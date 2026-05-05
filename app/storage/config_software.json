@@ -1,0 +1,11 @@
+{
+    "time_save_img": 30,
+    "time_save_txt": 30,
+    "time_save_csv": 30,
+    "disk_select": "C:\\",
+    "open_img": true,
+    "open_txt": true,
+    "open_csv": true,
+    "open_log_print": true,
+    "open_log_cosole": true
+}
