@@ -5,11 +5,9 @@ import inspect
 import psutil
 from pathlib import Path
 import shutil
+from dataclasses import dataclass
+@dataclass
 class Folder():
-    def __init__(self):
-        pass
-    
-
     def write_json_in_file(self, file_path: str, data: dict, indent: int = 4):
         """
         Ghi dữ liệu dạng JSON vào file.
@@ -38,6 +36,8 @@ class Folder():
         # os.path.join sẽ tự động thêm dấu / hoặc \ phù hợp với Windows/Linux
         new_path = os.path.join(parent_dir, new_name)
         return new_path
+    
+    
     def get_caller_parent_and_append(self, new_name: str):
         """
         Lấy đường dẫn thư mục cha của file GỌI hàm này và nối thêm tên mới.

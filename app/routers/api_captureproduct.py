@@ -1,11 +1,12 @@
 # from pathlib import Path
 # import sys
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
+# from app.utils import obj_queue,type_capture,name_queue_log_client
 
 from fastapi import APIRouter, WebSocket, Body, Depends
 from app.services.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
-from app.utils import obj_queue,type_capture,name_queue_log_client
+from app.config import TypeSend
 import cv2
 import asyncio
 
@@ -24,7 +25,7 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
         print(msg)
-        obj_queue.put(name_queue_log_client, {"type": type_capture, "message": msg})
+        services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:
@@ -63,13 +64,13 @@ async def capture(
     choose_product_current = services.obj_choose_product.get_choose_product_pick()
     if choose_product_current == -1:
         msg = "Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-        obj_queue.put(name_queue_log_client, {"type": type_capture, "message": msg})
+        services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
         return {"status": "error"}
     else:
         status,frame =  services.obj_camera.capture_once(timeout=1)
         if not status :
             msg = "Lỗi trong quá trình lấy ảnh"
-            obj_queue.put(name_queue_log_client, {"type": type_capture, "message": msg})
+            services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
             return {"status": "error"}
         services.obj_manager_product.add_point_img_product(choose_product_current,frame)
         status,arr_path_img = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current)
@@ -84,7 +85,7 @@ async def capture(
 
 @router.websocket("/ws")
 async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_services_ws)):
-    # obj_queue.put(name_queue_log_client,{"type":type_capture,"message":"✅ Cammera đã được kết nối."})
+    # obj_queue.put(name_queue_log_client,{"type":TypeSend.type_capture,"message":"✅ Cammera đã được kết nối."})
     print("✅ Cammera đã được kết nối.")
     await ws.accept()
     try: 

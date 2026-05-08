@@ -187,9 +187,16 @@ class ModelHandler:
     
     def get_polygon(self,img):
         mask  = self.predict(img) # Loc nhieu ảnh
-        mask_clean= self.clean_mask_opening(mask,config_detect.Kernel) # Loc nhieu xung quanh
-        polygon  = self.find_largest_external_polygon(mask_clean,config_detect.epsilon_ratio,config_detect.min_area)
-        return polygon
+        if mask:
+            mask_clean= self.clean_mask_opening(mask,config_detect.Kernel) # Loc nhieu xung quanh
+            polygon  = self.find_largest_external_polygon(mask_clean,config_detect.epsilon_ratio,config_detect.min_area)
+            return polygon
+        return None
+
+
+
+
+
 
 
 

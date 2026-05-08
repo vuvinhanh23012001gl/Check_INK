@@ -79,6 +79,15 @@
                 "heigh": 960
             },
             "run_point": {}
+        },
+        {
+            "id": 2,
+            "name": "SP01",
+            "description": "SDSDS",
+            "created_at": "2026-05-08 16:54:00.621889",
+            "updated_at": "2026-05-08 16:54:00.621889",
+            "regulation": [],
+            "run_point": []
         }
     ]
 }

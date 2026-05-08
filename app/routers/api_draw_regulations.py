@@ -1,8 +1,7 @@
 from fastapi import APIRouter,Body,Depends
-from app.utils import obj_queue,type_capture,name_queue_log_client
 from app.services.container import ServiceContainer
 from app.core.dependencies import get_services
-
+from app.config import TypeSend
 
 router = APIRouter(
     prefix="/draw-regulations",
@@ -19,8 +18,7 @@ def draw_regulations(services: ServiceContainer = Depends(get_services),bayload:
     print("Sản phẩm đang chọn là :",choose_product_current)
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-        obj_queue.put(name_queue_log_client, {"type": type_capture, "message": msg})  
-        print(msg)
+        services.queue_log_send_client.put({"type": TypeSend.type_capture, "message": msg})  
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:

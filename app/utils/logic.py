@@ -1,10 +1,10 @@
 import re
 import numpy as np
 import cv2
-
+from dataclasses import dataclass
+@dataclass
 class Logic():
-    def __init__(self):
-        pass
+    
     def is_valid_id(self,id_value) -> bool:
         if id_value is None:
             return False

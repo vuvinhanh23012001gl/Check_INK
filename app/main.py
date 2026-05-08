@@ -16,7 +16,6 @@ from app.routers import (
 )
 
 
-
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
     print("🚀 Đang khởi tạo tài nguyên...")
@@ -30,11 +29,11 @@ def create_app():
     # 🔹 FastAPI gốc
     global fastapi_app
     fastapi_app = FastAPI(title="Width Line Detection",lifespan=lifespan)
- 
+
     # 🔹 Static
     fastapi_app.mount("/static", StaticFiles(directory="app/static"), name="static")
     fastapi_app.mount("/storage", StaticFiles(directory="app/storage"), name="storage")
-
+    
     # 🔹 Router
     fastapi_app.include_router(home_router)
     fastapi_app.include_router(camera_router)
@@ -45,7 +44,6 @@ def create_app():
     fastapi_app.include_router(calibration_router)
     # 🔥 QUAN TRỌNG NHẤT – wrap FastAPI bằng Socket.IO
     return socketio.ASGIApp(sio, fastapi_app)
-
 
 
 # 🔥 Uvicorn PHẢI chạy biến này

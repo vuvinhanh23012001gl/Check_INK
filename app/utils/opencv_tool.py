@@ -2,10 +2,10 @@ import cv2
 import os
 import numpy as np
 import base64
-class Tool_OpenCv2:
-    def __init__(self):
-        pass    
+from dataclasses import dataclass
 
+@dataclass
+class Tool_OpenCv2:
     def save_image(self,image, save_path):
         """
         image: Dữ liệu ảnh (numpy array)

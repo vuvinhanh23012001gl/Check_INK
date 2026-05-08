@@ -13,10 +13,11 @@ from .log_txt import Log_Txt
 from .log_img  import Log_Img
 from .log_csv import Log_CSV
 from app.services.product import ChooseProduct,ProductManager
-from app.utils import obj_queue,name_queue_manage,Folder,Aggregate
+from queue import Queue
+from app.utils import Folder,Aggregate
 
 class Manager_Log:
-    def __init__(self,obj_folder:Folder,Config_Software:Config_SoftWare,choose_product:ChooseProduct,manager_product:ProductManager,obj_aggregate:Aggregate):
+    def __init__(self,obj_folder:Folder,Config_Software:Config_SoftWare,choose_product:ChooseProduct,manager_product:ProductManager,obj_aggregate:Aggregate,queue_manager_log:Queue):
 
         self.thread = None
         self.thread_running = None
@@ -33,7 +34,7 @@ class Manager_Log:
         self.path_img = None
         self.path_csv = None
         self.path_txt = None
-
+        self.queue_manager_log =  queue_manager_log
         self.Init()
     
     def Init(self):
@@ -58,7 +59,6 @@ class Manager_Log:
         self.obj_Log_Img = Log_Img(self.obj_folder,path_img = self.path_img,open_log_img= open_log_img)
         self.obj_Log_Csv = Log_CSV(folder = self.path_csv,enable = open_log_csv,header=["product_id", "result", "score"])
     
-        obj_queue.clear(name_queue_manage)
         if any([open_log_txt]):
             self.start_thread()
         else:
@@ -73,7 +73,7 @@ class Manager_Log:
     def _log_thread_loop(self):
         print("mở luồng nhận nhận dữ liệu log ảnh, img, csv")
         while self.thread_running:
-            data = obj_queue.get(name_queue_manage)
+            data = self.queue_manager_log.get()
             if data:
                 type_data = data.get("type",None)
                 msg =  data.get("msg",None)

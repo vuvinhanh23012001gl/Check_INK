@@ -1,8 +1,4 @@
 
-# import sys
-# import cv2
-# from pathlib import Path
-# sys.path.append(str(Path(__file__).resolve().parents[3]))
 import cv2
 import time
 import threading
@@ -13,9 +9,9 @@ from app.core import Result,ErrorCode
 from app.services.calculate_the_dimensions.handler_model import ModelHandler
 from app.services.calculate_the_dimensions.handler_frame_calibration import FrameHandlersCalibration
 from app.services.camera import Camera
-from app.utils import obj_queue,name_queue_img_calibration,name_queue_log_client,log_calibration,name_queue_data_client,datatype_Calibration
+# from app.utils import obj_queue,name_queue_img_calibration,name_queue_log_client,log_calibration,name_queue_data_client,datatype_Calibration
 from app.utils import Tool_OpenCv2
-
+from queue import  Queue
 
 
 class HandlerCalibration:
@@ -34,7 +30,14 @@ class HandlerCalibration:
 
     VALUE_TIMEOUT_WAIT_DATA = 20  # chờ timeout giây nếu không nhận được đủ dữ liệu thì thoát thông báo lõi
 
-    def __init__(self,obj_cam:Camera,obj_folder:Folder,obj_opencv:Tool_OpenCv2):
+    def __init__(self,obj_cam:Camera,obj_folder:Folder,obj_opencv:Tool_OpenCv2,queue_log_send_client:Queue,queue_data_send_client:Queue,queue_img_send_client:Queue,type_log,data_calibration):
+
+        self.data_calibration =  data_calibration
+        self.queue_log_send_client = queue_log_send_client
+        self.queue_data_send_client =  queue_data_send_client
+        self.queue_img_send_client = queue_img_send_client
+        self.type_log = type_log
+
 
         self.obj_cam =  obj_cam
         self.obj_folder = obj_folder
@@ -91,26 +94,26 @@ class HandlerCalibration:
             for index in range(0,number):
                 status,frame = self.obj_cam.capture_once(timeout=1)
                 if status:
-                    obj_queue.put(name_queue_img_calibration,frame)
+                    self.queue_img_send_client.put(frame)
             for index in range(0,number):
                 #frame = obj_queue.get_timeout(name_queue_img_calibration,HandlerCalibration.IMAGE_WATING_TIMEOUT)
                 frame = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_5.jpg")
                 if frame is None:
                     result = Result.Fail(ErrorCode.CAMERA_TIMEOUT) 
-                    obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":result.message()})
+                    self.queue_log_send_client.put({"type":self.type_log,"message":result.message()})
                     continue
                 self.process_multi_thread(index,frame,line)
             start_time = time.time()
-            obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":"Đang tính toán tỷ số calibration.\n"})
+            self.queue_log_send_client.put({"type":self.type_log,"message":"Đang tính toán tỷ số calibration.\n"})
             
             while True:
                 with self._lock:
                     if self._complete_work >= number:
                         break
-                obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":"."})
+                self.queue_log_send_client.put({"type":self.type_log,"message":"."})
                 if time.time() - start_time > self.VALUE_TIMEOUT_WAIT_DATA:
                     result = Result.Fail(ErrorCode.CALIBRATION_TIMEOUT)
-                    obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":result.message()})
+                    self.queue_log_send_client.put({"type":self.type_log,"message":result.message()})
                     return 
                 time.sleep(0.2)
             number_picture_ok = 0 
@@ -138,23 +141,22 @@ class HandlerCalibration:
                 data_new["cv"] = data.get("cv", 0)
                 data_new["scale_error_mm_per_pixel"] = data.get("scale_error_mm_per_pixel", 0)
                 self.write_file_config(data_new)
-                obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":"\nCấu hình Calibration thành công !"})
-                obj_queue.put(name_queue_data_client,{"type":datatype_Calibration,"data_table":data_new})
+                self.queue_log_send_client.put({"type":self.type_log,"message":"\nCấu hình Calibration thành công !"})
+                self.queue_data_send_client.put({"type":self.data_calibration ,"data_table":data_new})
             else:
-                obj_queue.put(
-                    name_queue_log_client,
+                self.queue_log_send_client.put(
                     {
-                        "type": log_calibration,
+                        "type": self.type_log,
                         "message": result.message(),
                     }
                 )
-                obj_queue.put(name_queue_data_client,{"type":datatype_Calibration,"data_table":self.get_data_file()})
+                self.queue_data_send_client.put({"type":self.data_calibration ,"data_table":self.get_data_file()})
             self.data_all.clear()
             self.complete_work = 0
             print("Phán định xong")
         else:
             result = Result.Fail(ErrorCode.CAMERA_DISCONNECT)
-            obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":result.message()})
+            self.queue_log_send_client.put({"type":self.type_log,"message":result.message()})
 
     def process_multi_thread(self,index,img,line):
         """Hàm này dùng để tạo luồng xử lý phán định sản phẩm trong đa luồng."""
@@ -181,7 +183,7 @@ class HandlerCalibration:
                 print(f"Phán định xong ảnh thứ {index}")
                 self._complete_work += 1
             frame = self.obj_opencv.convert_frame_to_base64(img)
-            obj_queue.put(name_queue_data_client,{"type":datatype_Calibration,"data_img":frame})
+            self.queue_data_send_client.put({"type":self.data_calibration ,"data_img":frame})
 
 
     def Init(self):

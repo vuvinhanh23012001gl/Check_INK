@@ -17,7 +17,7 @@ class FrameHandlers:
         self.regulation_master = regulation_master
         self.shape = shape 
         self.mm_per_pixel  = convert_mm
-        print("fhsdjfhsdfhdgffsdhfgdshfgsdhfgsdhfdsgfsdfjgdsjsdfsdgfyjgfasyjdgasujdgasukdgasukdgasjkdgaskdsagduksagdaskudgasuikdsa",self.mm_per_pixel)
+
     def hex_to_bgr(self,hex_color):
         hex_color = hex_color.lstrip('#')
         r = int(hex_color[0:2], 16)

@@ -1,10 +1,11 @@
 from datetime import datetime
 import unicodedata
 import re
-class Aggregate:
-    def __init__(self):
-        pass
+from dataclasses import dataclass
 
+
+@dataclass
+class Aggregate:
     def normalize_folder_name(self,text: str) -> str:
         """
         Chuyển tiếng Việt sang không dấu, thay khoảng trắng bằng '_',
@@ -12,7 +13,6 @@ class Aggregate:
         """
         if not isinstance(text, str):
             return ""
-
         # Bỏ khoảng trắng đầu cuối
         text = text.strip().lower()
 
@@ -30,8 +30,7 @@ class Aggregate:
         text = re.sub(r"_+", "_", text)
 
         return text
-
-
+    
 
     def get_today(self,mode: int = 1) -> str:
         formats = {
