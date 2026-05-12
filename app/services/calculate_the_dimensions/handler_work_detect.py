@@ -18,7 +18,7 @@ from app.services.calculate_the_dimensions.handler_model import ModelHandler
 from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
 
 
-from app.storage.config import PATH_PRODUCT_MODEL
+from app.config import PATH_PRODUCT_MODEL
 # from app.utils import obj_queue,name_queue_process_capture,name_queue_data_client,datatype_Home
 
 class HandlerWorkDetect:

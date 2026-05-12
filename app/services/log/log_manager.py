@@ -12,12 +12,12 @@ from .config_software import Config_SoftWare   # class
 from .log_txt import Log_Txt
 from .log_img  import Log_Img
 from .log_csv import Log_CSV
-from app.services.product import ChooseProduct,ProductManager
+from app.services import ProductService,ChooseProductService
 from queue import Queue
 from app.utils import Folder,Aggregate
 
 class Manager_Log:
-    def __init__(self,obj_folder:Folder,Config_Software:Config_SoftWare,choose_product:ChooseProduct,manager_product:ProductManager,obj_aggregate:Aggregate,queue_manager_log:Queue):
+    def __init__(self,obj_folder:Folder,Config_Software:Config_SoftWare,choose_product:ChooseProductService,product_service:ProductService,obj_aggregate:Aggregate,queue_manager_log:Queue):
 
         self.thread = None
         self.thread_running = None
@@ -26,7 +26,7 @@ class Manager_Log:
         self.obj_folder = obj_folder
         self.obj_Config_SoftWare = Config_Software
         self.obj_choose_product  = choose_product
-        self.obj_manager_product = manager_product
+        self.obj_product_service = product_service
 
         self.obj_Log_Txt  = None
         self.obj_Log_Img = None
@@ -38,12 +38,12 @@ class Manager_Log:
         self.Init()
     
     def Init(self):
-        
-        id_select =  self.obj_choose_product.get_choose_product_pick()
-        name_product = self.obj_manager_product.get_product_name_by_id(id_select)
-        name_product_save_folder  = self.obj_aggregate.normalize_folder_name(name_product)
-        # print(name_product)
-        # print(name_product_save_folder)
+        id_select =  self.obj_choose_product.get_choose_product()
+        # print("id_select",id_select.data)
+        name_product = self.obj_product_service.get_product_by_id(id_select.data)
+        name_product_save_folder  = self.obj_aggregate.normalize_folder_name(name_product.data)
+        # print("name_product",name_product.data.id)
+        # print("name_product_save_folder",name_product_save_folder)
         data_dict_path = self.obj_Config_SoftWare.create_path_by_name_product(name_product_save_folder)
         self.path_img  = data_dict_path.get("path_log_img")
         self.path_txt  = data_dict_path.get("path_log_txt")

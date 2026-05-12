@@ -4,7 +4,7 @@
 # from app.utils import obj_queue,type_capture,name_queue_log_client
 
 from fastapi import APIRouter, WebSocket, Body, Depends
-from app.services.container import ServiceContainer
+from app.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
 from app.config import TypeSend
 import cv2

@@ -3,7 +3,7 @@
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 from app.utils import Folder
-from app.storage.config import PATH_PRODUCT_CHOOSE_PRODUCT
+from app.config import PATH_PRODUCT_CHOOSE_PRODUCT
 
 class ChooseProduct():
     def __init__(self,obj_folder:Folder):

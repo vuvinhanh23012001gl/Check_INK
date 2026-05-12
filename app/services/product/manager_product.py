@@ -9,7 +9,7 @@ from pathlib import Path
 
 from app.utils import Folder
 from app.utils import Tool_OpenCv2
-from app.storage.config import PATH_PRODUCT_DATA, PATH_PRODUCT_IMG,REL_PATH_PRODUCT_IMG,PATH_PRODUCT_ROI_PRODUCT_IMG
+from app.config import PATH_PRODUCT_DATA, PATH_PRODUCT_IMG,PATH_PRODUCT_ROI_PRODUCT_IMG
 from .product import TypeProduct
 
 class ProductManager:

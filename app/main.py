@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
-from app.services.container import create_container
+from app.container import create_container
 
 from app.routers import (
     camera_router,

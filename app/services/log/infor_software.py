@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from app.utils import Folder
-from app.storage.config import PATH_INFORMATION_SOFTWARE 
+from app.config import PATH_INFORMATION_SOFTWARE 
 
 class Infor_Software:
   

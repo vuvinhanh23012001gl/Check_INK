@@ -3,7 +3,7 @@
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 
-from app.storage.config import PATH_FEATUERES_CFG_CAM 
+from app.config import PATH_FEATUERES_CFG_CAM 
 import stapipy as st
 import cv2
 import numpy as np

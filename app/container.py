@@ -4,16 +4,14 @@ from app.services.calculate_the_dimensions.handler_work_detect import HandlerWor
 # from app.services.calculate_the_dimensions.handler_work_detect import ImageQueueTester 
 from app.services.camera import Camera
 from app.utils import Tool_OpenCv2,Folder
-from app.services.product import ChooseProduct,ProductManager
+# from app.services.product import ChooseProduct,ProductManager
+from app.services import ProductService,ChooseProductService
 from app.services.log import Infor_Software,Config_SoftWare,Manager_Log
 from app.utils import Aggregate,Logic
 from app.config import QueueConfig,TypeSend
 from app.model import QueueManager,Worker
-from app.storage.config import PATH_PRODUCT_MODEL
-
-
-
-
+from app.config import PATH_PRODUCT_MODEL
+from app.repository import ChooseProductRepository,ProductRepository
 
 class ServiceContainer:
     def __init__(self):
@@ -64,10 +62,12 @@ class ServiceContainer:
                                                   self.obj_cv2,self.queue_log_send_client,self.queue_data_send_client,
                                                   self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
         print("✔ HandlerCalibration init")
-        self.obj_manager_product = ProductManager(self.obj_folder, self.obj_cv2)
-        print("✔ ProductManager init")
-        self.obj_choose_product = ChooseProduct(self.obj_folder)
-        print("✔ ChooseProduct init")
+        self.obj_product_repository = ProductRepository(self.obj_folder)
+        self.obj_manager_product = ProductService( self.obj_product_repository,self.obj_cv2,self.obj_folder)
+        print("✔ ProductService init")
+        self.obj_choose_product_repository =  ChooseProductRepository(self.obj_folder)
+        self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository,self.obj_manager_product)
+        print("✔ ChooseProductService init")
         self.obj_detect = HandlerWorkDetect(
             self.obj_folder,
             self.obj_choose_product,
@@ -79,12 +79,12 @@ class ServiceContainer:
         print("✔ Infor_Software init")
         self.obj_config_software = Config_SoftWare(self.obj_folder, self.obj_aggregate)
         print("✔ Config_SoftWare init")
-        self.obj_manager_log  = Manager_Log(
-            self.obj_folder,
-            self.obj_config_software,
-            self.obj_choose_product,
-            self.obj_manager_product,self.obj_aggregate,self.queue_manage_log
-        )
+        # self.obj_manager_log  = Manager_Log(
+        #     self.obj_folder,
+        #     self.obj_config_software,
+        #     self.obj_choose_product,
+        #     self.obj_manager_product,self.obj_aggregate,self.queue_manage_log
+        # )
         print("✔ Manager_Log init")
         # self.obj_img_queue_capture_test = ImageQueueTester(self.obj_detect)
         # self.obj_img_queue_capture_test.start()

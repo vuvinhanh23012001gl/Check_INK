@@ -3,7 +3,7 @@ import cv2
 import time
 import threading
 import statistics
-from app.storage.config import PATH_PRODUCT_MODEL,PATH_CONFIG_CALIBRATION
+from app.config import PATH_PRODUCT_MODEL,PATH_CONFIG_CALIBRATION
 from app.utils import Folder
 from app.core import Result,ErrorCode
 from app.services.calculate_the_dimensions.handler_model import ModelHandler

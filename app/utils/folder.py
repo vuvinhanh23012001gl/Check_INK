@@ -275,3 +275,11 @@ class Folder():
         if not p.is_file():
             return False, "PATH_IS_NOT_FILE"
         return True, None
+    
+    def create_folder(self,path: str) -> str:
+        """
+        Tạo folder nếu chưa tồn tại và trả về đường dẫn tuyệt đối.
+        """
+        p = Path(path)
+        p.mkdir(parents=True, exist_ok=True)
+        return str(p.resolve())

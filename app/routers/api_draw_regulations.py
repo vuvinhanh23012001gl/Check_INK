@@ -1,5 +1,5 @@
 from fastapi import APIRouter,Body,Depends
-from app.services.container import ServiceContainer
+from app.container import ServiceContainer
 from app.core.dependencies import get_services
 from app.config import TypeSend
 
@@ -14,7 +14,8 @@ def draw_regulations(services: ServiceContainer = Depends(get_services),bayload:
     print("---- Vào draw regulation --- ")
     status = bayload.get("status")
     print("Satus regulations: ",status)
-    choose_product_current = services.obj_choose_product.get_choose_product_pick()
+    result_choose_product_current = services.obj_choose_product.get_choose_product()
+    choose_product_current =  result_choose_product_current.data
     print("Sản phẩm đang chọn là :",choose_product_current)
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"

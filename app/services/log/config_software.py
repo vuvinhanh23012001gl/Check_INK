@@ -17,7 +17,7 @@
 
 from pathlib import Path
 from datetime import datetime
-from app.storage.config import PATH_CONFIG_SOFTWARE 
+from app.config import PATH_CONFIG_SOFTWARE 
 from app.utils import Folder
 from app.utils import Aggregate
 
