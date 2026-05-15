@@ -6,8 +6,8 @@ from app.utils import Folder
 from app.config import PATH_PRODUCT_CHOOSE_PRODUCT
 
 class ChooseProduct():
-    def __init__(self,obj_folder:Folder):
-          self.obj_folder = obj_folder
+    def __init__(self):
+     
           self.name_choose_product = "product"  
           self.default_data_when_empyty = -1
           self.path_file_config =  PATH_PRODUCT_CHOOSE_PRODUCT
@@ -22,7 +22,7 @@ class ChooseProduct():
     def set_choose_product(self,ID:int):
         if isinstance(ID,int):
             self.choose = ID 
-            self.obj_folder.write_json_in_file(self.path_file_config,{f"{self.name_choose_product}":ID})
+            Folder.write_json_in_file(self.path_file_config,{f"{self.name_choose_product}":ID})
         else:
             print("Dữ liệu không hợp lệ, phải là dict")
             return False
@@ -30,10 +30,10 @@ class ChooseProduct():
     
 
     def read_data_file_choose_product(self):
-        data  = self.obj_folder.read_json_from_file(self.path_file_config)
+        data  = Folder.read_json_from_file(self.path_file_config)
         if not data:
             send = {f"{self.name_choose_product}":self.default_data_when_empyty}
-            self.obj_folder.write_json_in_file(self.path_file_config,send)
+            Folder.write_json_in_file(self.path_file_config,send)
             self.choose = self.default_data_when_empyty
             return send
         else:
@@ -42,7 +42,7 @@ class ChooseProduct():
 
     def set_value_default(self):
         send = {f"{self.name_choose_product}":self.default_data_when_empyty}
-        self.obj_folder.write_json_in_file(self.path_file_config,send)
+        Folder.write_json_in_file(self.path_file_config,send)
         self.choose  = self.default_data_when_empyty
 
          

@@ -22,8 +22,8 @@ class ProductManager:
     NAME_HEAD_IMG_FILE_ROI_PRODUCT = "coordinates"
     EXTENT_FILE_IMG_ROI_PRODUCT = "jpg"
 
-    def __init__(self,obj_folder:Folder,obj_cv2:Tool_OpenCv2):
-        self.obj_folder = obj_folder
+    def __init__(self,obj_cv2:Tool_OpenCv2):
+
         self.obj_cv2 = obj_cv2
         self.name_manager = "type_products"
         self.path_file_config =  PATH_PRODUCT_DATA
@@ -48,7 +48,7 @@ class ProductManager:
             else:
                 self.obj_cv2.save_image(img,path_save_img)
             path_folder_save_roi_img_product = str(Path(PATH_PRODUCT_ROI_PRODUCT_IMG)/f"{product.id}")
-            self.obj_folder.get_or_create_folder(path_folder_save_roi_img_product)
+            Folder.get_or_create_folder(path_folder_save_roi_img_product)
             self.type_products.append(product)
             self.write_product_in_config()
             print("Thêm sản phẩm mới thành công")
@@ -94,7 +94,7 @@ class ProductManager:
 
     def write_file_config(self,data:dict):
         if isinstance(data,dict):
-            self.obj_folder.write_json_in_file(self.path_file_config,data)
+            Folder.write_json_in_file(self.path_file_config,data)
         else:
             print("Dữ liệu không hợp lệ, phải là dict")
             return False
@@ -103,7 +103,7 @@ class ProductManager:
 
 
     def read_file_config(self)->dict:
-        return self.obj_folder.read_json_from_file(self.path_file_config)
+        return Folder.read_json_from_file(self.path_file_config)
     
 
     def delete_product_by_id(self, product_id: int) -> bool:
@@ -122,7 +122,7 @@ class ProductManager:
                 self.write_product_in_config()
                 print(f"2.Đã data xóa sản phẩm với id={product_id}.")
                 path_folder_roi_product = Path(PATH_PRODUCT_ROI_PRODUCT_IMG) / f"{tp.id}"
-                self.obj_folder.delete_folder(path_folder_roi_product)
+                Folder.delete_folder(path_folder_roi_product)
                 print(f"3.Xóa thành công folder danh sách các ảnh ROI.")
                 print("-- Hết xóa dữ liệu ---")
                 return True,ProductManager.SUCCESS
@@ -139,7 +139,7 @@ class ProductManager:
         for prod in self.type_products:
             dict_out = prod.to_dict()
             path_save_img = str(Path(PATH_PRODUCT_IMG)/f"{prod.id}.jpg")
-            path_poxis = self.obj_folder.get_parts_from_bottom(path_save_img,levels=3)
+            path_poxis = Folder.get_parts_from_bottom(path_save_img,levels=3)
             dict_out["image_src"] =  str(path_poxis)
             arr_dict_inf_product.append(dict_out)
         return arr_dict_inf_product
@@ -173,7 +173,7 @@ class ProductManager:
                 return False, ProductManager.ERRO_IMG_EMPTY
             path_folder_roi_product = Path(PATH_PRODUCT_ROI_PRODUCT_IMG) / f"{id}"
             path_folder_roi_product.mkdir(parents=True, exist_ok=True) 
-            list_name_file = self.obj_folder.get_list_files(path_folder_roi_product)
+            list_name_file = Folder.get_list_files(path_folder_roi_product)
             # 3. Tìm index lớn nhất hiện có
             max_index = -1
             if len(list_name_file) != 0:
@@ -211,7 +211,7 @@ class ProductManager:
             print("---- Hết hàm lấy sản danh sách ảnh sp ---")
             return False, ProductManager.ERRO_NOT_FOUND_ID
         path_folder_roi_product = Path(PATH_PRODUCT_ROI_PRODUCT_IMG) / f"{product_id}"
-        list_name_file = self.obj_folder.get_list_files(path_folder_roi_product)
+        list_name_file = Folder.get_list_files(path_folder_roi_product)
         if len(list_name_file) == 0:
             print(f"Chưa có ảnh ROI cho sản phẩm id={product_id}")
             print("---- Hết hàm lấy sản danh sách ảnh sp ---")
@@ -219,7 +219,7 @@ class ProductManager:
         arr_path_img_roi = []
         for file_name in list_name_file:
             full_path = path_folder_roi_product / file_name
-            path_poxis = self.obj_folder.get_parts_from_bottom(full_path,levels=4)
+            path_poxis = Folder.get_parts_from_bottom(full_path,levels=4)
             arr_path_img_roi.append(str(path_poxis))
         print("danh sách ảnh ROI:", arr_path_img_roi)
         print("---- Hết hàm lấy sản danh sách ảnh sp ---")

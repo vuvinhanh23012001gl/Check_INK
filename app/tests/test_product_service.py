@@ -202,7 +202,7 @@ def test_get_arr_path_img_roi_product_by_id():
 
 def run_all_test():
 
-    # test_add_product()
+    test_add_product()
 
     # test_get_product()
 

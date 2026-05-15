@@ -1,12 +1,10 @@
 from datetime import datetime
 import unicodedata
 import re
-from dataclasses import dataclass
 
-
-@dataclass
 class Aggregate:
-    def normalize_folder_name(self,text: str) -> str:
+    @staticmethod
+    def normalize_folder_name(text: str) -> str:
         """
         Chuyển tiếng Việt sang không dấu, thay khoảng trắng bằng '_',
         chỉ giữ [a-z0-9_], dùng cho tên folder.
@@ -31,8 +29,8 @@ class Aggregate:
 
         return text
     
-
-    def get_today(self,mode: int = 1) -> str:
+    @staticmethod
+    def get_today(mode: int = 1) -> str:
         formats = {
             1: "%d-%m-%Y",  # 20-01-2026
             2: "%d/%m/%Y",  # 20/01/2026
@@ -45,8 +43,8 @@ class Aggregate:
         return datetime.now().strftime(fmt)
         
 
-        
-    def replace_drive(self,path: str, target_drive: str = "D:\\") -> str:
+    @staticmethod        
+    def replace_drive(path: str, target_drive: str = "D:\\") -> str:
         """
         Nếu gặp ':\\' trong đường dẫn thì loại bỏ và chèn target_drive vào.
         Ví dụ: C:\\App\\Log -> D:\\App\\Log

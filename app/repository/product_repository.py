@@ -13,12 +13,8 @@ from app.config import (
 
 class ProductRepository:
 
-    def __init__(
-        self,
-        folder: Folder
-    ):
-
-        self.folder = folder
+    def __init__( self ):
+       
 
         self.path_file_config = (
             PATH_PRODUCT_DATA
@@ -33,7 +29,7 @@ class ProductRepository:
     def read_config(self) -> dict:
 
         data = (
-            self.folder
+            Folder
             .read_json_from_file(
                 self.path_file_config
             )
@@ -50,7 +46,7 @@ class ProductRepository:
         data: dict
     ):
 
-        self.folder.write_json_in_file(
+        Folder.write_json_in_file(
             self.path_file_config,
             data
         )
@@ -138,7 +134,7 @@ class ProductRepository:
             product_id
         )
 
-        self.folder.delete_folder(path)
+        Folder.delete_folder(path)
 
     # =========================
     # ROI FILES
@@ -153,6 +149,6 @@ class ProductRepository:
             product_id
         )
 
-        return self.folder.get_list_files(
+        return Folder.get_list_files(
             path
         )

@@ -2,11 +2,11 @@ import cv2
 import os
 import numpy as np
 import base64
-from dataclasses import dataclass
 
-@dataclass
 class Tool_OpenCv2:
-    def save_image(self,image, save_path):
+    
+    @staticmethod
+    def save_image(image, save_path):
         """
         image: Dữ liệu ảnh (numpy array)
         save_path: Đường dẫn đầy đủ bao gồm tên file (vd: 'data/img/sanpham1.jpg')
@@ -23,7 +23,6 @@ class Tool_OpenCv2:
             # Tiến hành lưu ảnh
             # cv2.imwrite trả về True nếu thành công, False nếu thất bại
             result = cv2.imwrite(save_path, image)
-            
             if result:
                 print(f"Lưu ảnh thành công tại: {save_path}")
                 return True
@@ -34,6 +33,7 @@ class Tool_OpenCv2:
         except Exception as e:
             print(f"Có lỗi xảy ra: {e}")
             return False
+        
     def delete_image(self, image_path):
         """
         image_path: Đường dẫn đầy đủ tới file ảnh cần xoá
@@ -56,6 +56,7 @@ class Tool_OpenCv2:
         except Exception as e:
             print(f"❌ Có lỗi xảy ra khi xoá ảnh: {e}")
             return False
+        
     def create_black_image(self, width, height, channels=3):
         """
         Tạo ảnh màu đen
@@ -73,6 +74,7 @@ class Tool_OpenCv2:
         cv2.imshow(win_name, img)
         cv2.waitKey(wait)
         cv2.destroyAllWindows()
+
     def convert_frame_to_base64(self,frame):
         """
         Convert OpenCV frame sang base64 để gửi cho client

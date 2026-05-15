@@ -19,11 +19,8 @@ from pathlib import Path
 from datetime import datetime
 from app.config import PATH_CONFIG_SOFTWARE 
 from app.utils import Folder
-from app.utils import Aggregate
-
 
 class Config_SoftWare:
-
     """Quản lý cấu hình phần mềm & đường dẫn log"""
 
     # ====== TIME CONFIG ======
@@ -55,12 +52,10 @@ class Config_SoftWare:
     PATH_SAVE_FOLDER_LOG_CSV = PATH_FOLDER_LOG / DEFAULT_PRODUCT/NAME_FOLDER_LOG_CSV
 
     
-    def __init__(self,obj_folder:Folder,obj_aggregate:Aggregate):
+    def __init__(self):
 
-        self.obj_aggregate = obj_aggregate
-        self.obj_folder = obj_folder
-        self.path_config_software = self.obj_folder.get_or_create_json_by_path(PATH_CONFIG_SOFTWARE)
-        self.data_read_head_config = self.obj_folder.read_json_from_file(self.path_config_software) 
+        self.path_config_software = Folder.get_or_create_json_by_path(PATH_CONFIG_SOFTWARE)
+        self.data_read_head_config = Folder.read_json_from_file(self.path_config_software) 
         self.path_file_config = self.path_config_software
         self.disk_select = self.data_read_head_config.get("disk_select",Config_SoftWare.DISK_SAVE)
 
@@ -136,7 +131,7 @@ class Config_SoftWare:
     
 
     def save_config_software(self):
-        self.obj_folder.write_json_in_file(self.path_file_config,self.to_dict())
+        Folder.write_json_in_file(self.path_file_config,self.to_dict())
     
 
     def get_time_save_img(self):
@@ -223,7 +218,7 @@ class Config_SoftWare:
 
     def get_arr_disk_on_pc(self):
         """Hàm trả về list rỗng nếu không"""
-        return self.obj_folder.list_drives()
+        return Folder.list_drives()
     
 
 # c1 =  Config_SoftWare()
@@ -239,12 +234,12 @@ class Config_SoftWare:
 
 
 class Change_Disk:
-    def __init__(self,obj_config_softWare:Config_SoftWare,obj_folder:Folder,obj_aggregate:Aggregate):
-        self.obj_aggregate = obj_aggregate
-        self.obj_folder = obj_folder
+    def __init__(self,obj_config_softWare:Config_SoftWare):
+       
         self.obj_config_softWare = obj_config_softWare
+        
     def arr_disk_on_pc(self):
-        return self.obj_folder.list_drives()
+        return Folder.list_drives()
     
     def found_currently_selecting(self,disk):
         """Kiểm tra ổ này có đang được chọn
@@ -274,9 +269,9 @@ class Change_Disk:
     #         path_txt = self.obj_config_softWar.get_path_log_txt()
     #         path_csv = self.obj_config_softWar.get_path_log_csv()
 
-    #         path_img_new = self.obj_aggregate.replace_drive(path_img,disk)
-    #         path_txt_new = self.obj_aggregate.replace_drive(path_txt,disk)
-    #         path_csv_new =  self.obj_aggregate.replace_drive(path_csv,disk)
+    #         path_img_new = Aggregate.replace_drive(path_img,disk)
+    #         path_txt_new = Aggregate.replace_drive(path_txt,disk)
+    #         path_csv_new =  Aggregate.replace_drive(path_csv,disk)
 
     #         self.obj_config_softWare.set_path_log_csv(path_csv_new)
     #         self.obj_config_softWar.set_path_log_img(path_img_new)

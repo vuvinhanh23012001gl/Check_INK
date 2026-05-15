@@ -8,10 +8,10 @@ from app.utils import Folder
 
 class Log_Img:
     extension = "jpg"
-    def __init__(self,obj_folder:Folder ,path_img: str, open_log_img: bool = True):
-        self.obj_folder = obj_folder
+    def __init__(self,path_img: str, open_log_img: bool = True):
+
         self.open_log = open_log_img
-        self.path_img = self.obj_folder.create_folder_from_path(Path(path_img))
+        self.path_img = Folder.create_folder_from_path(Path(path_img))
 
     def save(self, img, file_name: str):
   

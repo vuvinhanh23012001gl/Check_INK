@@ -28,6 +28,7 @@ class ErrorCode(Enum):
     # ===== POINT =====
     POINT_NOT_FOUND = 6001
     POINT_ALREADY_EXISTS = 6002
+    IMAGE_INVALID = 6003
 
 
 ERROR_MESSAGE = {
@@ -64,5 +65,9 @@ ERROR_MESSAGE = {
     # ===== POINT =====
     ErrorCode.POINT_NOT_FOUND:
         "[Lỗi] Không tìm thấy point",
+        
     ErrorCode.POINT_ALREADY_EXISTS :"\n[Thất bại] điểm đã tồn tại không được thêm điểm này",
+
+    ErrorCode.IMAGE_INVALID:
+        "[Lỗi] Ảnh đầu vào rỗng hoặc không hợp lệ",
 } 

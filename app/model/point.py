@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class Point:
 
     def __init__(
@@ -8,6 +9,8 @@ class Point:
         y: float,
         z: float,
         path_model_patch_core: str | Path | None = None,
+        path_img_point: str | Path | None = None,
+        path_img_retrain: str | Path | None = None,
         arr_polygon: list | None = None
     ):
 
@@ -21,6 +24,17 @@ class Point:
             else None
         )
 
+        self._path_img_point = (
+            Path(path_img_point)
+            if path_img_point
+            else None
+        )
+
+        self._path_img_retrain = (
+            Path(path_img_retrain)
+            if path_img_retrain
+            else None
+        )
         self._arr_polygon = (
             arr_polygon
             if arr_polygon
@@ -95,6 +109,45 @@ class Point:
         )
 
     # =========================
+    # PATH IMG POINT
+    # =========================
+    @property
+    def path_img_point(
+        self
+    ) -> Path | None:
+
+        return self._path_img_point
+
+    @path_img_point.setter
+    def path_img_point(
+        self,
+        value: str | Path | None
+    ) -> None:
+
+        self._path_img_point = (
+            Path(value)
+            if value
+            else None
+        )
+
+
+    @property
+    def path_img_retrain(
+        self
+    ) -> Path | None:
+        return self._path_img_retrain
+
+    @path_img_retrain.setter
+    def path_img_retrain(
+        self,
+        value: str | Path | None
+    ) -> None:
+        self._path_img_retrain = (
+            Path(value)
+            if value
+            else None
+        )
+    # =========================
     # ARR POLYGON
     # =========================
     @property
@@ -109,6 +162,7 @@ class Point:
         self,
         arr_polygon: list
     ) -> None:
+
         self._arr_polygon = arr_polygon
 
     # =========================
@@ -129,6 +183,17 @@ class Point:
                 else None
             ),
 
+            "path_img_point": (
+                str(self.path_img_point)
+                if self.path_img_point
+                else None
+            ),
+            
+            "path_img_retrain": (
+                str(self.path_img_retrain)
+                if self.path_img_retrain
+                else None
+            ),
             "arr_polygon": (
                 self.arr_polygon
             )
@@ -148,78 +213,11 @@ class Point:
             f"z={self.z}, "
             f"path_model_patch_core="
             f"{self.path_model_patch_core}, "
+            f"path_img_point="
+            f"{self.path_img_point}, "
+            f"path_img_retrain="
+            f"{self.path_img_retrain}, "
             f"arr_polygon="
             f"{self.arr_polygon}"
             f")"
         )
-    
-
-
-
-# from pathlib import Path
-# from point import Point
-# def test_point():
-#     point = Point(
-#         x=100,
-#         y=200,
-#         z=50,
-#         path_model_patch_core=(
-#             "models/patch_core/model.onnx"
-#         ),
-
-#         arr_polygon=[
-#             [(10, 10), (100, 10), (100, 100)],
-#             [(200, 200), (300, 200), (300, 300)]
-#         ]
-#     )
-#     # =========================
-#     # PRINT
-#     # =========================
-#     print(point)
-#     # =========================
-#     # PROPERTY
-#     # =========================
-#     print(point.x)
-#     print(point.y)
-#     print(point.z)
-
-#     print(
-#         point.path_model_patch_core
-#     )
-
-#     print(
-#         point.arr_polygon
-#     )
-
-#     # =========================
-#     # SET
-#     # =========================
-#     point.x = 999
-
-#     point.path_model_patch_core = (
-#         Path(
-#             "models/new_model.onnx"
-#         )
-#     )
-
-#     point.arr_polygon = [
-#         [(1, 1), (2, 2), (3, 3)]
-#     ]
-
-#     # =========================
-#     # PRINT AFTER SET
-#     # =========================
-#     print(point)
-
-#     # =========================
-#     # TO DICT
-#     # =========================
-#     dict_data = (
-#         point.to_dict()
-#     )
-
-#     print(dict_data)
-
-
-# if __name__ == "__main__":
-#     test_point()

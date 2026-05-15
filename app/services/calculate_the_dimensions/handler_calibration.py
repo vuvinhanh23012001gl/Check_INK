@@ -30,7 +30,7 @@ class HandlerCalibration:
 
     VALUE_TIMEOUT_WAIT_DATA = 20  # chờ timeout giây nếu không nhận được đủ dữ liệu thì thoát thông báo lõi
 
-    def __init__(self,obj_cam:Camera,obj_folder:Folder,obj_opencv:Tool_OpenCv2,queue_log_send_client:Queue,queue_data_send_client:Queue,queue_img_send_client:Queue,type_log,data_calibration):
+    def __init__(self,obj_cam:Camera,queue_log_send_client:Queue,queue_data_send_client:Queue,queue_img_send_client:Queue,type_log,data_calibration):
 
         self.data_calibration =  data_calibration
         self.queue_log_send_client = queue_log_send_client
@@ -40,8 +40,7 @@ class HandlerCalibration:
 
 
         self.obj_cam =  obj_cam
-        self.obj_folder = obj_folder
-        self.obj_opencv = obj_opencv
+
 
         self.name = None
         self.number_capture = 0
@@ -182,12 +181,12 @@ class HandlerCalibration:
                 }
                 print(f"Phán định xong ảnh thứ {index}")
                 self._complete_work += 1
-            frame = self.obj_opencv.convert_frame_to_base64(img)
+            frame = Tool_OpenCv2.convert_frame_to_base64(img)
             self.queue_data_send_client.put({"type":self.data_calibration ,"data_img":frame})
 
 
     def Init(self):
-            data = self.obj_folder.get_or_create_json_by_path_return_data(PATH_CONFIG_CALIBRATION)
+            data = Folder.get_or_create_json_by_path_return_data(PATH_CONFIG_CALIBRATION)
             self.calibration = data.get(
                 HandlerCalibration.JSON_NAME_CALIBRATION,
                 HandlerCalibration.VALUE_DEFAULT_CALIBRATION
@@ -213,11 +212,11 @@ class HandlerCalibration:
                 print("Đây là lần đầu chạy dữ liệu cấu hình Calibrate để phép đo chính xác hơn.")
 
     def get_data_file(self):
-        return self.obj_folder.get_or_create_json_by_path_return_data(PATH_CONFIG_CALIBRATION)
+        return Folder.get_or_create_json_by_path_return_data(PATH_CONFIG_CALIBRATION)
 
     def write_file_config(self,data:dict):
         if isinstance(data,dict):
-            self.obj_folder.write_json_in_file(PATH_CONFIG_CALIBRATION,data)
+            Folder.write_json_in_file(PATH_CONFIG_CALIBRATION,data)
         else:
             print("Dữ liệu không hợp lệ, phải là dict")
             return False

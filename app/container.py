@@ -3,11 +3,9 @@ from app.services.calculate_the_dimensions.handler_calibration import HandlerCal
 from app.services.calculate_the_dimensions.handler_work_detect import HandlerWorkDetect
 # from app.services.calculate_the_dimensions.handler_work_detect import ImageQueueTester 
 from app.services.camera import Camera
-from app.utils import Tool_OpenCv2,Folder
 # from app.services.product import ChooseProduct,ProductManager
 from app.services import ProductService,ChooseProductService
 from app.services.log import Infor_Software,Config_SoftWare,Manager_Log
-from app.utils import Aggregate,Logic
 from app.config import QueueConfig,TypeSend
 from app.model import QueueManager,Worker
 from app.config import PATH_PRODUCT_MODEL
@@ -47,40 +45,31 @@ class ServiceContainer:
         self.queue_manage_log =  Worker(q_manage)
 
 
-
         print("...----------------------------------.Init Service...-----------------------------.")
-        self.obj_logic = Logic()
-        self.obj_folder = Folder()
-        print("✔ Folder init")
-        self.obj_cv2  = Tool_OpenCv2()
-        print("✔ Tool_OpenCv2 init")
         self.obj_camera = Camera()
         print("✔ Camera init")
-        self.obj_aggregate = Aggregate()
-        print("✔ Aggregate init")
-        self.obj_calibration = HandlerCalibration(self.obj_camera,self.obj_folder,
-                                                  self.obj_cv2,self.queue_log_send_client,self.queue_data_send_client,
+        self.obj_calibration = HandlerCalibration(self.obj_camera,
+                                                  self.queue_log_send_client,self.queue_data_send_client,
                                                   self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
         print("✔ HandlerCalibration init")
-        self.obj_product_repository = ProductRepository(self.obj_folder)
-        self.obj_manager_product = ProductService( self.obj_product_repository,self.obj_cv2,self.obj_folder)
+        self.obj_product_repository = ProductRepository()
+        self.obj_manager_product = ProductService( self.obj_product_repository)
         print("✔ ProductService init")
-        self.obj_choose_product_repository =  ChooseProductRepository(self.obj_folder)
+        self.obj_choose_product_repository =  ChooseProductRepository()
         self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository,self.obj_manager_product)
         print("✔ ChooseProductService init")
         self.obj_detect = HandlerWorkDetect(
-            self.obj_folder,
             self.obj_choose_product,
             self.obj_manager_product,
             self.obj_calibration, self.queue_data_send_client,self.queue_process_capture,TypeSend.datatype_Home,PATH_PRODUCT_MODEL
         )
         print("✔ HandlerWorkDetect init")
-        self.obj_infor_software = Infor_Software(self.obj_folder)
+        self.obj_infor_software = Infor_Software()
         print("✔ Infor_Software init")
-        self.obj_config_software = Config_SoftWare(self.obj_folder, self.obj_aggregate)
+        self.obj_config_software = Config_SoftWare()
         print("✔ Config_SoftWare init")
         # self.obj_manager_log  = Manager_Log(
-        #     self.obj_folder,
+        #     
         #     self.obj_config_software,
         #     self.obj_choose_product,
         #     self.obj_manager_product,self.obj_aggregate,self.queue_manage_log

@@ -1,33 +1,80 @@
 {
-    "2": [
+    "1": [
         {
-            "x": 100,
+            "x": 210,
             "y": 200,
             "z": 300,
-            "path_model_patch_core": "storage\\model\\patch_core\\2\\1",
+            "path_model_patch_core": "storage\\model\\patch_core\\1\\1",
+            "path_img_point": "storage\\img_points\\1\\1.jpg",
+            "path_img_retrain": "storage\\retrain\\patch_core\\1\\1",
             "arr_polygon": [
                 [
                     [
-                        0,
-                        0
+                        10,
+                        10
                     ],
                     [
-                        0,
-                        4
+                        100,
+                        10
                     ],
                     [
-                        3,
-                        3
+                        100,
+                        100
+                    ]
+                ],
+                [
+                    [
+                        200,
+                        200
+                    ],
+                    [
+                        300,
+                        200
+                    ],
+                    [
+                        300,
+                        300
                     ]
                 ]
             ]
         },
         {
-            "x": 100,
-            "y": 100,
+            "x": 310,
+            "y": 200,
             "z": 300,
-            "path_model_patch_core": "storage\\model\\patch_core\\2\\2",
-            "arr_polygon": []
+            "path_model_patch_core": "storage\\model\\patch_core\\1\\2",
+            "path_img_point": "storage\\img_points\\1\\2.jpg",
+            "path_img_retrain": "storage\\retrain\\patch_core\\1\\2",
+            "arr_polygon": [
+                [
+                    [
+                        10,
+                        10
+                    ],
+                    [
+                        100,
+                        10
+                    ],
+                    [
+                        100,
+                        100
+                    ]
+                ],
+                [
+                    [
+                        200,
+                        200
+                    ],
+                    [
+                        300,
+                        200
+                    ],
+                    [
+                        300,
+                        300
+                    ]
+                ]
+            ]
         }
     ]
 }

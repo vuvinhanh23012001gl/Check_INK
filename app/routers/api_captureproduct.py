@@ -21,7 +21,7 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
     print("--------------Vào UI capture----------------")
     status = payload.get("status")
     print("Status:", status)    # UI_Capture
-    choose_product_current = services.obj_choose_product.get_choose_product_pick()
+    choose_product_current = services.obj_choose_product.get_choose_product()
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
         print(msg)
@@ -30,7 +30,7 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
         return {"status": "error", "message": msg}
     else:
         status,arr_path_img = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current)
-        arr_run_point = services.obj_manager_product.get_arr_data_run_point_product_by_id(choose_product_current)
+        arr_run_point = services.obj_manager_product.get(choose_product_current)
         infor = services.obj_manager_product.get_infor_product(choose_product_current)
         print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
         print("--------------Hết UI capture----------------")

@@ -22,14 +22,13 @@ from app.config import PATH_PRODUCT_MODEL
 # from app.utils import obj_queue,name_queue_process_capture,name_queue_data_client,datatype_Home
 
 class HandlerWorkDetect:
-    def __init__(self,obj_folder:Folder,Choose_Product : ChooseProduct,Manager_Product : ProductManager, obj_handler_calibration : HandlerCalibration,queue_data_send_client:Queue,queue_process_capture:Queue,type_data_home,path_product_model):
-        
+    def __init__(self,Choose_Product : ChooseProduct,Manager_Product : ProductManager, obj_handler_calibration : HandlerCalibration,queue_data_send_client:Queue,queue_process_capture:Queue,type_data_home,path_product_model):
         self.queue_data_send_client = queue_data_send_client
         self.queue_process_capture =  queue_process_capture
         self.type_data_home  = type_data_home
         self.path_product_model =  path_product_model
         
-        self.obj_folder = obj_folder
+       
         self.Choose_Product  = Choose_Product
         self.Manager_Product =  Manager_Product
 
@@ -67,7 +66,7 @@ class HandlerWorkDetect:
 
     def Init(self):
         print("--- Init detect Model---")
-        status_Check_file,message = self.obj_folder.check_file(self.path_product_model)
+        status_Check_file,message = Folder.check_file(self.path_product_model)
         if  not status_Check_file :
             print("Đường dẫn Mô hình không tồn tại.")
             raise FileNotFoundError(message)

@@ -8,11 +8,9 @@ from app.utils import Folder
 from app.config import PATH_INFORMATION_SOFTWARE 
 
 class Infor_Software:
-  
-    def __init__(self,obj_folder:Folder):
-        self.obj_folder = obj_folder
-        self.path_infor_software = self.obj_folder.get_or_create_json_by_path(PATH_INFORMATION_SOFTWARE)
-        self.data_head_infor_software = self.obj_folder.read_json_from_file(self.path_infor_software) 
+    def __init__(self,):
+        self.path_infor_software = Folder.get_or_create_json_by_path(PATH_INFORMATION_SOFTWARE)
+        self.data_head_infor_software = Folder.read_json_from_file(self.path_infor_software) 
         self.name = self.data_head_infor_software.get("name","Weld Ink Line Measurement")
         self.version = self.data_head_infor_software.get("version","1.0.0")
         self.author = self.data_head_infor_software.get("author","Vũ VinH Ánh")
@@ -90,7 +88,7 @@ class Infor_Software:
         )
     
     def save_upadte_data_infor_software(self):
-        self.obj_folder.write_json_in_file(self.path_infor_software,self.to_dict())
+        Folder.write_json_in_file(self.path_infor_software,self.to_dict())
 
         
 # I1  = Infor_Software()

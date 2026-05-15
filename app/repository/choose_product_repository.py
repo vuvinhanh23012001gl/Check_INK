@@ -6,13 +6,7 @@ from app.config import (
 
 class ChooseProductRepository:
 
-    def __init__(
-        self,
-        folder: Folder
-    ):
-
-        self.folder = folder
-
+    def __init__(self  ):
         self.path_file_config = (
             PATH_PRODUCT_CHOOSE_PRODUCT
         )
@@ -24,7 +18,7 @@ class ChooseProductRepository:
     def read(self):
 
         data = (
-            self.folder
+            Folder
             .read_json_from_file(
                 self.path_file_config
             )
@@ -49,7 +43,8 @@ class ChooseProductRepository:
             self.key_name: product_id
         }
 
-        self.folder.write_json_in_file(
+        
+        Folder.write_json_in_file(
             self.path_file_config,
             data
         )

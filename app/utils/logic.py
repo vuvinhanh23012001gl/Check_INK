@@ -1,18 +1,18 @@
 import re
 import numpy as np
 import cv2
-from dataclasses import dataclass
-@dataclass
+
+
 class Logic():
-    
-    def is_valid_id(self,id_value) -> bool:
+    @staticmethod
+    def is_valid_id(id_value) -> bool:
         if id_value is None:
             return False
         id_str = str(id_value).strip()
         # Chỉ cho phép chữ số
         return bool(re.fullmatch(r"[0-9]+", id_str))
     
-    async def convert_uploadfile_to_numpy(self, file) -> np.ndarray:
+    async def convert_uploadfile_to_numpy(file) -> np.ndarray:
         contents = await file.read()
         np_arr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -23,8 +23,8 @@ class Logic():
         return img
     
         
-
-    def validate_full_regulation(self, data: dict) -> tuple[bool, str]:
+    @staticmethod
+    def validate_full_regulation(data: dict) -> tuple[bool, str]:
 
         if not isinstance(data, dict):
             return False, "Data phải là dict"
@@ -117,7 +117,7 @@ class Logic():
 
         return True, "Dữ liệu hợp lệ"
 
-    def validate_calibration_data(self,data: dict):
+    def validate_calibration_data(data: dict):
         if not data:
             return {"status": False, "message": "Dữ liệu calibration rỗng"}
 

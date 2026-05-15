@@ -1,14 +1,14 @@
-#Lop nay chuyen lam viec voi thu muc
+
 import os
 import json
 import inspect
 import psutil
 from pathlib import Path
 import shutil
-from dataclasses import dataclass
-@dataclass
+
 class Folder():
-    def write_json_in_file(self, file_path: str, data: dict, indent: int = 4):
+    @staticmethod
+    def write_json_in_file(file_path: str, data: dict, indent: int = 4):
         """
         Ghi dữ liệu dạng JSON vào file.
         - file_path: đường dẫn tới file json
@@ -24,7 +24,8 @@ class Folder():
         except Exception as e:
             print(f"❌ Lỗi khi ghi file JSON: {e}")
 
-    def get_parent_and_append(self, new_name: str):
+    @staticmethod
+    def get_parent_and_append(new_name: str):
         """
         Lấy đường dẫn thư mục cha và nối thêm tên mới dùng thư viện os.
         """
@@ -37,8 +38,8 @@ class Folder():
         new_path = os.path.join(parent_dir, new_name)
         return new_path
     
-    
-    def get_caller_parent_and_append(self, new_name: str):
+    @staticmethod
+    def get_caller_parent_and_append(new_name: str):
         """
         Lấy đường dẫn thư mục cha của file GỌI hàm này và nối thêm tên mới.
         """
@@ -49,26 +50,21 @@ class Folder():
         parent_dir = os.path.dirname(caller_file_path)
         # 3. Nối thêm tên mới
         new_path = os.path.join(parent_dir, new_name)
-        
         return new_path
     
-    def read_json_from_file(self, file_path: str):
+    @staticmethod
+    def read_json_from_file(file_path: str):
         """
         Đọc dữ liệu từ file JSON.
         - Luôn trả về dict để tránh lỗi NoneType.
         """
         try:
-            # 1. Kiểm tra file có tồn tại
             if not os.path.exists(file_path):
                 print(f"⚠️ File không tồn tại: {file_path}")
                 return {}
-
-            # 2. Mở và load dữ liệu
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 print(f"📖 Đã đọc xong dữ liệu từ: {file_path}")
-
-                # Nếu JSON không phải dict → trả về dict rỗng
                 return data if isinstance(data, dict) else {}
 
         except json.JSONDecodeError:
@@ -78,8 +74,8 @@ class Folder():
         except Exception as e:
             print(f"❌ Lỗi khi đọc file JSON: {e}")
             return {}
-
-    def get_or_create_json(self, name_file: str, name_folder: str) -> str:
+    @staticmethod
+    def get_or_create_json(name_file: str, name_folder: str) -> str:
         """
         Kiểm tra nếu file JSON đã tồn tại thì trả về đường dẫn.
         Nếu chưa có: tạo folder, tạo file và ghi {} rỗng.
@@ -101,15 +97,15 @@ class Folder():
         else:
             print(f"✅ File đã tồn tại: {file_path}")
         return file_path
-    def get_or_create_json_by_path(self, file_path: str) -> str:
+    
+    @staticmethod
+    def get_or_create_json_by_path(file_path: str) -> str:
         """
         Kiểm tra nếu file JSON đã tồn tại thì trả về đường dẫn.
         Nếu chưa có: tạo folder cha, tạo file và ghi {} rỗng.
         """
-
         # Lấy thư mục cha từ đường dẫn đầy đủ
         target_dir = os.path.dirname(os.path.abspath(file_path))
-
         # Đảm bảo thư mục tồn tại
         os.makedirs(target_dir, exist_ok=True)
 
@@ -123,10 +119,10 @@ class Folder():
                 print("❌ Lỗi khi tạo file JSON:", e)
         else:
             print(f"✅ File đã tồn tại: {file_path}")
-
         return file_path
     
-    def get_or_create_json_by_path_return_data(self, file_path: str) -> dict:
+    @staticmethod
+    def get_or_create_json_by_path_return_data(file_path: str) -> dict:
         """
         Nếu file JSON tồn tại → đọc và trả về data.
         Nếu chưa tồn tại → tạo folder + file JSON rỗng {} và trả về {}.
@@ -166,7 +162,9 @@ class Folder():
         except Exception as e:
             print("❌ Lỗi khi đọc file JSON:", e)
             return {}
-    def get_or_create_folder(self,folder_name: str, base_dir: str = None) -> str:
+        
+    @staticmethod
+    def get_or_create_folder(folder_name: str, base_dir: str = None) -> str:
         """
         Tạo folder nếu chưa tồn tại và trả về đường dẫn tuyệt đối.
 
@@ -182,7 +180,9 @@ class Folder():
         os.makedirs(folder_path, exist_ok=True)
 
         return folder_path
-    def create_folder_from_path(self,path: str | Path) -> Path:
+    
+    @staticmethod
+    def create_folder_from_path(path: str | Path) -> Path:
         """
         Tạo toàn bộ thư mục từ đường dẫn nếu chưa tồn tại
         :param path: đường dẫn đầy đủ
@@ -192,8 +192,8 @@ class Folder():
         p.mkdir(parents=True, exist_ok=True)
         return p
 
-
-    def list_drives(self,with_trailing_sep=True):
+    @staticmethod
+    def list_drives(with_trailing_sep=True):
         drives = set()
         for p in psutil.disk_partitions(all=False):
             drive, _ = os.path.splitdrive(p.device)
@@ -204,8 +204,9 @@ class Folder():
                 drive = f"{drive}\\" if with_trailing_sep else drive
             drives.add(drive)
         return sorted(drives)
-
-    def ensure_file(self, folder: str, filename: str) -> str:
+    
+    @staticmethod
+    def ensure_file(folder: str, filename: str) -> str:
         """
         Đảm bảo thư mục và file tồn tại; tự động tạo nếu chưa có và trả về đường dẫn file.
         """
@@ -220,8 +221,9 @@ class Folder():
         file_path.touch(exist_ok=True)
 
         return str(file_path.resolve())
-    
-    def get_parts_from_bottom(self,path_input: str, levels: int = 1) -> str:
+
+    @staticmethod
+    def get_parts_from_bottom(path_input: str, levels: int = 1) -> str:
         """
         Lấy n phần tính từ dưới lên.
         levels=1: lấy tên file
@@ -234,8 +236,9 @@ class Folder():
         # Lấy n phần tử cuối cùng
         last_parts = parts[-levels:]
         return "/".join(last_parts)
-    
-    def get_list_files(self,folder_path: str, extension: str = None) -> list:
+
+    @staticmethod
+    def get_list_files(folder_path: str, extension: str = None) -> list:
         """
         Lấy danh sách tên các file trong một thư mục.
         :param folder_path: Đường dẫn tới thư mục.
@@ -254,7 +257,9 @@ class Folder():
         else:
             # Lấy tất cả các file
             return [f.name for f in path.iterdir() if f.is_file()]
-    def delete_folder(self,folder_path):
+
+    @staticmethod
+    def delete_folder(folder_path):
         path = Path(folder_path)
         if path.exists() and path.is_dir():
             try:
@@ -268,15 +273,41 @@ class Folder():
             print("Thư mục không tồn tại.")
             return False
         
-    def check_file(self,file_path: str | Path):
+    @staticmethod
+    def delete_file(
+        path_file: str | Path
+    ) -> bool:
+
+        try:
+
+            path_file = Path(path_file)
+
+            if path_file.exists() and path_file.is_file():
+
+                path_file.unlink()
+
+                return True
+
+            return False
+
+        except Exception as e:
+
+            print(
+                f"Lỗi xóa file: {e}"
+            )
+
+            return False
+    @staticmethod
+    def check_file(file_path: str | Path):
         p = Path(file_path)
         if not p.exists():
             return False, "FILE_NOT_EXIST"
         if not p.is_file():
             return False, "PATH_IS_NOT_FILE"
         return True, None
-    
-    def create_folder(self,path: str) -> str:
+
+    @staticmethod
+    def create_folder(path: str) -> str:
         """
         Tạo folder nếu chưa tồn tại và trả về đường dẫn tuyệt đối.
         """

@@ -5,7 +5,7 @@ from app.core.dependencies import get_services
 from app.container import ServiceContainer
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/static/templates")
+templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request):

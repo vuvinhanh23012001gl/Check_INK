@@ -23,14 +23,12 @@ class ProductService:
     def __init__(
         self,
         repository: ProductRepository,
-        obj_cv2: Tool_OpenCv2,obj_foler:Folder
     ):
 
         self.repository = repository
 
-        self.obj_cv2 = obj_cv2
-        self.obj_folder = obj_foler
-
+       
+    
         self.products = (
             self._load_products()
         )
@@ -163,7 +161,7 @@ class ProductService:
         ):
 
             success = (
-                self.obj_cv2.save_image(
+                Tool_OpenCv2.save_image(
                     img,
                     str(path_img)
                 )
@@ -172,7 +170,7 @@ class ProductService:
         else:
 
             img_black = (
-                self.obj_cv2
+                Tool_OpenCv2
                 .create_black_image(
                     1920,
                     1200
@@ -180,7 +178,7 @@ class ProductService:
             )
 
             success = (
-                self.obj_cv2.save_image(
+                Tool_OpenCv2.save_image(
                     img_black,
                     str(path_img)
                 )
@@ -246,7 +244,7 @@ class ProductService:
             )
         )
 
-        self.obj_cv2.delete_image(
+        Tool_OpenCv2.delete_image(
             str(path_img)
         )
 
@@ -479,7 +477,7 @@ class ProductService:
             # =====================
 
             path_poxis = (
-                self.obj_folder
+                Folder
                 .get_parts_from_bottom(
                     full_path,
                     levels=4
