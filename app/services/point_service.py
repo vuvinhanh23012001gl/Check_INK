@@ -6,6 +6,8 @@ from pathlib  import Path
 from app.utils import Folder
 import numpy as np 
 from app.utils import Tool_OpenCv2
+
+
 class PointService:
     def __init__( self,repository: PointRepository,path_base_patch_core:Path,path_base_img_coordinates,path_base_img_coordinates_retrain,path_base_storage):
 
@@ -42,6 +44,7 @@ class PointService:
             for item in arr_point:
 
                 point = Point(
+                    point_id=item.get("point_id", 0),
                     x=item.get("x", 0),
                     y=item.get("y", 0),
                     z=item.get("z", 0),
@@ -78,6 +81,15 @@ class PointService:
                 ].append(point)
 
         return points
+    
+    def _generate_point_id(self) -> int:
+        max_id = 0
+        for arr_point in self.points.values():
+            for point in arr_point:
+                if point.point_id > max_id:
+                    max_id = point.point_id
+
+        return max_id + 1
     # ========================
     # SAVE
     # =========================
@@ -140,128 +152,151 @@ class PointService:
         point: Point,
         img: np.ndarray
     ) -> Result:
+
         print("Vào hàm add_point")
+
+        # =========================
+        # CHECK IMAGE
+        # =========================
+
         if img is None or img.size == 0:
+
             return Result.Fail(
                 ErrorCode.IMAGE_INVALID
             )
+
+        # =========================
+        # CREATE PRODUCT
+        # =========================
+
         if product_id not in self.points:
+
             self.points[product_id] = []
-        EPSILON = 0.0001
-        for existing_point in self.points[product_id]:
-            if (
-                abs(existing_point.x - point.x) < EPSILON
-                and
-                abs(existing_point.y - point.y) < EPSILON
-                and
-                abs(existing_point.z - point.z) < EPSILON
-            ):
-                return Result.Fail(
-                    ErrorCode.POINT_ALREADY_EXISTS
-                )
-        self.points[product_id].append(
-            point
+
+        # =========================
+        # CHECK DUPLICATE POINT ID
+        # =========================
+
+        if point.point_id is not None:
+
+            for existing_point in self.points[product_id]:
+
+                if (
+                    existing_point.point_id
+                    ==
+                    point.point_id
+                ):
+
+                    return Result.Fail(
+                        ErrorCode.POINT_ALREADY_EXISTS
+                    )
+
+        # =========================
+        # AUTO GENERATE POINT ID
+        # =========================
+
+        else:
+
+            point.point_id = (
+                self._generate_point_id()
+            )
+
+        point_id_str = str(
+            point.point_id
         )
-        index = (
-            len(self.points[product_id]) - 1
+
+        product_id_str = str(
+            product_id
         )
-        product_id_str = (
-            str(product_id).strip()
-        )
+
         # =========================
         # CREATE PATH
-        # ========================
+        # =========================
+
         path_model_folder = (
             Path(self.path_base_patch_core)
             / product_id_str
-            / str(index)
+            / point_id_str
         )
+
         path_img_coordinate = (
             Path(self.path_base_img_coordinates)
             / product_id_str
-            / f"{index}.jpg"
+            / f"{point_id_str}.jpg"
         )
 
         path_img_retrain_folder = (
             Path(self.path_base_img_coordinates_retrain)
             / product_id_str
-            / str(index)
+            / point_id_str
         )
+
+        # =========================
+        # CREATE FOLDER
+        # =========================
 
         Folder.create_folder(
             path_model_folder
         )
+
         Folder.create_folder(
             path_img_retrain_folder
         )
+
         path_img_coordinate.parent.mkdir(
             parents=True,
             exist_ok=True
         )
 
+        # =========================
+        # SAVE IMAGE
+        # =========================
+
         Tool_OpenCv2.save_image(
             img,
             path_img_coordinate
         )
-        base_batch_core = (
+
+        # =========================
+        # SAVE RELATIVE PATH
+        # =========================
+
+        point.path_model_patch_core = (
             Folder.get_parts_from_bottom(
                 path_model_folder,
                 5
             )
         )
 
-        base_img = (
+        point.path_img_point = (
             Folder.get_parts_from_bottom(
                 path_img_coordinate,
                 4
             )
         )
 
-        base_img_retrain = (
+        point.path_img_retrain = (
             Folder.get_parts_from_bottom(
                 path_img_retrain_folder,
                 5
             )
         )
 
-        point.path_model_patch_core = (
-            base_batch_core
+        # =========================
+        # APPEND
+        # =========================
+
+        self.points[product_id].append(
+            point
         )
 
-        point.path_img_point = (
-            base_img
-        )
-        point.path_img_retrain = (
-            base_img_retrain
-        )
+        # =========================
+        # SAVE JSON
+        # =========================
 
-        print(
-            "Full path save model:",
-            path_model_folder
-        )
-        print(
-            "Path model:",
-            base_batch_core
-        )
-        print(
-            "Full path img coordinate:",
-            path_img_coordinate
-        )
-        print(
-            "Path img coordinate:",
-            base_img
-        )
-        print(
-            "Full path retrain:",
-            path_img_retrain_folder
-        )
-        print(
-            "Path retrain:",
-            base_img_retrain
-        )
         self._save_points()
+
         return Result.Ok(point)
-           
     # =========================
     # UPDATE POINT
     # =========================
@@ -269,7 +304,7 @@ class PointService:
     def update_point(
         self,
         product_id: int,
-        index_point: int,
+        point_id: int,
 
         x=None,
         y=None,
@@ -279,13 +314,15 @@ class PointService:
         path_img_point=None,
         path_img_retrain=None,
         arr_polygon=None
-    ):
+    ) -> Result:
 
-        result_find = (
-            self.get_point_by_index(
-                product_id,
-                index_point
-            )
+        # =========================
+        # FIND POINT
+        # =========================
+
+        result_find = self.get_point_by_id(
+            product_id,
+            point_id
         )
 
         if not result_find.ok:
@@ -294,72 +331,98 @@ class PointService:
                 ErrorCode.POINT_NOT_FOUND
             )
 
-        point:Point = result_find.data
+        point: Point = result_find.data
 
-        # =====================
-        # UPDATE
-        # =====================
+        # =========================
+        # UPDATE XYZ
+        # =========================
 
         if x is not None:
-
             point.x = x
 
         if y is not None:
-
             point.y = y
 
         if z is not None:
-
             point.z = z
 
-        if (
-            path_model_patch_core
-            is not None
-        ):
+        # =========================
+        # UPDATE PATH MODEL
+        # =========================
+
+        if path_model_patch_core is not None:
+
             point.path_model_patch_core = (
-                Path(
-                    path_model_patch_core
-                )
+                Path(path_model_patch_core)
             )
 
-        if (
-            path_img_point
-            is not None
-        ):
+        # =========================
+        # UPDATE IMAGE POINT
+        # =========================
+
+        if path_img_point is not None:
 
             point.path_img_point = (
-                Path(
-                    path_img_point
-                )
+                Path(path_img_point)
             )
+
+        # =========================
+        # UPDATE RETRAIN
+        # =========================
+
         if path_img_retrain is not None:
 
             point.path_img_retrain = (
                 Path(path_img_retrain)
             )
 
+        # =========================
+        # UPDATE POLYGON
+        # =========================
+
         if arr_polygon is not None:
+
             point.arr_polygon = (
                 self._normalize_polygon(
                     arr_polygon
                 )
             )
 
-        # =====================
+        # =========================
         # SAVE
-        # =====================
+        # =========================
 
         self._save_points()
 
         return Result.Ok(point)
-
     # =========================
     # DELETE POINT
     # =========================
-    def get_point_by_index(
-    self,
-    product_id: int,
-    index_point: int
+    def get_point_by_id(
+        self,
+        product_id: int,
+        point_id: int
+    ) -> Result:
+
+        arr_point = self.points.get(
+            product_id,
+            []
+        )
+
+        for point in arr_point:
+
+            if point.point_id == point_id:
+
+                return Result.Ok(point)
+
+        return Result.Fail(
+            ErrorCode.POINT_NOT_FOUND
+        )
+
+    def delete_point(
+        self,
+        product_id: int,
+        point_id: int
     ) -> Result:
 
         # =========================
@@ -377,124 +440,222 @@ class PointService:
             )
 
         # =========================
-        # CHECK INDEX
+        # FIND POINT
         # =========================
 
-        if (
-            index_point < 0
-            or
-            index_point >= len(arr_point)
-        ):
+        delete_index = -1
+        point_delete = None
+
+        for index, point in enumerate(arr_point):
+
+            if point.point_id == point_id:
+
+                delete_index = index
+                point_delete = point
+                break
+
+        if point_delete is None:
 
             return Result.Fail(
                 ErrorCode.POINT_NOT_FOUND
             )
 
         # =========================
-        # RETURN POINT
+        # DELETE IMAGE POINT
         # =========================
 
-        return Result.Ok(
-            arr_point[index_point]
-        )
+        if point_delete.path_img_point:
 
-    def delete_point(
-        self,
-        product_id: int,
-        index_point: int
-    ) -> Result:
-        result_find = (
-            self.get_point_by_index(
-                product_id,
-                index_point
-            )
-        )
-        if not result_find.ok:
-            return Result.Fail(
-                ErrorCode.POINT_NOT_FOUND
-            )
-        point: Point = result_find.data
-        if point.path_img_point:
             full_path_img = (
                 Path(self.path_base_storage)
-                / point.path_img_point
+                / point_delete.path_img_point
             )
+
             if full_path_img.exists():
+
                 Folder.delete_file(
                     full_path_img
                 )
+
             else:
+
                 print(
                     f"Không tồn tại file: "
                     f"{full_path_img}"
                 )
-            print("full_path_img",full_path_img)
-        if point.path_model_patch_core:
+
+        # =========================
+        # DELETE MODEL FOLDER
+        # =========================
+
+        if point_delete.path_model_patch_core:
+
             full_path_model = (
                 Path(self.path_base_storage)
-                / point.path_model_patch_core
+                / point_delete.path_model_patch_core
             )
-            print("full_path_model",full_path_model)
+
             if full_path_model.exists():
+
                 Folder.delete_folder(
                     full_path_model
                 )
+
             else:
+
                 print(
                     f"Không tồn tại folder model: "
                     f"{full_path_model}"
                 )
-        if point.path_img_retrain:
+
+        # =========================
+        # DELETE RETRAIN FOLDER
+        # =========================
+
+        if point_delete.path_img_retrain:
 
             full_path_retrain = (
                 Path(self.path_base_storage)
-                / point.path_img_retrain
+                / point_delete.path_img_retrain
             )
+
             if full_path_retrain.exists():
 
                 Folder.delete_folder(
                     full_path_retrain
                 )
+
             else:
+
                 print(
                     f"Không tồn tại folder retrain: "
                     f"{full_path_retrain}"
                 )
-        # ========================
-        # DELETE POINT
+
         # =========================
+        # DELETE POINT IN MEMORY
+        # =========================
+
         deleted_point = (
             self.points[product_id].pop(
-                index_point
+                delete_index
             )
         )
+
+        # =========================
+        # SAVE JSON
+        # =========================
+
         self._save_points()
+
+        # =========================
+        # RETURN
+        # =========================
+
         return Result.Ok(
             deleted_point
         )
 
-    def delete_all_points_by_product_id(
+    def delete_by_product_id(
         self,
         product_id: int
-    ):
+    ) -> Result:
 
-        if product_id in self.points:
+        # =========================
+        # CHECK PRODUCT
+        # =========================
 
-            del self.points[
-                product_id
-            ]
+        if product_id not in self.points:
 
-            self._save_points()
+            return Result.Fail(
+                ErrorCode.PRODUCT_NOT_FOUND
+            )
+
+        product_id_str = str(
+            product_id
+        )
+
+        # =========================
+        # PATH MODEL
+        # =========================
+
+        path_model_folder = (
+            Path(self.path_base_patch_core)
+            / product_id_str
+        )
+
+        # =========================
+        # PATH IMAGE
+        # =========================
+
+        path_img_folder = (
+            Path(self.path_base_img_coordinates)
+            / product_id_str
+        )
+
+        # =========================
+        # PATH RETRAIN
+        # =========================
+
+        path_retrain_folder = (
+            Path(self.path_base_img_coordinates_retrain)
+            / product_id_str
+        )
+
+        # =========================
+        # DELETE MODEL FOLDER
+        # =========================
+
+        if path_model_folder.exists():
+
+            Folder.delete_folder(
+                path_model_folder
+            )
+
+        # =========================
+        # DELETE IMAGE FOLDER
+        # =========================
+
+        if path_img_folder.exists():
+
+            Folder.delete_folder(
+                path_img_folder
+            )
+
+        # =========================
+        # DELETE RETRAIN FOLDER
+        # =========================
+
+        if path_retrain_folder.exists():
+
+            Folder.delete_folder(
+                path_retrain_folder
+            )
+
+        # =========================
+        # DELETE PRODUCT
+        # =========================
+
+        del self.points[
+            product_id
+        ]
+
+        # =========================
+        # SAVE JSON
+        # =========================
+
+        self._save_points()
+
+        # =========================
+        # RETURN
+        # =========================
 
         return Result.Ok()
 
-    # =========================
-    # TO DICT
-    # =========================
 
     def get_dict_data(
         self
-    ):
+    ) -> Result:
 
         output = {}
 
@@ -514,79 +675,164 @@ class PointService:
         return Result.Ok(
             output
         )
-    
-    def has_path_model_patch_core(self, point: Point) -> bool:
-        return (
-            point.path_model_patch_core is not None
-            and str(point.path_model_patch_core).strip() != ""
-        )
-    
-    def has_arr_polygon(self, point: Point) -> bool:
-        return (
-            point.arr_polygon is not None
-            and len(point.arr_polygon) > 0
-        )
-    
-    def has_path_img_point(
-        self,
-        point: Point
-    ) -> bool:
 
-        return (
-            point.path_img_point is not None
-            and
-            str(
-                point.path_img_point
-            ).strip() != ""
-        )
-    def set_arr_polygon_by_point(
+    # =========================
+    # CHECK MODEL PATH
+    # =========================
+
+
+    def has_path_model_patch_core(
         self,
         product_id: int,
-        index_point: int,
+        point_id: int
+    ) -> bool:
+
+        arr_point = self.points.get(
+            product_id
+        )
+
+        if arr_point is None:
+
+            return False
+
+        for point in arr_point:
+
+            if point.point_id == point_id:
+
+                return (
+                    point.path_model_patch_core
+                    is not None
+                    and
+                    str(
+                        point.path_model_patch_core
+                    ).strip() != ""
+                )
+
+        return False
+
+
+    def has_arr_polygon(
+        self,
+        product_id: int,
+        point_id: int
+    ) -> bool:
+
+        arr_point = self.points.get(
+            product_id
+        )
+
+        if arr_point is None:
+
+            return False
+
+        for point in arr_point:
+
+            if point.point_id == point_id:
+
+                return (
+                    point.arr_polygon
+                    is not None
+                    and
+                    len(
+                        point.arr_polygon
+                    ) > 0
+                )
+
+        return False
+
+
+    # =========================
+    # CHECK IMG POINT
+    # =========================
+
+    def has_path_img_point(
+        self,
+        product_id: int,
+        point_id: int
+    ) -> bool:
+
+        arr_point = self.points.get(
+            product_id
+        )
+
+        if arr_point is None:
+
+            return False
+
+        for point in arr_point:
+
+            if point.point_id == point_id:
+                return (
+                    point.path_img_point
+                    is not None
+                    and
+                    str(
+                        point.path_img_point
+                    ).strip() != ""
+                )
+        return False
+
+    # =========================
+    # SET ARR POLYGON
+    # =========================
+    
+    def set_arr_polygon_by_point_id(
+        self,
+        product_id: int,
+        point_id: int,
         arr_polygon
-    ):
+    ) -> Result:
+
+        # =========================
+        # FIND PRODUCT
+        # =========================
+
+        arr_point = self.points.get(
+            product_id
+        )
+
+        if arr_point is None:
+
+            return Result.Fail(
+                ErrorCode.PRODUCT_NOT_FOUND
+            )
+
         # =========================
         # FIND POINT
         # =========================
-        result_find: Result = self.get_point_by_index(
-            product_id,
-            index_point
-        )
 
-        if not result_find.ok:
+        point_find = None
+
+        for point in arr_point:
+
+            if point.point_id == point_id:
+
+                point_find = point
+                break
+
+        if point_find is None:
+
             return Result.Fail(
                 ErrorCode.POINT_NOT_FOUND
             )
 
-        point: Point = result_find.data
+        # =========================
+        # SET POLYGON
+        # =========================
 
-        # =========================
-        # NORMALIZE + SET (NOT APPEND)
-        # =========================
-        point.arr_polygon = self._normalize_polygon(
-            arr_polygon
+        point_find.arr_polygon = (
+            self._normalize_polygon(
+                arr_polygon
+            )
         )
 
         # =========================
         # SAVE
         # =========================
+
         self._save_points()
 
-        return Result.Ok(point)
+        return Result.Ok(
+            point_find
+        )
     
-    # ham duoi chua chuan cho lam
-    def get_point_index_by_xyz(
-        self,
-        product_id: int,
-        x: float,
-        y: float,
-        z: float
-    ) -> int:
-
-        arr_point = self.points.get(product_id, [])
-
-        for idx, point in enumerate(arr_point):
-            if point.x == x and point.y == y and point.z == z:
-                return idx
-
-        return -1

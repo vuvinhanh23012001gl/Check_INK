@@ -1,50 +1,40 @@
 {
     "1": [
         {
-            "x": 210,
+            "point_id": 101,
+            "x": 21220,
             "y": 200,
             "z": 300,
-            "path_model_patch_core": "storage\\model\\patch_core\\1\\1",
-            "path_img_point": "storage\\img_points\\1\\1.jpg",
-            "path_img_retrain": "storage\\retrain\\patch_core\\1\\1",
+            "path_model_patch_core": "storage\\model\\patch_core\\1\\101",
+            "path_img_point": "storage\\img_points\\1\\101.jpg",
+            "path_img_retrain": "storage\\retrain\\patch_core\\1\\101",
             "arr_polygon": [
                 [
                     [
-                        10,
-                        10
+                        0,
+                        0
                     ],
                     [
-                        100,
-                        10
+                        0,
+                        4
                     ],
                     [
-                        100,
-                        100
-                    ]
-                ],
-                [
-                    [
-                        200,
-                        200
-                    ],
-                    [
-                        300,
-                        200
-                    ],
-                    [
-                        300,
-                        300
+                        3,
+                        3
                     ]
                 ]
             ]
-        },
+        }
+    ],
+    "2": [
         {
-            "x": 310,
+            "point_id": 101,
+            "x": 20,
             "y": 200,
             "z": 300,
-            "path_model_patch_core": "storage\\model\\patch_core\\1\\2",
-            "path_img_point": "storage\\img_points\\1\\2.jpg",
-            "path_img_retrain": "storage\\retrain\\patch_core\\1\\2",
+            "path_model_patch_core": "storage\\model\\patch_core\\2\\101",
+            "path_img_point": "storage\\img_points\\2\\101.jpg",
+            "path_img_retrain": "storage\\retrain\\patch_core\\2\\101",
             "arr_polygon": [
                 [
                     [
