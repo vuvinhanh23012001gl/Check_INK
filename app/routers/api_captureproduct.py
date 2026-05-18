@@ -29,9 +29,9 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:
-        status,arr_path_img = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current)
-        arr_run_point = services.obj_manager_product.get(choose_product_current)
-        infor = services.obj_manager_product.get_infor_product(choose_product_current)
+        status,arr_path_img = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+        arr_run_point = services.obj_products_service.get(choose_product_current)
+        infor = services.obj_products_service.get_infor_product(choose_product_current)
         print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
         print("--------------Hết UI capture----------------")
         return {"status": "ok","path_arr_img": arr_path_img,"arr_point":arr_run_point,"inf_product":infor}
@@ -72,10 +72,10 @@ async def capture(
             msg = "Lỗi trong quá trình lấy ảnh"
             services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
             return {"status": "error"}
-        services.obj_manager_product.add_point_img_product(choose_product_current,frame)
-        status,arr_path_img = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current)
-        arr_run_point = services.obj_manager_product.get_arr_data_run_point_product_by_id(choose_product_current)
-        infor = services.obj_manager_product.get_infor_product(choose_product_current)
+        services.obj_products_service.add_point_img_product(choose_product_current,frame)
+        status,arr_path_img = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+        arr_run_point = services.obj_products_service.get_arr_data_run_point_product_by_id(choose_product_current)
+        infor = services.obj_products_service.get_infor_product(choose_product_current)
         # print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
         return {"status": "ok","path_arr_img": arr_path_img,"arr_point":arr_run_point,"inf_product":infor}
       

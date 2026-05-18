@@ -23,10 +23,10 @@ def draw_regulations(services: ServiceContainer = Depends(get_services),bayload:
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:
-        status,arr_path_img = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current)
-        arr_run_point = services.obj_manager_product.get_arr_data_run_point_product_by_id(choose_product_current)
-        infor = services.obj_manager_product.get_infor_product(choose_product_current)
-        status,data_regualtion,_,_ = services.obj_manager_product.get_data_regulation_by_product_id(choose_product_current)
+        status,arr_path_img = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+        arr_run_point = services.obj_products_service.get_arr_data_run_point_product_by_id(choose_product_current)
+        infor = services.obj_products_service.get_infor_product(choose_product_current)
+        status,data_regualtion,_,_ = services.obj_products_service.get_data_regulation_by_product_id(choose_product_current)
         print("data_regualtion",data_regualtion)
         print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
         return {"status": "ok","path_arr_img":arr_path_img,"data_regualtion":data_regualtion}
@@ -41,7 +41,7 @@ def accept_data(services: ServiceContainer = Depends(get_services),bayload:dict 
     print("data nhan duoc:",status,message)
     if status:
         choose_product_current = services.obj_choose_product.get_choose_product_pick()
-        status_add_set,message =  services.obj_manager_product.set_data_regulation_by_product_id(choose_product_current,data_regulation)
+        status_add_set,message =  services.obj_products_service.set_data_regulation_by_product_id(choose_product_current,data_regulation)
         if status_add_set:
             return {"status":True,"message":"ok"}
         else:

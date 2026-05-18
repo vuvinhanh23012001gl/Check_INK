@@ -30,7 +30,7 @@ def data_home(services: ServiceContainer = Depends(get_services),bayload:dict = 
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
         return {"status":False, "message": msg}
     else:
-        result = services.obj_manager_product.get_arr_path_img_roi_product_by_id(choose_product_current.data)
+        result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current.data)
         # print("result",result.data)
         # print("status result.ok path_arr_img result.data",result.ok ,result.data)
         return {"status": result.ok ,"path_arr_img":result.data}

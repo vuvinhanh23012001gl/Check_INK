@@ -53,14 +53,14 @@ class ServiceContainer:
                                                   self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
         print("✔ HandlerCalibration init")
         self.obj_product_repository = ProductRepository()
-        self.obj_manager_product = ProductService( self.obj_product_repository)
+        self.obj_products_service = ProductService( self.obj_product_repository)
         print("✔ ProductService init")
         self.obj_choose_product_repository =  ChooseProductRepository()
-        self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository,self.obj_manager_product)
+        self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository,self.obj_products_service)
         print("✔ ChooseProductService init")
         self.obj_detect = HandlerWorkDetect(
             self.obj_choose_product,
-            self.obj_manager_product,
+            self.obj_products_service,
             self.obj_calibration, self.queue_data_send_client,self.queue_process_capture,TypeSend.datatype_Home,PATH_PRODUCT_MODEL
         )
         print("✔ HandlerWorkDetect init")
@@ -72,7 +72,7 @@ class ServiceContainer:
         #     
         #     self.obj_config_software,
         #     self.obj_choose_product,
-        #     self.obj_manager_product,self.obj_aggregate,self.queue_manage_log
+
         # )
         print("✔ Manager_Log init")
         # self.obj_img_queue_capture_test = ImageQueueTester(self.obj_detect)

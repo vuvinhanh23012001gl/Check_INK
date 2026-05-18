@@ -2,6 +2,8 @@ import {fetchGet,fetchGetSendData} from "./common_value.js";
 
 const add_product = document.getElementById("add-product");
 const overlay_new_product =  document.getElementById("overlay-new-product");
+const overlay_accpet_delete_product = document.getElementById("overlay-delete-product");
+
 const close_add_product = document.getElementById("close-add-product");
 const form_add_new_product = document.getElementById("form-add-new-product");
 const previewImg = document.getElementById("previewImg");
@@ -9,14 +11,23 @@ const imageInput = document.getElementById("imageInput");
 const preview_box = document.querySelector(".preview-box");
 const table_product_list = document.getElementById("table-product-list");
 
+const btn_cancel_delete = document.getElementById("btn-cancel-delete");
+const btn_confirm_delete = document.getElementById("btn-confirm-delete");
+
+let selected_delete_id_current = null; //ID khi nhan xoa tren giao dien gia tri nay se dc gan
+
+
+
 close_add_product.addEventListener("click", function() {
     overlay_new_product.style.display = "none";
     console.log("Close add new product");
 });
+
 add_product.addEventListener("click",function() {
     console.log("Add new product clicked");
     UpDateTable();
 });
+
 async function UpDateTable(){
     overlay_new_product.style.display = "flex";
     let get_data_product = await fetchGet("/product");
@@ -24,7 +35,17 @@ async function UpDateTable(){
     table_product_list.innerHTML = "";
     createDataShowTable(get_data_product);
 }
-
+function show_box_warning_accept(id,name) {
+    overlay_new_product.style.display = "flex";
+    overlay_accpet_delete_product.style.display = "flex";
+    document.getElementById(
+        "warning-title"
+    ).textContent = "⚠️ Xác nhận xóa";
+    document.getElementById(
+        "warning-message"
+    ).innerText = `Xóa sản phẩm có ID:${id} Tên:${name}?\nKhi nhấn xóa tất cả dữ liệu về sản phẩm sẽ bị xóa !`;
+    //dang ki su kien xoa
+}
 
 form_add_new_product.addEventListener("submit", function(e) {
     e.preventDefault();
@@ -50,10 +71,7 @@ form_add_new_product.addEventListener("submit", function(e) {
         alert("Lưu thành công sản phẩm mới!");
       }   
       else{
-            if (data?.message == "ErrorIDExists") {alert("Loại sản phẩm đã tồn tại trong cơ sở dữ liệu");   }
-            else if (data?.message == "ErrorDataIncorect") {alert("Lỗi dữ liệu đầu vào.");}
-            else if (data?.message == "ErroDataIncorectID") {alert("ID phải là số nguyên dương.");}
-            else {alert("Lưu không thành công!");}
+            alert(data?.message)
       }
     })
     .catch(err => {
@@ -61,6 +79,7 @@ form_add_new_product.addEventListener("submit", function(e) {
       alert("Lỗi kết nối server!");
     });
 });
+
 
 function isValidId(id) {
     return /^[0-9]+$/.test(String(id));
@@ -87,6 +106,41 @@ imageInput.addEventListener("change", function(e) {
     reader.readAsDataURL(file);
 });
 
+
+btn_cancel_delete.addEventListener("click",function(){
+    overlay_accpet_delete_product.style.display = "none";
+
+});
+
+
+btn_confirm_delete.addEventListener("click", async function () {
+    if (!selected_delete_id_current) return;
+    try {
+        let status_erase = await fetchGetSendData(
+            "/product/erase_product",
+            { ID_Erase: selected_delete_id_current }
+        );
+        if (status_erase?.success) {
+            console.log(
+                "Xóa thành công:",
+                selected_delete_id_current
+            );
+            await UpDateTable();
+        } else {
+            console.log(
+                "Xóa thất bại:",
+                status_erase?.message
+            );
+        }
+    } catch (err) {
+        console.error(err);
+    }
+    overlay_accpet_delete_product.style.display = "none";
+    selected_delete_id_current = null;
+});
+
+
+
 function createDataShowTable(data) {
     data?.data.forEach((item, index) => {
         // console.log("index", index, "item", item);
@@ -105,9 +159,11 @@ function createDataShowTable(data) {
 
         // Image
         let cellImg = document.createElement("td");
+        // console.log("item",item);
         if(item.image_src){ // nếu có trường image
             let img = document.createElement("img");
             img.src = item.image_src; // đường dẫn ảnh
+            // console.log("item.image_src;",item.image_src);
             img.alt = item.name || "Ảnh sản phẩm";
             img.style.width = "100px"; // chỉnh kích thước nhỏ vừa
             img.style.height = "auto";
@@ -122,26 +178,9 @@ function createDataShowTable(data) {
         btn.classList.add("btn_erase");
         cellAction.appendChild(btn);
         btn.addEventListener("click",async ()=>{
-            let status_erase = await fetchGetSendData("/product/erase_product",{"ID_Erase":item.id});
-            if (status_erase?.success){
-                console.log("Xóa thành công ",item.id);
-            }
-            else{
-                let message = status_erase?.message; 
-                if (message == "ErroEmpytyData"){
-                    console.log("Danh sách hiện tại đang rỗng không thể xóa được");
-                }
-                else if (message ==  "ErroNoFind"){
-                    console.log("Không tìm thấy ID để xóa");
-                }
-                else {
-                    console.log("Lỗi gửi dữ liệu");
-                }
-            }
-            status_erase?.message 
-            row.innerHTML = "";
-            return;
-            
+            console.log("data o day",data);
+            show_box_warning_accept(cellId.textContent,cellName.textContent);
+            selected_delete_id_current = item.id;            
         });
         // Append cells to row
         row.appendChild(cellId);

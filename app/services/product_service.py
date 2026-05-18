@@ -6,17 +6,9 @@ import cv2
 import datetime
 import numpy as np
 from app.model import Product
-from app.repository import (
-    ProductRepository
-)
-from app.utils import (
-    Tool_OpenCv2,Folder
-)
-from app.core import (
-    Result,
-    ErrorCode
-)
-
+from app.repository import (ProductRepository)
+from app.utils import (Tool_OpenCv2,Folder)
+from app.core import (Result,ErrorCode)
 
 class ProductService:
 
@@ -24,15 +16,10 @@ class ProductService:
         self,
         repository: ProductRepository,
     ):
-
         self.repository = repository
-
-       
-    
         self.products = (
             self._load_products()
         )
-
     # =========================
     # LOAD
     # =========================
@@ -82,23 +69,19 @@ class ProductService:
     def get_product_by_id(
         self,
         product_id
-    ):
-
+    )-> Result:
+        # tim doi tuong qua ID Tra ve product ID
+        # Tra ve doi tuong co data Product
         product = self.products.get(
             product_id
         )
-
         if not product:
-
             return Result.Fail(
                 ErrorCode.PRODUCT_NOT_FOUND
             )
-
         return Result.Ok(product)
 
-    # =========================
-    # GET ALL PRODUCT
-    # =========================
+
 
     def get_all_products(self):
 
@@ -115,60 +98,37 @@ class ProductService:
         product: Product,
         img=None
     ):
-
         result_find = (
             self.get_product_by_id(
                 product.id
             )
         )
-
         if result_find.ok:
-
             return Result.Fail(
                 ErrorCode.PRODUCT_ALREADY_EXISTED
             )
-
-        # =====================
-        # UPDATE TIME
-        # =====================
-
         time_now = str(
             datetime.datetime.now()
         )
-
         product.created_at = time_now
-
         product.updated_at = time_now
-
-        # =====================
-        # IMAGE PATH
-        # =====================
-
         path_img = (
             self.repository
             .get_product_image_path(
                 product.id
             )
         )
-
-        # =====================
-        # SAVE IMAGE
-        # =====================
-
         if isinstance(
             img,
             np.ndarray
         ):
-
             success = (
                 Tool_OpenCv2.save_image(
                     img,
                     str(path_img)
                 )
             )
-
         else:
-
             img_black = (
                 Tool_OpenCv2
                 .create_black_image(
@@ -176,7 +136,6 @@ class ProductService:
                     1200
                 )
             )
-
             success = (
                 Tool_OpenCv2.save_image(
                     img_black,
@@ -189,30 +148,15 @@ class ProductService:
             return Result.Fail(
                 ErrorCode.PRODUCT_SAVE_IMAGE_FAIL
             )
-
-        # =====================
-        # CREATE ROI FOLDER
-        # =====================
-
         self.repository.create_roi_folder(
             product.id
         )
-
-        # =====================
-        # SAVE PRODUCT
-        # =====================
-
         self.products[
             product.id
         ] = product
-
         self._save_products()
-
         return Result.Ok(product)
 
-    # =========================
-    # DELETE PRODUCT
-    # =========================
 
     def delete_product(
         self,
@@ -268,9 +212,7 @@ class ProductService:
 
         return Result.Ok()
 
-    # =========================
-    # ADD ROI IMAGE
-    # =========================
+
 
     def add_roi_image(
         self,
@@ -298,10 +240,6 @@ class ProductService:
 
         product = result_find.data
 
-        # =====================
-        # ROI FOLDER
-        # =====================
-
         folder_roi = (
             self.repository
             .create_roi_folder(
@@ -326,10 +264,6 @@ class ProductService:
             folder_roi /
             f"coordinates_{new_index}.jpg"
         )
-
-        # =====================
-        # SAVE ROI IMAGE
-        # =====================
 
         success = cv2.imwrite(
             str(path_file),
@@ -531,7 +465,7 @@ class ProductService:
             )
 
             path_poxis = (
-                self.repository.folder
+                Folder
                 .get_parts_from_bottom(
                     path_save_img,
                     levels=3

@@ -20,7 +20,7 @@ choose_product.addEventListener("click",async function(){
         return;
     } 
     else if (arr_product.length === 0){
-        alert("Hiện tại chưa có sản phẩm nào");
+        // alert("Hiện tại chưa có sản phẩm nào");
         return;
     }
         for (let key of arr_product) {

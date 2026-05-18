@@ -33,8 +33,9 @@ class Tool_OpenCv2:
         except Exception as e:
             print(f"Có lỗi xảy ra: {e}")
             return False
-        
-    def delete_image(self, image_path):
+    
+    @staticmethod   
+    def delete_image(image_path):
         """
         image_path: Đường dẫn đầy đủ tới file ảnh cần xoá
         """
@@ -57,7 +58,8 @@ class Tool_OpenCv2:
             print(f"❌ Có lỗi xảy ra khi xoá ảnh: {e}")
             return False
         
-    def create_black_image(self, width, height, channels=3):
+    @staticmethod
+    def create_black_image(width, height, channels=3):
         """
         Tạo ảnh màu đen
         channels = 1 : ảnh grayscale
@@ -85,3 +87,28 @@ class Tool_OpenCv2:
         
         frame_base64 = base64.b64encode(buffer).decode('utf-8')
         return frame_base64
+
+
+    @staticmethod
+    def bytes_to_ndarray(
+        contents: bytes
+    ) -> np.ndarray | None:
+        if not contents:
+            return None
+        try:
+            nparr = np.frombuffer(
+                contents,
+                np.uint8
+            )
+            img = cv2.imdecode(
+                nparr,
+                cv2.IMREAD_COLOR
+            )
+            if img is None:
+                return None
+            return img
+        except Exception as e:
+            print(
+                f"bytes_to_ndarray error: {e}"
+            )
+            return None

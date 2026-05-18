@@ -11,6 +11,7 @@
     <link rel = "stylesheet" href="../static/css/config_software.css">
     <link rel = "stylesheet" href = "../static/css/draw_regulations.css">
     <link rel ="stylesheet" href="../static/css/config_calibration.css">
+    <link rel ="stylesheet" href="../static/css/accept_erase_product.css">
     <script src="../static/cnd/cnd_lybrary.js"></script>
     <title>Kiểm tra độ rộng hộp mực</title>
 
@@ -19,7 +20,7 @@
     <div class = "header">
         <ul class ="header-ul">
             <li class="header-ul-li " id = "choose-product">Chọn loại sản phẩm</li>
-            <li class="header-ul-li " id = "add-product">Thêm sản phẩm mới</li>
+            <li class="header-ul-li " id = "add-product">Thêm xóa sản phẩm</li>
             <li class="header-ul-li">Cấu hình master
                 <img id = "preview">
                 <ul class = "header-ul-li-master">
@@ -123,7 +124,6 @@
                     <table class="table" id = "table_calib">
                           <tbody id="table_calibration"></tbody>
                     </table>
-                    
                 </div>
                 <div class="part-controler">
                     <button id="open-video"><img src="../static/img/live-stream-video.png" alt="Mở steam Camera"></i>Video Stream Camera</button>
@@ -165,14 +165,6 @@
             </div>  
 
             
-
-
-            
-
-
-
-            
-
         </div>
     </div>
     <!-- show thông tin cam và  -->
@@ -217,7 +209,29 @@
                         </thead>
                     </table>
                 </div>
+                
     </div>
+
+    <!-- ===== OVERLAY XÁC NHẬN XÓA ===== -->
+    <div class="overlay-delete-product" id="overlay-delete-product" style="display: none;">
+        <div class="delete-box">
+            <h2 id = "warning-title"></h2>
+            <p id ="warning-message"  ></p>
+            <div class="delete-action">
+                <button class="btn btn-delete-confirm" id="btn-confirm-delete">
+                    🗑️ Xóa
+                </button>
+                <button class="btn btn-delete-cancel" id="btn-cancel-delete">
+                    ❌ Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
     <div class="overlay-choose-product" id="overlay-choose-product">
         <!-- ===== LEFT PANEL ===== -->
          <div class="block_choose-product">

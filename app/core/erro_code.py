@@ -46,7 +46,7 @@ ERROR_MESSAGE = {
 
     # products
     ErrorCode.PRODUCT_ALREADY_EXISTED:
-        "[Cảnh báo] Product đã tồn tại",
+        "[Cảnh báo] Sản phẩm hiện đã tồn tại. Hãy tạo sản phẩm mới mã ID khác",
 
     ErrorCode.PRODUCT_NOT_FOUND:
         "[Lỗi] Không tìm thấy product",

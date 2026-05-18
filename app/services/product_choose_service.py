@@ -172,3 +172,11 @@ class ChooseProductService:
             f")"
         )
     
+    def is_choose_product(
+        self,
+        product_id: int
+    ) -> bool:
+        # ham nay kiem tra 1 gia tri id co duoc chon khong ?
+        return (
+            self.choose == product_id
+        )

@@ -30,7 +30,7 @@ def test_point_service():
     # =========================
     # CREATE POINT
     # =========================
-    point = Point(101,
+    point = Point(102,
         x=20,
         y=200,
         z=300,
@@ -43,13 +43,14 @@ def test_point_service():
     # # =========================
     # # ADD
     # # =========================
+
     # import numpy as np
     # img = np.zeros(
     #     (100, 100, 3),
     #     dtype=np.uint8
     # )
 
-    # res_add = service.add_point(product_id=2, point=point, img =  img)
+    # res_add = service.add_point(product_id=3, point=point, img =  img)
     # print_result("ADD POINT", res_add)
 
 
@@ -62,13 +63,13 @@ def test_point_service():
 
     # # =========================
     # # UPDATE
-    # # =========================
-    # id = 1
+    # =========================
+    # id = 2
     # res_get = service.get_points_by_product_id(id)
     # print_result("GET POINTS", res_get)
     # res_update = service.update_point(
     #         product_id=id,
-    #         point_id=1,
+    #         point_id=101,
     #         x=9290,
     #         y=888,
     #         z=777,

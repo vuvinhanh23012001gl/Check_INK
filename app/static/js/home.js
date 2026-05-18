@@ -186,31 +186,31 @@ function RenderDataHome(data){
             const imgList = data?.path_arr_img;
             
             console.log("Danh sách ảnh:", imgList);
-            imgList.forEach((imgPath, index) => {
-                const div_create = document.createElement("div");
-                div_create.className = "div-index-img-mater";
-                const h_create = document.createElement("p");
-                h_create.innerText = `Ảnh master ${index}`;
-                h_create.className = "p-index-img-master";
-                const img = document.createElement("img");
-                img.src = `${imgPath}?t=${Date.now()}`;  // dam bao  goi moi nhat
-                img.alt = "Ảnh sản phẩm";
-                img.style.width = "200px";
-                img.style.margin = "10px";
-                div_create.appendChild(img);
-                div_create.appendChild(h_create);
-                scroll_content.appendChild(div_create);
-                divCreateList_Home.push(div_create);
-                div_create.addEventListener("click", function () {
-                    clearn_div(divCreateList_Home);
-                    console.log("Ảnh master đang chỉ tới là", index);
-                    div_create.classList.add("div_click");
-                    video_product.src = `${imgPath}?t=${Date.now()}`;  
-                    video_product.style.width = "1365.33px";
-                    video_product.style.height = "1024px";
-                    video_product.style.display = "flex";
-                });
-        });
+        //     imgList.forEach((imgPath, index) => {
+        //         const div_create = document.createElement("div");
+        //         div_create.className = "div-index-img-mater";
+        //         const h_create = document.createElement("p");
+        //         h_create.innerText = `Ảnh master ${index}`;
+        //         h_create.className = "p-index-img-master";
+        //         const img = document.createElement("img");
+        //         img.src = `${imgPath}?t=${Date.now()}`;  // dam bao  goi moi nhat
+        //         img.alt = "Ảnh sản phẩm";
+        //         img.style.width = "200px";
+        //         img.style.margin = "10px";
+        //         div_create.appendChild(img);
+        //         div_create.appendChild(h_create);
+        //         scroll_content.appendChild(div_create);
+        //         divCreateList_Home.push(div_create);
+        //         div_create.addEventListener("click", function () {
+        //             clearn_div(divCreateList_Home);
+        //             console.log("Ảnh master đang chỉ tới là", index);
+        //             div_create.classList.add("div_click");
+        //             video_product.src = `${imgPath}?t=${Date.now()}`;  
+        //             video_product.style.width = "1365.33px";
+        //             video_product.style.height = "1024px";
+        //             video_product.style.display = "flex";
+        //         });
+        // });
     }
 }
 function clearn_div_img(div_card) {

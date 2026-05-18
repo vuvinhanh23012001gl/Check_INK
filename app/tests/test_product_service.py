@@ -17,17 +17,17 @@ from app.core import Result
 # INIT
 # =========================
 
-obj_folder = Folder()
+
 
 obj_cv2 = Tool_OpenCv2()
 
 repository = ProductRepository(
-    folder=obj_folder
+
 )
 
 service = ProductService(
     repository=repository,
-    obj_cv2=obj_cv2
+  
 )
 
 
@@ -52,26 +52,26 @@ def print_result(
 # TEST ADD PRODUCT
 # =========================
 
-def test_add_product():
-    print("\n===== TEST ADD PRODUCT =====")
+# def test_add_product():
+#     print("\n===== TEST ADD PRODUCT =====")
 
-    product = Product(
-        id=3,
-        name="Ao Thun",
-        description="Ao mau den"
-    )
+#     product = Product(
+#         id=1,
+#         name="Ao Thun",
+#         description="Ao mau den"
+#     )
 
-    img = np.zeros(
-        (480, 640, 3),
-        dtype=np.uint8
-    )
+#     img = np.zeros(
+#         (480, 640, 3),
+#         dtype=np.uint8
+#     )
 
-    result = service.add_product(
-        product=product,
-        img=img
-    )
+#     result = service.add_product(
+#         product=product,
+#         img=img
+#     )
 
-    print_result(result)
+#     print_result(result)
 
 
 
