@@ -1,321 +1,751 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
     <link rel="icon" type="image/png" href="../static/img/image.png">
     <link rel="stylesheet" href="../static/css/home.css">
     <link rel="stylesheet" href="../static/css/add_new_product.css">
-    <link rel = "stylesheet" href="../static/css/choose_product.css">
-    <link rel = "stylesheet" href="../static/css/config_software.css">
-    <link rel = "stylesheet" href = "../static/css/draw_regulations.css">
-    <link rel ="stylesheet" href="../static/css/config_calibration.css">
-    <link rel ="stylesheet" href="../static/css/accept_erase_product.css">
+    <link rel="stylesheet" href="../static/css/choose_product.css">
+    <link rel="stylesheet" href="../static/css/config_software.css">
+    <link rel="stylesheet" href="../static/css/draw_regulations.css">
+    <link rel="stylesheet" href="../static/css/config_calibration.css">
+    <link rel="stylesheet" href="../static/css/accept_erase_product.css">
+    <link rel="stylesheet" href="../static/css/test_scoll.css">
     <script src="../static/cnd/cnd_lybrary.js"></script>
-    <title>Kiểm tra độ rộng hộp mực</title>
 
+    <title>Kiểm tra độ rộng hộp mực</title>
 </head>
+
 <body>
-    <div class = "header">
-        <ul class ="header-ul">
-            <li class="header-ul-li " id = "choose-product">Chọn loại sản phẩm</li>
-            <li class="header-ul-li " id = "add-product">Thêm xóa sản phẩm</li>
-            <li class="header-ul-li">Cấu hình master
-                <img id = "preview">
-                <ul class = "header-ul-li-master">
+
+    <div class="header">
+        <ul class="header-ul">
+
+            <li class="header-ul-li" id="choose-product">
+                Chọn loại sản phẩm
+            </li>
+
+            <li class="header-ul-li" id="add-product">
+                Thêm xóa sản phẩm
+            </li>
+
+            <li class="header-ul-li">
+                Cấu hình master
+                <img id="preview">
+
+                <ul class="header-ul-li-master">
                     <li id="header-ul-li-capture-product">Lấy ảnh master mẫu</li>
                     <li id="header-ul-li-draw-regulations">Vẽ master quy định</li>
                     <li id="header-ul-li-draw-calibration">Cấu hình calibration</li>
-                 </ul>
+                </ul>
             </li>
-            <li class="header-ul-li">Cấu hình
+
+            <li class="header-ul-li">
+                Cấu hình
                 <ul>
                     <li id="btn-open-camera-config">Cấu hình camera</li>
                     <li id="btn-open-com-config">Cấu hình cổng COM</li>
                     <li id="btn-open-software-config">Cấu hình phần mềm</li>
                 </ul>
             </li>
-            <li class="header-ul-li">Thông tin
+
+            <li class="header-ul-li">
+                Thông tin
                 <ul>
-                    <li id="get_pdf_manual">Hướng dẫn sử dụng </li>
+                    <li id="get_pdf_manual">Hướng dẫn sử dụng</li>
                     <li id="get_infor_software">Thông tin phần mềm</li>
                 </ul>
             </li>
-            <!-- <li id="api-run" class="header-ul-li"></li>    -->
-            <li class="header-ul-li close" style="text-align: center;padding-left: 70px;" id="out-app">Thoát</li>
+
+            <!-- <li id="api-run" class="header-ul-li"></li> -->
+
+            <li
+                class="header-ul-li close"
+                style="text-align: center;padding-left: 70px;"
+                id="out-app"
+            >
+                Thoát
+            </li>
 
         </ul>
     </div>
+
     <div class="split-frame">
-        <div class = "show-screen"> 
-            <div class = "show-img-master">
-                <button class="scroll-up" style="background-color: #004085">◀️</button>
-                <div class = "scroll-container">
-                    <div id = "scroll-content">
-                               <!-- Noi dung duoc chen o day -->
-                    </div>
+        <div class="show-screen">
+            <div class="show-img-master">
+                <div class="scroll-container">
+                    <div class="box-bao-ve-product">
+                        <div> Ảnh sản phẩm số 1 </div>
+                        <div class="img-box">
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                        </div>
+                        </div>
+             <div class="box-bao-ve-product">
+                        <div> Ảnh sản phẩm số 1 </div>
+                        <div class="img-box">
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+
+                                    <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?1">
+                                    <div class="img-text">Ảnh 1</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?2">
+                                    <div class="img-text">Ảnh 2</div>
+                                </div>
+
+                                <div class="img-item">
+                                    <img src="https://picsum.photos/300/200?3">
+                                    <div class="img-text">Ảnh 3</div>
+                                </div>
+                        </div>
+                        </div>
+
+                
+
                 </div>
-                <button class="scroll-down" style="background-color:#004085;">▶️</button>
             </div>
-            <div class = "show-img">
-                      <!-- <img id="show-img-preview" src="" alt="Ảnh preview" /> -->
-                <img alt="Video feed " id="video-product">
+
+            <div class="show-img">
+
+                <img id="show-img-preview" src="" alt="Ảnh preview" />
+
+                <img alt="Video feed" id="video-product">
+
                 <div id="wrap-canvas">
                     <canvas id="canvasImage"></canvas>
                     <canvas id="canvasShape"></canvas>
                     <canvas id="canvasPreview"></canvas>
                 </div>
+
             </div>
-            <div class = "show-satus">
-                <p id = "coordinate">Pixel: (0, 0)</p>
+
+            <div class="show-satus">
+
+                <p id="coordinate">Pixel: (0, 0)</p>
+
                 <div id="progress-container">
-                        <div id="progress-row"></div>
-                </div>     
-                <button id="btn_reset_count_total" class="header-show-item-conect">Đặt lại</button>
-                <div id="time-display">Thời gian chạy: 0.0 s</div>
+                    <div id="progress-row"></div>
+                </div>
+
+                <button id="btn_reset_count_total" class="header-show-item-conect">
+                    Đặt lại
+                </button>
+
+                <div id="time-display">
+                    Thời gian chạy: 0.0 s
+                </div>
+
                 <div id="product-count">
-                            OK: 0 | NG: 0 | Tổng: 0
-                </div> 
+                    OK: 0 | NG: 0 | Tổng: 0
+                </div>
+
                 <div class="cluster">
-                <div class="header-show-item-conect item1">
-                    <p id="element-circle-status-com"class="header-show-circle on"></p>    
-                    <h2 id="header-show-status">COM đã kết nối</h2>
+
+                    <div class="header-show-item-conect item1">
+                        <p id="element-circle-status-com" class="header-show-circle on"></p>
+                        <h2 id="header-show-status">COM đã kết nối</h2>
+                    </div>
+
+                    <div class="header-show-item-conect item2">
+                        <p id="element-circle-status-camera" class="header-show-circle off"></p>
+                        <h2 id="status-connect-cam">Chờ kết nối....</h2>
+                    </div>
+
+                    <button id="toggleBtn" class="toggle-btn">
+                        Ảnh phán định
+                    </button>
+
                 </div>
-                <div class="header-show-item-conect item2">
-                    <p id="element-circle-status-camera" class="header-show-circle off "></p>    
-                    <h2  id="status-connect-cam">Chờ kết nối....</h2>
-                </div>
-                        <button id="toggleBtn" class="toggle-btn">Ảnh phán định</button>
-                </div>
+
             </div>
+
         </div>
-        <div class = "show-option">
-            
-            <div id="paner-main" class = "paner active">
-                <div class = "paner-main-status-product">   <!--chon run ok eg tuy vao trang thai phan dinh -->
-                        --
+
+        <div class="show-option">
+
+            <div id="paner-main" class="paner active">
+
+                <div class="paner-main-status-product">
+                    <!--chon run ok eg tuy vao trang thai phan dinh -->
+                    --
                 </div>
-                <div class = "paner-main-table-show-point">
-                    <div  id="table-show-point-detect"></div>     
+
+                <div class="paner-main-table-show-point">
+                    <div id="table-show-point-detect"></div>
                 </div>
-                <div class="paner-main-show-log" id = "log_judment">
-                </div>
+
+                <div class="paner-main-show-log" id="log_judment"></div>
+
             </div>
 
             <div id="paner-draw-regulations" class="paner">
+
                 <div id="part-table-log">
-                    <div class="log" id ="log-regulations"></div>
+
+                    <div class="log" id="log-regulations"></div>
+
                     <table class="table">
                         <tbody id="table"></tbody>
                     </table>
+
                 </div>
+
                 <div class="part-controler">
-                    <button id = "btn-all-erase"><img src="../static/img/clean-up.png" alt="icon xóa tất cả"></i> Xóa tất cả dữ liệu line</button>
-                    <button id = "btn-erase"><img src="../static/img/erase_draw_img.png" alt="icon xóa tất cả hình đã vẽ trong hình"></i> Xóa dữ liệu quy định </button>
-                    <button id = "btn-accept-and-send-server"><img src="../static/img/apply.png" alt="Áp dụng và thoát"> Áp dụng</button>
-                    <button id = "btn-close-draw-regualations"><img src="../static/img/close.png" alt="Áp dụng và thoát"> Thoát</button>
+
+                    <button id="btn-all-erase">
+                        <img src="../static/img/clean-up.png" alt="icon xóa tất cả">
+                        Xóa tất cả dữ liệu line
+                    </button>
+
+                    <button id="btn-erase">
+                        <img
+                            src="../static/img/erase_draw_img.png"
+                            alt="icon xóa tất cả hình đã vẽ trong hình"
+                        >
+                        Xóa dữ liệu quy định
+                    </button>
+
+                    <button id="btn-accept-and-send-server">
+                        <img src="../static/img/apply.png" alt="Áp dụng và thoát">
+                        Áp dụng
+                    </button>
+
+                    <button id="btn-close-draw-regualations">
+                        <img src="../static/img/close.png" alt="Áp dụng và thoát">
+                        Thoát
+                    </button>
+
                 </div>
+
             </div>
-            
+
             <div id="paner-calibration" class="paner">
+
                 <div id="part-table-log-calibrations">
+
                     <div class="log" id="log-calibration"></div>
-                    <table class="table" id = "table_calib">
-                          <tbody id="table_calibration"></tbody>
+
+                    <table class="table" id="table_calib">
+                        <tbody id="table_calibration"></tbody>
                     </table>
+
                 </div>
+
                 <div class="part-controler">
-                    <button id="open-video"><img src="../static/img/live-stream-video.png" alt="Mở steam Camera"></i>Video Stream Camera</button>
-                    <button id="capture-calibration"><img src="../static/img/camera.png"alt="Chụp ảnh Camera"></i>Chụp Ảnh </button>
-                    <button id="calcular-calibration-button"><img src="../static/img/calculator.png" alt="Tính calibration">Tính Calibration</button>
-                    <button id= "cancel-calibration-button"><img src="../static/img/close_two.png" alt="Thoát">Thoát</button>
+
+                    <button id="open-video">
+                        <img
+                            src="../static/img/live-stream-video.png"
+                            alt="Mở steam Camera"
+                        >
+                        Video Stream Camera
+                    </button>
+
+                    <button id="capture-calibration">
+                        <img
+                            src="../static/img/camera.png"
+                            alt="Chụp ảnh Camera"
+                        >
+                        Chụp Ảnh
+                    </button>
+
+                    <button id="calcular-calibration-button">
+                        <img
+                            src="../static/img/calculator.png"
+                            alt="Tính calibration"
+                        >
+                        Tính Calibration
+                    </button>
+
+                    <button id="cancel-calibration-button">
+                        <img
+                            src="../static/img/close_two.png"
+                            alt="Thoát"
+                        >
+                        Thoát
+                    </button>
+
                 </div>
+
             </div>
 
             <div id="paner-capture-product" class="paner add-capture-product">
+
                 <!-- Bảng thông tin loại sản phẩm -->
+
                 <div class="panel-table">
-                <table class="product-table">
-                    <thead>
-                        <tr>
-                            <th>Tên loại</th>
-                            <th>Max X</th>
-                            <th>Max Y</th>
-                            <th>Max K</th>
-                        </tr> 
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-                <div class="log log-area" id="log-box"></div>
-                </div>
-                        <!-- Nút điều khiển 1 điểm -->
-                <div class="controls-single-point">
-                    <div class="anonymous" id="anonymous">
-                                <!--Chèn nội dung ở đây -->
-                    </div>
-                </div> 
-                        <!-- Nút điều khiển tất cả điểm -->
-                <div class="controls-all-points">
-                    <button class="btn btn-add-point" id = "btn-add-frame"><img src="../static/img/gallery.png" alt="Thêm master"> Thêm master</button>
-                    <button class="btn btn-save" id = "run_all_master"><img src="../static/img/diskette.png" alt="Chạy các Master">Chạy các Master</button>
-                    <button class="btn btn-exit" id = "exit-add-capture-product"><img src="../static/img/close.png" alt="Thoát cài đặt chụp ảnh"> Thoát</button>
-                </div>                    
-            </div>  
 
-            
-        </div>
-    </div>
-    <!-- show thông tin cam và  -->
-    <div class="overlay-new-product" id="overlay-new-product">
-        <!-- ===== LEFT PANEL ===== -->
-            <div class="left-panel">
-                <h2>➕ Tạo loại sản phẩm</h2>
-                <form method="post" id = "form-add-new-product" action="/product/add" enctype="multipart/form-data">
-                        <label>ID</label>
-                        <input type="number" name="id" placeholder="Nhập ID sản phẩm" min="1" required>
+                    <table class="product-table">
 
-                        <label>Tên sản phẩm</label>
-                        <input type="text" name="name" placeholder="Nhập tên cho sản phẩm" required>
-
-                        <label>Mô tả</label>
-                        <textarea name="description" placeholder = "Nhập mô tả sản phẩm" required></textarea>
-
-                        <!-- Upload image -->
-                        <div class="file-input">
-                            <label>Ảnh sản phẩm (Vui lòng chọn file ảnh)</label>
-                            <input type="file" name="images" id = "imageInput"  accept="image/*" required>
-                        </div>
-                        <div class="preview-box">
-                            <img id="previewImg">
-                        </div>
-                        <button type="submit" class="btn btn-create">Tạo sản phẩm</button>
-                    </form>
-                        <button type="button" class="btn btn-exit"  id = "close-add-product">❌ Thoát</button>
-                </div>
-                <!-- ===== RIGHT PANEL ===== -->
-                <div class="right-panel">
-                    <h2>📦 Sản phẩm hiện có</h2>
-                    <table id = "table-product-list">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Tên</th>
-                                <th>Mô tả</th>
-                                <th>Ảnh mẫu</th>
-                                <th>Hành động</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Giới hạn trục X</th>
+                                <th>Giới hạn trục y</th>
+                                <th>Giới hạn trục z</th>
                             </tr>
                         </thead>
+
+                        <tbody>
+                        </tbody>
+
                     </table>
+
+                    <div class="log log-area" id="log-box"></div>
+
                 </div>
-                
+
+                <!-- Nút điều khiển 1 điểm -->
+
+                <div class="controls-single-point">
+                    <div class="anonymous" id="anonymous">
+                        <!--Chèn nội dung ở đây -->
+                    </div>
+                </div>
+
+                <!-- Nút điều khiển tất cả điểm -->
+                <div class="controls-all-points">
+
+                    <button class="">
+                        <img src="../static/img/product.png" alt="Thêm sản phẩm">
+                        Thêm sản phẩm
+                    </button>
+                    <button class="">
+                        <img src="../static/img/magnifying-glass.png" alt="Thêm điểm kiểm tra">
+                        Thêm điểm
+                    </button>
+                    <button class="">
+                        <img src="../static/img/live-stream-video.png" alt="Video Stream">
+                         Stream Video
+                    </button>
+                    <button class="">
+                        <img src="../static/img/run.png" alt="Chạy các Master">
+                        Chạy thử
+                    </button>
+
+                    <button class="" id="exit-add-capture-product">
+                        <img
+                            src="../static/img/close.png"
+                            alt="Thoát cài đặt chụp ảnh"   >
+                        Thoát
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- show thông tin cam và -->
+
+    <div class="overlay-new-product" id="overlay-new-product">
+
+        <!-- ===== LEFT PANEL ===== -->
+
+        <div class="left-panel">
+
+            <h2>➕ Tạo loại sản phẩm</h2>
+
+            <form
+                method="post"
+                id="form-add-new-product"
+                action="/product/add"
+                enctype="multipart/form-data"
+            >
+
+                <label>ID</label>
+                <input
+                    type="number"
+                    name="id"
+                    placeholder="Nhập ID sản phẩm"
+                    min="1"
+                    required
+                >
+
+                <label>Tên sản phẩm</label>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Nhập tên cho sản phẩm"
+                    required
+                >
+
+                <label>Mô tả</label>
+
+                <textarea
+                    name="description"
+                    placeholder="Nhập mô tả sản phẩm"
+                    required
+                ></textarea>
+
+                <!-- Upload image -->
+
+                <div class="file-input">
+                    <label>Ảnh sản phẩm (Vui lòng chọn file ảnh)</label>
+
+                    <input
+                        type="file"
+                        name="images"
+                        id="imageInput"
+                        accept="image/*"
+                        required
+                    >
+                </div>
+
+                <div class="preview-box">
+                    <img id="previewImg">
+                </div>
+
+                <button type="submit" class="btn btn-create">
+                    Tạo sản phẩm
+                </button>
+
+            </form>
+
+            <button
+                type="button"
+                class="btn btn-exit"
+                id="close-add-product"
+            >
+                ❌ Thoát
+            </button>
+
+        </div>
+
+        <!-- ===== RIGHT PANEL ===== -->
+
+        <div class="right-panel">
+
+            <h2>📦 Sản phẩm hiện có</h2>
+
+            <table id="table-product-list">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>Mô tả</th>
+                        <th>Ảnh mẫu</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+
+            </table>
+
+        </div>
+
     </div>
 
     <!-- ===== OVERLAY XÁC NHẬN XÓA ===== -->
-    <div class="overlay-delete-product" id="overlay-delete-product" style="display: none;">
+
+    <div
+        class="overlay-delete-product"
+        id="overlay-delete-product"
+        style="display: none;"
+    >
+
         <div class="delete-box">
-            <h2 id = "warning-title"></h2>
-            <p id ="warning-message"  ></p>
+
+            <h2 id="warning-title"></h2>
+
+            <p id="warning-message"></p>
+
             <div class="delete-action">
+
                 <button class="btn btn-delete-confirm" id="btn-confirm-delete">
                     🗑️ Xóa
                 </button>
+
                 <button class="btn btn-delete-cancel" id="btn-cancel-delete">
                     ❌ Hủy
                 </button>
+
             </div>
+
         </div>
+
     </div>
-
-
-
-
 
     <div class="overlay-choose-product" id="overlay-choose-product">
-        <!-- ===== LEFT PANEL ===== -->
-         <div class="block_choose-product">
-            <h1 id ="header" >Chọn sản phẩm cần kiểm tra <span id ="close-choose-product">X<span></h1>
-            <div id="container-chose-product"></div>
-         </div>
-    </div>
-    <div id="overlay_config_software" style="display: none;"> 
-            <div id="settings-box">
-                    <div id =  "config-log"> Cấu hình Log</div>
-                    <h2 id="settings-title">⚙️ Cấu hình phần mềm
-                        <span id="infor-log-config-software"></span>
-                    </h2>
-                    <!-- ⚙️ Các tùy chọn log -->
-                    <div class="log-setting">
-                        <span>Thời gian lưu log hình ảnh</span>
-                        <input type="number" id="set-time-save-log-img" placeholder="Số ngày">
-                    </div>
-                    <div id="setting-log-image">
-                        <span>Log hình ảnh</span>
-                        <label id="switch-sound">
-                        <input type="checkbox" id="set-sound">
-                        <span id="slider-sound"></span>
-                        </label>
-                    </div>
-                    <div class="log-setting">
-                        <span>Thời gian lưu log Excel</span>
-                        <input type="number" id="set-time-save-log-excell" placeholder="Số ngày">
-                    </div>
-                    <div id="setting-log-product">
-                        <span>Log sản phẩm Excell</span>
-                        <label id="switch-notification">
-                        <input type="checkbox" id="set-notification">
-                        <span id="slider-notification"></span>
-                        </label>
-                    </div>
-                    <div class="log-setting">
-                        <span>Thời gian lưu log phần mềm</span>
-                        <input type="number" id="set-time-save-log-software" placeholder="Số ngày">
-                    </div>
-                    <div id="setting-log-software">
-                        <span>Log phần mềm</span>
-                        <label id="switch-darkmode">
-                        <input type="checkbox" id="set-darkmode" checked>
-                        <span id="slider-darkmode"></span>
-                        </label>
-                    </div>
-                    <div id="setting-log-cosole">
-                        <span>Log cosole</span>
-                        <label id="switch-cosole">
-                        <input type="checkbox" id="set-cosole">
-                        <span id="slider-cosole"></span>
-                        </label>
-                    </div>
-                    <div id="setting-img-retraining">
-                        <span>Image retraining</span>
-                        <label id="switch-img-retraining">
-                            <input type="checkbox" id="set-img-retraining">
-                            <span id="slider-img-retraining"></span>
-                        </label>
-                    </div>
-                    <!-- 🔘 Nút điều khiển -->
-                    
-                    <hr>
-                 
-                    <div id="config-img-process">
-                        <div class="img-setting">
-                            <label for="threshold">Ngưỡng nhận diện</label>
-                            <input type="number" id="threshold">
-                        </div>
 
-                        <div class="img-setting">
-                            <label for="config_weight">Cấu hình chiều cao vật</label>
-                            <input type="number" id="config_weight">
-                        </div>
-                    </div>
-                  
-                    <div id="buttons">
-                        <button id="save-settings">💾 Lưu cấu hình</button>
-                        <button id="close-settings">✖ Thoát</button>
-                    </div>  
-            </div>
+        <!-- ===== LEFT PANEL ===== -->
+
+        <div class="block_choose-product">
+
+            <h1 id="header">
+                Chọn sản phẩm cần kiểm tra
+                <span id="close-choose-product">X<span>
+            </h1>
+
+            <div id="container-chose-product"></div>
+
+        </div>
+
     </div>
-        <script type="module" src="../static/js/controler.js"></script> 
+
+    <div id="overlay_config_software" style="display: none;">
+
+        <div id="settings-box">
+
+            <div id="config-log">
+                Cấu hình Log
+            </div>
+
+            <h2 id="settings-title">
+                ⚙️ Cấu hình phần mềm
+                <span id="infor-log-config-software"></span>
+            </h2>
+
+            <!-- ⚙️ Các tùy chọn log -->
+
+            <div class="log-setting">
+                <span>Thời gian lưu log hình ảnh</span>
+                <input
+                    type="number"
+                    id="set-time-save-log-img"
+                    placeholder="Số ngày"
+                >
+            </div>
+
+            <div id="setting-log-image">
+
+                <span>Log hình ảnh</span>
+
+                <label id="switch-sound">
+                    <input type="checkbox" id="set-sound">
+                    <span id="slider-sound"></span>
+                </label>
+
+            </div>
+
+            <div class="log-setting">
+                <span>Thời gian lưu log Excel</span>
+                <input
+                    type="number"
+                    id="set-time-save-log-excell"
+                    placeholder="Số ngày"
+                >
+            </div>
+
+            <div id="setting-log-product">
+
+                <span>Log sản phẩm Excell</span>
+
+                <label id="switch-notification">
+                    <input type="checkbox" id="set-notification">
+                    <span id="slider-notification"></span>
+                </label>
+
+            </div>
+
+            <div class="log-setting">
+                <span>Thời gian lưu log phần mềm</span>
+                <input
+                    type="number"
+                    id="set-time-save-log-software"
+                    placeholder="Số ngày"
+                >
+            </div>
+
+            <div id="setting-log-software">
+
+                <span>Log phần mềm</span>
+
+                <label id="switch-darkmode">
+                    <input type="checkbox" id="set-darkmode" checked>
+                    <span id="slider-darkmode"></span>
+                </label>
+
+            </div>
+
+            <div id="setting-log-cosole">
+
+                <span>Log cosole</span>
+
+                <label id="switch-cosole">
+                    <input type="checkbox" id="set-cosole">
+                    <span id="slider-cosole"></span>
+                </label>
+
+            </div>
+
+            <div id="setting-img-retraining">
+
+                <span>Image retraining</span>
+
+                <label id="switch-img-retraining">
+                    <input type="checkbox" id="set-img-retraining">
+                    <span id="slider-img-retraining"></span>
+                </label>
+
+            </div>
+
+            <!-- 🔘 Nút điều khiển -->
+
+            <hr>
+
+            <div id="config-img-process">
+
+                <div class="img-setting">
+                    <label for="threshold">Ngưỡng nhận diện</label>
+                    <input type="number" id="threshold">
+                </div>
+
+                <div class="img-setting">
+                    <label for="config_weight">Cấu hình chiều cao vật</label>
+                    <input type="number" id="config_weight">
+                </div>
+
+            </div>
+
+            <div id="buttons">
+
+                <button id="save-settings">
+                    💾 Lưu cấu hình
+                </button>
+
+                <button id="close-settings">
+                    ✖ Thoát
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script type="module" src="../static/js/controler.js"></script>
+
 </body>
 </html>
-

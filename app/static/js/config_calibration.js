@@ -1,4 +1,10 @@
-import {scroll_content,wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_product,postData,
+// import {scroll_content,wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_product,postData,
+//     get_camera_connection,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,
+//     drawImageContain,coordinate,getMousePositionInCanvas,CLICK_DELAY
+//     ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,logSocket,logSocketData,fetchGet
+// } from "./common_value.js" // them scoll
+
+import {wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_product,postData,
     get_camera_connection,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,
     drawImageContain,coordinate,getMousePositionInCanvas,CLICK_DELAY
     ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,logSocket,logSocketData,fetchGet
@@ -294,7 +300,7 @@ open_video.addEventListener("click",function(){
     write_log_calibration_clear("⚙️Cần vẽ 1 đường Line để cấu hình Calibration.\n📷Trong quá trình chụp hãy giữ nguyên vị trí camera, đồ gá, vật để giữ đúng tỷ lệ.\n➡️ Nhấn \"Chụp ảnh\" ➡️ Click ảnh vừa chụp ➡️ Vẽ và cấu hình ➡️ Nhấn \"Tính Calibration\" để phần mềm tự cấu hình tính toán.");
 });    
 function status_head_into() {
-    scroll_content.innerHTML =  "";
+    // scroll_content.innerHTML =  "";
     video_product.style.height = `${HEIGH_IMG_SHAPE}px`;
     video_product.style.width =  `${WIDTH_IMG_SHAPE}px`;
     wrap_canvas.style.display =  "none";
@@ -324,7 +330,7 @@ function CreateDivImg(data_base64){
     const h_create = document.createElement("p");
     h_create.innerText = "Ảnh Calibration";
     h_create.className = "p-index-img-master";
-    scroll_content.innerHTML = "";
+    // scroll_content.innerHTML = "";
     // image preview nhỏ
     const img = new Image();
     img.src = "data:image/jpeg;base64," + data_base64;
@@ -335,7 +341,7 @@ function CreateDivImg(data_base64){
     // append DOM
     div_create.appendChild(img);
     div_create.appendChild(h_create);
-    scroll_content.appendChild(div_create);
+   // scroll_content.appendChild(div_create);
 
     // click ảnh
     div_create.addEventListener("click", function(){
@@ -375,7 +381,7 @@ function clearAllCanvas() {
     startY = 0;
     isDraw = false;
     status_enough_points = false;
-    scroll_content.innerHTML = "";
+    // scroll_content.innerHTML = "";
     data_calibration = {
     name: "",
     PointStarX: 0,
@@ -409,7 +415,7 @@ function CreateDivImg_append(data_base64){
     // append DOM
     div_create.appendChild(img);
     div_create.appendChild(h_create);
-    scroll_content.appendChild(div_create);
+    // scroll_content.appendChild(div_create);
     // click ảnh
     div_create.addEventListener("click", function(){
           // reset trạng thái vẽ

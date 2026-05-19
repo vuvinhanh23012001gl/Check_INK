@@ -1,4 +1,5 @@
-import {scroll_content,logSocket,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js";
+// import {scroll_content,logSocket,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js"; co scroll
+import {logSocket,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js";
 
 const paner_capture_product = document.getElementById("paner-capture-product");
 const btn_function_capture_product = document.getElementById("header-ul-li-capture-product");
@@ -12,7 +13,7 @@ let divCreateList = []; // biến toàn cục luu mang data gửi lên
 let max_point_run ={}
 max_point_run.x =  0;
 max_point_run.y =  0;
-max_point_run.k = 0;
+max_point_run.z = 0;
 
 
 
@@ -65,7 +66,7 @@ function renderMaster(data) {
             return;
         }
         create_table_product(data);
-        scroll_content.innerHTML = "";
+        // scroll_content.innerHTML = "";
         const imgList = data?.path_arr_img;
         const list_point  = data?.arr_point;
       
@@ -88,7 +89,7 @@ function renderMaster(data) {
 
                 div_create.appendChild(img);
                 div_create.appendChild(h_create);
-                scroll_content.appendChild(div_create);
+                // scroll_content.appendChild(div_create);
                 divCreateList.push(div_create);
                 div_create.addEventListener("click",function(){
                         clearn_div(divCreateList);
@@ -98,7 +99,7 @@ function renderMaster(data) {
                         video_product.style.height = "1024px";
                         video_product.style.objectFit = "contain";   // QUAN TRỌNG
                         video_product.style.display = "block";
-                        const index = Array.from(scroll_content.children).indexOf(this);
+                        // const index = Array.from(scroll_content.children).indexOf(this);
                         console.log("Ảnh master đang chỉ tới là:",index);
                         create_table_controler(index);
 
@@ -190,38 +191,34 @@ function renderMaster(data) {
 
 
 function create_table_product(data) {
-       console.log("-----------------------------------------------------------Ok---------------------");
-       console.log(data)
        const tbody = document.querySelector(".product-table tbody");
-       if (!tbody){
-        console.log("Bảng không tồn tại");
-        return;
+       if (!tbody){console.log("Bảng không tồn tại");return;
+    
        }
        if (!data){
             log_box.innerHTML = "Bạn chưa chọn loại sản phẩm.Hãy nhấn \"Chọn loại sản phẩm\"";
             return;
        }
        tbody.innerHTML = "";
-       let log = data?.inf_product;
-        console.log("Dữ liệu nhận được là ",log);
-      //  let id =  log?.list_id[0]; //Id chua can de hien thi
-       let name   = log?.name;
-       let x = log?.xyz[0];
+       console.log(data)
+       let id = data?.product_choose?._id;
+       let name = `${id}.${data?.product_choose?._name}`;
+       let x = data?.infor_iai?.limit_x_max;
        max_point_run.x = x;
-       let y = log?.xyz[1];
+       let y = data?.infor_iai?.limit_y_max;
        max_point_run.y = y;
-       let k = 100;
-       max_point_run.k = k;
+       let z = data?.infor_iai?.limit_z_max;
+       max_point_run.z = z;
        console.log(name)
        console.log(x)
        console.log(y)
-       console.log(k)
+       console.log(z)
       const row = document.createElement("tr");
       row.innerHTML =  
       `<td>${name}</td>
        <td>${x}</td>
        <td>${y}</td>
-       <td>${k}</td>
+       <td>${z}</td>
       `;
       tbody.appendChild(row);
 };
@@ -247,12 +244,12 @@ btn_add_frame.addEventListener("click",function(){
     
     div_create.appendChild(img);
     div_create.appendChild(h_create);
-    scroll_content.appendChild(div_create); 
+    // scroll_content.appendChild(div_create); 
     div_create.addEventListener("click", function() {
 
         show_video_product();
         console.log("Mở camera để chụp ảnh master");
-        const index = Array.from(scroll_content.children).indexOf(this);
+        // const index = Array.from(scroll_content.children).indexOf(this);
         console.log("Index của khung master vừa thêm:", index);
         create_table_controler(index);
 

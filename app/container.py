@@ -1,18 +1,23 @@
 
-from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
-from app.services.calculate_the_dimensions.handler_work_detect import HandlerWorkDetect
+# from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
+# from app.services.calculate_the_dimensions.handler_work_detect import HandlerWorkDetect
 # from app.services.calculate_the_dimensions.handler_work_detect import ImageQueueTester 
 from app.services.camera import Camera
 # from app.services.product import ChooseProduct,ProductManager
-from app.services import ProductService,ChooseProductService
+from app.services import ProductService,ChooseProductService,IAIService
 from app.services.log import Infor_Software,Config_SoftWare,Manager_Log
-from app.config import QueueConfig,TypeSend
+from app.config import QueueConfig,TypeSend,IAIConfig
 from app.model import QueueManager,Worker
-from app.config import PATH_PRODUCT_MODEL
+from app.config import PATH_PRODUCT_MODEL,PATH_FILE_DATA_CONFIG_IAI
 from app.repository import ChooseProductRepository,ProductRepository
 
 class ServiceContainer:
     def __init__(self):
+
+        #Load config
+        print("---------------Load config-----------")
+        self.obj_iai_config = IAIConfig(PATH_FILE_DATA_CONFIG_IAI)
+        self.obj_iai_service = IAIService(self.obj_iai_config)        
         print("---------------Tạo hàng đợi-----------")
         
         self.queue_manager = QueueManager()
@@ -43,14 +48,15 @@ class ServiceContainer:
         self.queue_img_send_client = Worker(q_img_send_client)
         self.queue_process_capture = Worker(q_process_capture)
         self.queue_manage_log =  Worker(q_manage)
-
+        
 
         print("...----------------------------------.Init Service...-----------------------------.")
+        
         self.obj_camera = Camera()
         print("✔ Camera init")
-        self.obj_calibration = HandlerCalibration(self.obj_camera,
-                                                  self.queue_log_send_client,self.queue_data_send_client,
-                                                  self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
+        # self.obj_calibration = HandlerCalibration(self.obj_camera,
+        #                                           self.queue_log_send_client,self.queue_data_send_client,
+        #                                           self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
         print("✔ HandlerCalibration init")
         self.obj_product_repository = ProductRepository()
         self.obj_products_service = ProductService( self.obj_product_repository)
@@ -58,11 +64,11 @@ class ServiceContainer:
         self.obj_choose_product_repository =  ChooseProductRepository()
         self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository,self.obj_products_service)
         print("✔ ChooseProductService init")
-        self.obj_detect = HandlerWorkDetect(
-            self.obj_choose_product,
-            self.obj_products_service,
-            self.obj_calibration, self.queue_data_send_client,self.queue_process_capture,TypeSend.datatype_Home,PATH_PRODUCT_MODEL
-        )
+        # self.obj_detect = HandlerWorkDetect(
+        #     self.obj_choose_product,
+        #     self.obj_products_service,
+        #     self.obj_calibration, self.queue_data_send_client,self.queue_process_capture,TypeSend.datatype_Home,PATH_PRODUCT_MODEL
+        # )
         print("✔ HandlerWorkDetect init")
         self.obj_infor_software = Infor_Software()
         print("✔ Infor_Software init")

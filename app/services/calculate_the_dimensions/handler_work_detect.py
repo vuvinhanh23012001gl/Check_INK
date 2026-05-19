@@ -7,11 +7,9 @@ import threading
 import time
 from queue import Queue
 
-
-
 from app.utils import Folder
-from app.services.product import ChooseProduct
-from app.services.product import ProductManager
+# from app.services.product import ChooseProduct
+# from app.services.product import ProductManager
 from app.services.calculate_the_dimensions.handler_aggregator import ProductAggregator
 from app.services.calculate_the_dimensions.handler_frame import FrameHandlers
 from app.services.calculate_the_dimensions.handler_model import ModelHandler

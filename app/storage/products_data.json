@@ -1,3 +1,18 @@
 {
-    "products": {}
+    "products": {
+        "1": {
+            "id": 1,
+            "name": "1",
+            "description": "1",
+            "created_at": "2026-05-19 09:07:35.150523",
+            "updated_at": "2026-05-19 09:07:35.150523"
+        },
+        "2": {
+            "id": 2,
+            "name": "VuvINHANH",
+            "description": "Vinh",
+            "created_at": "2026-05-19 17:31:13.652992",
+            "updated_at": "2026-05-19 17:31:13.652992"
+        }
+    }
 }

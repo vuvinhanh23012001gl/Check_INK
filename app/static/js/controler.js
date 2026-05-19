@@ -6,3 +6,4 @@ import "./capture_product.js";
 import "./home.js";
 import "./draw_regulations.js";
 import "./config_calibration.js";
+import "./test_scoll.js";

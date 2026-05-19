@@ -328,6 +328,7 @@ class ProductService:
         self._save_products()
 
         return Result.Ok(product)
+    
     def get_arr_path_img_roi_product_by_id(
         self,
         product_id

@@ -1,7 +1,9 @@
-import {postData,scroll_content,clearn_div,video_product,wrap_canvas,
+// import {postData,scroll_content,clearn_div,video_product,wrap_canvas,
+//     WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,drawImageContain,
+//     getMousePositionInCanvas,CLICK_DELAY,drawPoint,checkPointClickInline,drawTransparentLine,isPointOnLineSegment,drawTextOnLine} from "./common_value.js"
+import {postData,clearn_div,video_product,wrap_canvas,
     WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,drawImageContain,
     getMousePositionInCanvas,CLICK_DELAY,drawPoint,checkPointClickInline,drawTransparentLine,isPointOnLineSegment,drawTextOnLine} from "./common_value.js"
-
 
 const paner_draw_regulations  = document.getElementById("paner-draw-regulations");
 const header_ul_li_draw_regulations = document.getElementById("header-ul-li-draw-regulations");
@@ -552,7 +554,7 @@ function write_log_regulation_append(text){
 
 
 function RenderDataRegulation(data){
-    scroll_content.innerHTML = "";
+    // scroll_content.innerHTML = "";
     video_product.style.display = "none";
     wrap_canvas.style.display = "flex";
     resizeAllCanvas();
@@ -580,7 +582,7 @@ function RenderDataRegulation(data){
                 img.style.margin = "10px";
                 div_create.appendChild(img);
                 div_create.appendChild(h_create);
-                scroll_content.appendChild(div_create);
+                // scroll_content.appendChild(div_create);
                 divCreateList.push(div_create);
                 div_create.addEventListener("click", function () {
                     write_log_regulation_clear("✍️ Click chuột trái để vẽ các line.\n✍️ Trỏ vào line và click chuột phải để xóa line.\n✍️ Double click chuột trái để cấu hình cho line.\n✍️ Nhấn \"Áp dụng\" để lưu thông tin line.\n✍️Nhấn \"Xóa tất cả dữ liệu line\" để xóa tạm tất cả các line đã vẽ trong tất cả ảnh.\n✍️Nhấn \"Xóa dữ liệu quy định\" để xóa tạm các line trong ảnh hiện tại.")

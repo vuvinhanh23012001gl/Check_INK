@@ -21,20 +21,20 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
     print("--------------Vào UI capture----------------")
     status = payload.get("status")
     print("Status:", status)    # UI_Capture
-    choose_product_current = services.obj_choose_product.get_choose_product()
+    choose_product_current = services.obj_choose_product.get_choose_product().data
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-        print(msg)
+        # print(msg)
         services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:
-        status,arr_path_img = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
-        arr_run_point = services.obj_products_service.get(choose_product_current)
-        infor = services.obj_products_service.get_infor_product(choose_product_current)
-        print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
-        print("--------------Hết UI capture----------------")
-        return {"status": "ok","path_arr_img": arr_path_img,"arr_point":arr_run_point,"inf_product":infor}
+        product_choose = services.obj_products_service.get_product_by_id(choose_product_current)
+        if product_choose.data:
+            infor_iai = services.obj_iai_config.get_dict()
+            # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+            return {"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+
     
 
 

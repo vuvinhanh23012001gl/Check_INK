@@ -1,5 +1,5 @@
 
-export const scroll_content = document.getElementById("scroll-content");
+// export const scroll_content = document.getElementById("scroll-content");
 export const video_product = document.getElementById("video-product");    // Hiển thị hình ảnh
 export const wrap_canvas =  document.getElementById("wrap-canvas");       //Hien thi canvas
 export const coordinate = document.getElementById("coordinate");

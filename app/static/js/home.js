@@ -1,4 +1,5 @@
-import {postData,scroll_content,clearn_div,video_product,wrap_canvas,logSocketData,logSocket,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+// import {postData,scroll_content,clearn_div,video_product,wrap_canvas,logSocketData,logSocket,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+import {postData,clearn_div,video_product,wrap_canvas,logSocketData,logSocket,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
 
 
 const status_judment = document.querySelector(".paner-main-status-product");
@@ -13,13 +14,13 @@ const label_status_connect_camera = document.getElementById("status-connect-cam"
 
 let divCreateList_Home = [];
 
-const SCROLL_STEP = 300;
-btn_left.addEventListener("click", () => {
-  scroll_content.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
-});
-btn_right.addEventListener("click", () => {
-  scroll_content.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
-});
+// const SCROLL_STEP = 300;
+// btn_left.addEventListener("click", () => {
+//   scroll_content.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
+// });
+// btn_right.addEventListener("click", () => {
+//   scroll_content.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
+// });
 
 scroll_container.addEventListener("scroll", Event_press_left_right);
 
@@ -144,7 +145,7 @@ function create_show_table(data) {
   return table;
 }
 function Event_press_left_right() {
-    const scroll_width = scroll_content.scrollWidth;
+    // const scroll_width = scroll_content.scrollWidth;
     const scroll_client = scroll_container.clientWidth;
     const scroll_left = scroll_container.scrollLeft;
     if (scroll_width > scroll_client) {
@@ -175,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
    
 
 function RenderDataHome(data){
-    scroll_content.innerHTML = "";
+    // scroll_content.innerHTML = "";
     video_product.style.display = "flex";
     wrap_canvas.style.display = "None";
     let status = data?.status;

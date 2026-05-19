@@ -122,11 +122,7 @@ html, body {
     overflow: hidden;
  
 }
-.show-img-master{
-    background-color: rgb(45, 55, 55);
-    width:100%;
-    height: 16%;
-}
+
 .show-img {
     margin: 0px;
     width: 100%;
@@ -153,28 +149,11 @@ html, body {
    align-items: center;
 }
 
-.scroll-container{
-  width: 96%;
-  height: 100%;
-}
-.scroll-up,.scroll-down{
-  width: 2%;
-}
-.show-img-master{
-  display: flex;
-  border-radius: 10px;
-}
-#scroll-content{
-   scroll-behavior: smooth;
-   display: flex;
-   flex-direction: row;
-   height: 100%;
-   width: 100%;
-   overflow-x:scroll; 
-}
-#scroll-content::-webkit-scrollbar {
-  display: none;             /* Chrome, Safari */
-}
+
+
+
+
+
 .div-index-img-mater {
   position: relative;
   height: 100%;
@@ -211,24 +190,8 @@ html, body {
 .div-index-img-mater img{
    height: 79%;
 }
-.scroll-up, .scroll-down {
-  color: white;
-  border: none;
-  border-radius: 10px;         /* hình tròn */
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
-/* Hover: đổi màu + nhấn xuống nhẹ */
-.scroll-up:hover, .scroll-down:hover {
-  background-color: #0ea96a;
-  transform: scale(1.1);
-}
+
 .show-satus{
   font-weight: 600;
   display: flex;
@@ -327,45 +290,114 @@ html, body {
    position: relative;
 } 
 .controls-all-points {
-  padding-top: 5%;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   background-color: #f4f4f4;
   position: absolute;
-  bottom: 10px;
-  gap: 5px;
+  bottom: 2px;
+  
   width: 98%;
-  height: 10%;
+  height: 10.5%;
+
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  overflow: hidden; /* chặn con tràn ra */
+  gap: 5px;
+  flex-wrap: wrap;
+
+  overflow: hidden;
+
+  box-sizing: border-box; /* QUAN TRỌNG */
 }
 
 .controls-all-points button {
-  flex: 1 1 auto;         /* cho phép co/giãn trong khung */
-  max-width: 100%;        /* không vượt khung cha */
-  max-height: 100%;       /* không vượt khung cha */
-  font-weight: 600;
-  white-space: nowrap;
-  font-size: 1em;
-  border-radius: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+
+  background: linear-gradient(145deg, #0052b4, #003f8c);
+  border-radius: 14px;
   box-sizing: border-box;
+  color: white;
+
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-}
-.controls-all-points button img {
-  max-height: 60%;  /* ảnh không vượt nút */
-  max-width: 20px;
+
+  gap: 6px;
+
+  border: none;
+  cursor: pointer;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  padding: 8px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.25s ease;
+
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  position: relative;
+  overflow: hidden;
 }
 
-.controls-all-points button.btn-exit:hover{
-  background-color: #f44336;
+/* hiệu ứng ánh sáng nhẹ */
+.controls-all-points button::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -120%;
+  width: 80%;
+  height: 200%;
+
+  background: rgba(255,255,255,0.15);
+  transform: rotate(25deg);
+
+  transition: 0.5s;
 }
+
+/* hover */
+.controls-all-points button:hover {
+  transform: translateY(-3px) scale(1.03);
+
+  background: linear-gradient(145deg, #0066dd, #0049a5);
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.22),
+    0 0 10px rgba(0, 119, 255, 0.35);
+}
+
+/* chạy ánh sáng */
+.controls-all-points button:hover::before {
+  left: 150%;
+}
+
+/* khi nhấn */
+.controls-all-points button:active {
+  transform: scale(0.96);
+}
+
+/* icon */
+.controls-all-points img {
+  width: 30px;
+  height: 30px;
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* icon hover */
+.controls-all-points button:hover img {
+  transform: scale(1.12) rotate(-3deg);
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+}
+
 
 .panel-table{
   width: 100%;

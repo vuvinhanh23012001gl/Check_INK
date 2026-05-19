@@ -1,3 +1,4 @@
 from .product_service import ProductService
 from .product_choose_service import ChooseProductService
 from .point_service import PointService
+from .iai_service import IAIService
