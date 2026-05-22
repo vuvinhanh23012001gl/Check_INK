@@ -8,7 +8,7 @@ export const HEIGH_IMG_SHAPE = 960;
 export const CLICK_DELAY = 300; // ms (200–300ms là hợp lý)
 
 // 1. Kết nối đúng vào Namespace /log
-export const logSocket = io("http://127.0.0.1:8000/log");   //chuyen de lay log realt time
+export const SocketLog = io("http://127.0.0.1:8000/log");   //chuyen de lay log realt time
 
 export const cImg = document.getElementById("canvasImage"); //IMG  
 export const ctxImg = cImg.getContext("2d");
@@ -154,12 +154,6 @@ export function drawImageContain(ctx, canvas, img) {
 
 }
 
-logSocket.on("connect", () => {
-    console.log("Đã kết nối vào kênh LOG. ID:", logSocket.id);
-});
-logSocket.on("disconnect", () => {
-    console.log("Đã mất kết nối với kênh LOG");
-});
 
 const CAMERA_KEY = "camera_connected";
 
@@ -177,18 +171,26 @@ export function get_camera_connection() {
     return sessionStorage.getItem(CAMERA_KEY) === "true";
 }
 
-export const logSocketData = io("http://127.0.0.1:8000/data"); // chuyen de truyen data real time
-logSocketData.on("connect", () => {
-    console.log("Đã kết nối vào kênh LOG. ID:", logSocketData.id);
+SocketLog.on("connect", () => {
+    console.log("Đã kết nối vào kênh SocketLog. ID:", SocketLog.id);
 });
-logSocketData.on("disconnect", () => {
-    console.log("Đã mất kết nối với kênh LOG ID:",logSocketData.id);
+
+SocketLog.on("disconnect", () => {
+    console.log("Đã mất kết nối với kênh SocketLog");
+});
+
+export const SocketData = io("http://127.0.0.1:8000/data"); // chuyen de truyen data real time
+SocketData.on("connect", () => {
+    console.log("Đã kết nối vào kênh SocketData . ID:", SocketData.id);
+});
+
+SocketData.on("disconnect", () => {
+    console.log("Đã mất kết nối với kênh SocketData  ID:",SocketData.id);
 });
 
 export function show_video_product(){
         let ws = new WebSocket("ws://127.0.0.1:8000/captureproduct/ws");
         video_product.style.display = "block";
-            // 🔥 QUAN TRỌNG: nhận binary
         ws.binaryType = "arraybuffer";
         ws.onopen = () => {
                 console.log("WebSocket connected");
@@ -200,9 +202,7 @@ export function show_video_product(){
                 console.error("WebSocket error", err);
         };
         ws.onmessage = (event) => {
-                // event.data là ArrayBuffer
         const blob = new Blob([event.data], { type: "image/jpeg" });
-    
         video_product.src = URL.createObjectURL(blob);
     };
 }

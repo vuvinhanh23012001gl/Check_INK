@@ -11,6 +11,9 @@ from app.model import QueueManager,Worker
 from app.config import PATH_PRODUCT_MODEL,PATH_FILE_DATA_CONFIG_IAI
 from app.repository import ChooseProductRepository,ProductRepository
 
+
+# COM
+
 class ServiceContainer:
     def __init__(self):
 
@@ -42,6 +45,9 @@ class ServiceContainer:
                 maxsize=100
         )
 
+        # Viết Cấu hình IAI xử dụng COM kết nối
+        # Viet giao tiep voi COM da ok
+        # END
 
         self.queue_log_send_client = Worker(q_log_send_client)
         self.queue_data_send_client = Worker(q_data_send_client)

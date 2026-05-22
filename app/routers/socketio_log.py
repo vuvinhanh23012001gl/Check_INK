@@ -16,7 +16,7 @@ sio = socketio.AsyncServer(
     cors_allowed_origins="*"
 )
 
-@sio.event(namespace=NAMESPACE_LOG)
+@sio.event(namespace = NAMESPACE_LOG)
 async def connect(sid, environ):
     print("Client conected to log", sid)
 
@@ -31,19 +31,38 @@ async def connect(sid, environ):
 @sio.event(namespace=NAMESPACE_DATA)
 async def disconnect(sid):
     print("Client disconnected to log", sid)
+
 
 async def log_sender(app):
     """Task chạy nền để tiêu thụ dữ liệu từ queue và gửi qua Socket.io"""
     print("📢 Log Sender Task đã bắt đầu...")
-    # services: ServiceContainer = app.state.services
-    # while True:
-    #     await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
-    #     data_log = services.queue_log_send_client.get()
-    #     if data_log is not None:
-    #         log_type = data_log.get("type",None)
-    #         if log_type == TypeSend.type_capture:
-    #             msg = data_log.get("message","")
-    #             await sio.emit(TypeSend.type_capture, {"msg": msg}, namespace= NAMESPACE_LOG)
+    services: ServiceContainer = app.state.services
+    while True:
+            await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
+            data_log = services.queue_log_send_client.get()
+            if data_log is not None:
+                log_type = data_log.get("type",None)
+                if log_type == TypeSend.type_log_capture:
+                    msg = data_log.get("message","")
+                    print("msg",msg)
+                    await sio.emit(TypeSend.type_log_capture, {"msg": msg}, namespace = NAMESPACE_LOG)
+            await asyncio.sleep(1)
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #         if log_type == TypeSend.log_calibration:
     #             msg = data_log.get("message","")
     #             await sio.emit(TypeSend.log_calibration, {"msg": msg}, namespace= NAMESPACE_LOG)

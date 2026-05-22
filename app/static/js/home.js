@@ -1,17 +1,17 @@
-// import {postData,scroll_content,clearn_div,video_product,wrap_canvas,logSocketData,logSocket,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
-import {postData,clearn_div,video_product,wrap_canvas,logSocketData,logSocket,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+// import {postData,scroll_content,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+import {postData,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
 
 
 const status_judment = document.querySelector(".paner-main-status-product");
 const log_judment = document.getElementById("log_judment");
 const btn_left = document.querySelector(".scroll-up");   
 const btn_right = document.querySelector(".scroll-down");
-const scroll_container = document.querySelector(".scroll-container");
 const div_show_point_detect = document.getElementById("table-show-point-detect");
 
 const circle_status_connect_camera =  document.getElementById("element-circle-status-camera");
 const label_status_connect_camera = document.getElementById("status-connect-cam");
-
+const label_status_connect_com = document.getElementById("header-show-status");
+const circle_status_connect_com = document.getElementById("element-circle-status-com");
 let divCreateList_Home = [];
 
 // const SCROLL_STEP = 300;
@@ -22,23 +22,24 @@ let divCreateList_Home = [];
 //   scroll_content.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
 // });
 
-scroll_container.addEventListener("scroll", Event_press_left_right);
+// scroll_container.addEventListener("scroll", Event_press_left_right);
 
-logSocketData.on("data_output_judment", data =>{
+SocketData.on("data_output_judment", data =>{
   console.log("data judment :",data);
   handle_judment_realtime(data?.msg?.data_output_judment);
 });
 
 
-logSocketData.on("status_camera", data =>{
+SocketData.on("status_camera", data =>{
   let status_connect  = data?.status;
-  // console.log("data",data);
+  // console.log("dataxyz",data);
   set_camera_connection(status_connect);
   isConect(status_connect,circle_status_connect_camera,label_status_connect_camera,"Camera");
+  isConect(false,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
 });
 
 
-logSocket.on("log_Home", (data) => {
+SocketLog.on("log_Home", (data) => {
     console.log("Dữ liệu sản phẩm nhận được log_Home :", data);
     log_judment.innerHTML += `<p>${data?.msg}</p>`;
 });
@@ -76,6 +77,7 @@ function handle_judment_realtime(data)
         
   }
 }
+
 
 function Run_div(index, status_frame, div_card) {
   if (!div_card || !div_card[index]) return; // tránh lỗi nếu index sai
@@ -144,18 +146,18 @@ function create_show_table(data) {
   table.appendChild(tbody);
   return table;
 }
-function Event_press_left_right() {
-    // const scroll_width = scroll_content.scrollWidth;
-    const scroll_client = scroll_container.clientWidth;
-    const scroll_left = scroll_container.scrollLeft;
-    if (scroll_width > scroll_client) {
-      btn_left.style.display = scroll_left > 0 ? "block" : "none";
-      btn_right.style.display = (scroll_left + scroll_client) < scroll_width ? "block" : "none";
-    } else {
-      btn_left.style.display = "none";
-      btn_right.style.display = "none";
-    }
-}
+// function Event_press_left_right() {
+//     // const scroll_width = scroll_content.scrollWidth;
+//     const scroll_client = scroll_container.clientWidth;
+//     const scroll_left = scroll_container.scrollLeft;
+//     // if (scroll_width > scroll_client) {
+//     //   btn_left.style.display = scroll_left > 0 ? "block" : "none";
+//     //   btn_right.style.display = (scroll_left + scroll_client) < scroll_width ? "block" : "none";
+//     // } else {
+//     //   btn_left.style.display = "none";
+//     //   btn_right.style.display = "none";
+//     // }
+// }
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Vào DOM");
@@ -185,7 +187,7 @@ function RenderDataHome(data){
     }
     else{   
             const imgList = data?.path_arr_img;
-            
+
             console.log("Danh sách ảnh:", imgList);
         //     imgList.forEach((imgPath, index) => {
         //         const div_create = document.createElement("div");

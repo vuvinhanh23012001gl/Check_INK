@@ -1,3 +1,4 @@
 from .product_repository import ProductRepository
 from .choose_product_repository import ChooseProductRepository
 from .point_repository import PointRepository
+from .com_repository import ComRepository

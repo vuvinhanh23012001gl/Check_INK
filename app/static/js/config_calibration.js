@@ -1,13 +1,13 @@
 // import {scroll_content,wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_product,postData,
 //     get_camera_connection,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,
 //     drawImageContain,coordinate,getMousePositionInCanvas,CLICK_DELAY
-//     ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,logSocket,logSocketData,fetchGet
+//     ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,SocketLog,SocketData,fetchGet
 // } from "./common_value.js" // them scoll
 
 import {wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_product,postData,
     get_camera_connection,cImg,ctxImg,cShape,ctxShape,cPrev,ctxPrev,
     drawImageContain,coordinate,getMousePositionInCanvas,CLICK_DELAY
-    ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,logSocket,logSocketData,fetchGet
+    ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,SocketLog,SocketData,fetchGet
 } from "./common_value.js"
 console.log("-- Vào cấu hình calibration--");
 
@@ -42,11 +42,11 @@ let data_calibration = {
 };
 
 
-logSocket.on("log_calibration", (data) => {
+SocketLog.on("log_calibration", (data) => {
     if (data?.status == undefined){ write_log_calibration_append(`${data?.msg}`);}
 });
 
-logSocketData.on("data_calibration", (data) => {
+SocketData.on("data_calibration", (data) => {
     let img_calibration  = data.data?.data_img;
     let data_table_calibration = data.data?.data_table;
     console.log("data_table_calibration",data_table_calibration);

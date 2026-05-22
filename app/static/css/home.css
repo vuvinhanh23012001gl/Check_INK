@@ -309,7 +309,7 @@ html, body {
   box-sizing: border-box; /* QUAN TRỌNG */
 }
 
-.controls-all-points button {
+.btn-form-cap {
   flex: 1 1 0;
   min-width: 0;
 
@@ -317,7 +317,7 @@ html, body {
   border-radius: 14px;
   box-sizing: border-box;
   color: white;
-
+  white-space: nowrap;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -347,7 +347,7 @@ html, body {
 }
 
 /* hiệu ứng ánh sáng nhẹ */
-.controls-all-points button::before {
+.btn-form-cap::before {
   content: "";
   position: absolute;
   top: -50%;
@@ -362,7 +362,7 @@ html, body {
 }
 
 /* hover */
-.controls-all-points button:hover {
+.btn-form-cap:hover {
   transform: translateY(-3px) scale(1.03);
 
   background: linear-gradient(145deg, #0066dd, #0049a5);
@@ -373,12 +373,12 @@ html, body {
 }
 
 /* chạy ánh sáng */
-.controls-all-points button:hover::before {
+.btn-form-cap:hover::before {
   left: 150%;
 }
 
 /* khi nhấn */
-.controls-all-points button:active {
+.btn-form-cap:active {
   transform: scale(0.96);
 }
 
@@ -414,6 +414,7 @@ html, body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);  /* bóng nhẹ */
   background-color: #edecec;
   margin-top: 2px;
+  overflow-y:scroll;
 }
 
     .product-table {
@@ -720,32 +721,6 @@ button.active{
   margin-top: 20px;
 }
 
-/* Style chung cho các nút */
-.btn {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Hover effect */
-.btn:hover {
-  background-color: #0056b3;
-  transform: translateY(-2px);
-}
-
-/* Active (click) effect */
-.btn:active {
-  background-color: #004999;
-  transform: translateY(0);
-}
-
 .paner-main-status-product{
   display: flex;
   justify-content: center;
@@ -864,50 +839,87 @@ button.active{
   display:none;
   margin-bottom: 20px;
 }
-.input-value-xyk {
-  flex: 2;
-  padding:20px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  font-size: 14px;
-  background: #fff !important;
-  color: black !important;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-}
+
 
 /* Label + Input */
-.Alight-items-x {
+.Alight-items{
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  gap: 12px;
+  gap: 10px;
+
 }
 
-.Alight-items-x label {
+.Alight-items label {
   flex: 1;
   font-weight: 600;
   font-size: 15px;
   color: #333;
 }
 
-.Alight-items-x input {
-
-  flex: 2;
+.Alight-items input {
+  height: 40px;              /* cao hơn */
+  padding: 0 18px;
+  border: 2px solid #031414;
+  font-weight: 600;
+  flex: 4;
   padding: 10px 12px;
   border: 1px solid #ddd;
-  border-radius: 10px;
-  font-size: 14px;
   transition: 0.3s;
   background: #fff;
+  border-radius: 15px !important;
 }
 
-.Alight-items-x input:focus {
+.Alight-items input:focus {
   border-color: #4a90e2;
   outline: none;
   box-shadow: 0 0 6px rgba(74,144,226,0.35);
 }
+.btn-driver-capture-point {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px,20fr));
+  gap: 8px;
+}
+.btn-driver-capture-point button{
+  margin: 8px;
+  height: 70px;
+  display:flexbox;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #1976ff, #0052cc);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.btn-driver-capture-point img{
+ width: 30px;
+}
+
+.btn-driver-capture-point button:hover {
+  transform: translateY(-3px) scale(1.03);
+
+  background: linear-gradient(145deg, #0066dd, #0049a5);
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.22),
+    0 0 10px rgba(0, 119, 255, 0.35);
+}
+
+/* chạy ánh sáng */
+.btn-driver-capture-point button:hover::before {
+  left: 150%;
+}
+
+/* khi nhấn */
+.btn-driver-capture-point button:active {
+  transform: scale(0.96);
+}
+
+
 
 /* Nút bấm */
 button.btn {
@@ -1298,3 +1310,154 @@ form label {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Đổ bóng nhẹ */
 }
 
+
+
+/*Thanh Scoll */  
+.scroll-container{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.show-img-master{
+    background-color: rgb(45, 55, 55);
+    width:100%;
+    height: 16%;
+    display: flex;
+    border-radius: 5px;
+}
+
+.img-box{
+    width: 100%;
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-content: flex-start;
+    border: 1.5px solid rgba(31, 18, 18, 0.35);
+    background-color: rgb(7, 27, 20);
+}
+
+
+/* BOX MỖI ẢNH */
+.img-item{
+    width: 105px;
+    background-color: rgb(54, 138, 132);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: 0.2s ease;
+}
+
+.img-item:hover{
+    transform: scale(1.03);
+}
+
+
+/* ẢNH */
+.img-item img{
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+}
+
+
+/* TEXT */
+.img-text{
+    padding: 2px;
+    padding-top: 4px;
+    font-size: 11px;
+    text-align: center;
+    background-color: #244b45;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.img-box div:hover{
+    transform: translateY(-2px);
+    box-shadow:
+        0 4px 12px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.scroll-container::-webkit-scrollbar{
+    width: 12px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb{
+    background: rgba(233, 236, 237, 0.732);
+    border-radius: 20px;
+}
+
+.box-frame{
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center;
+    width: 100%;
+    border: 1px solid rgba(31, 18, 18, 0.35);
+    border-radius: 10px;
+    background-color: rgba(98, 246, 122, 0.903);
+    min-height: 100px;
+    height: auto;
+    
+}
+
+
+.text_inf_frame{
+    font-size: 14px;
+    padding-top: 5px;
+    color: rgb(32, 6, 6);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.img-box{
+    font-size: 12px;
+    padding-top: 3px;
+    color: rgb(244, 241, 241);
+    font-weight: 600;
+    flex: 1; 
+}
+
+.box-frame-selected{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    border: 2px solid #6fddff;
+
+    border-radius: 10px;
+
+    background: linear-gradient(
+        145deg,
+        rgba(82, 190, 230, 0.98),
+        rgba(45, 150, 210, 0.98)
+    );
+
+    min-height: 100px;
+    height: auto;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 0 10px rgba(4, 215, 46, 0.75),
+        0 0 22px rgba(111, 221, 255, 0.45),
+        inset 0 0 12px rgba(255,255,255,0.12);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease;
+}
