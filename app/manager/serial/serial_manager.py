@@ -25,13 +25,11 @@ class ManagerSerial:
         self.rx_thread = None
         self.tx_thread = None
 
-
         self.check_thread = threading.Thread(
             target=self._check_connect,
-            daemon=False,
+            daemon=True,
             name="CheckCOM"
         )
-
         self.check_thread.start()
 
 
@@ -43,12 +41,12 @@ class ManagerSerial:
         print("✅ Mở luồng RX/TX")
         self.rx_thread = threading.Thread(
             target=self._listen_serial,
-            daemon=False,
+            daemon=True,
             name="SerialRX"
         )
         self.tx_thread = threading.Thread(
             target=self._send_serial,
-            daemon=False,
+            daemon=True,
             name="SerialTX"
         )
         self.rx_thread.start()
@@ -69,6 +67,8 @@ class ManagerSerial:
             print("✅ Đã dừng TX")
         self.clear_rx_queue()
         self.clear_tx_queue()
+
+
 
     def _check_connect(self):
         # Cứ mỗi 2 s cập nhật lại kiểm tra kết nối với Com 1 lần.
@@ -97,7 +97,10 @@ class ManagerSerial:
                     print("Cố gắng kết nối với COM ...")
                     time.sleep(1)
                     continue
-                if not self.serial_com.ser:
+                if (
+                        not self.serial_com.ser
+                        or not self.serial_com.ser.is_open
+                    ):
                     print(
                         f"🔄 Đang mở {port_name}"
                     )
@@ -213,7 +216,7 @@ class ManagerSerial:
         while self.running_tx:
             try:
                 data = self.tx_queue.get(
-                    timeout=0.1
+                    timeout = 0.1
                 )
                 self.serial_com.send_data(
                     data
@@ -235,6 +238,7 @@ class ManagerSerial:
             return None
 
         return self.rx_queue.get()
+
 
     def clear_tx_queue(self):
 

@@ -1,7 +1,4 @@
 from pathlib import Path
-import uuid
-
-
 class Point:
 
     def __init__(

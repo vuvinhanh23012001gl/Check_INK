@@ -14,16 +14,30 @@ const scroll_container = document.querySelector(".scroll-container");
 
 // biến toàn cục luu mang data gửi lên
 let divCreateList = []; 
+
+
 let max_point_run ={}
 max_point_run.x =  0;
 max_point_run.y =  0;
 max_point_run.z = 0;
 
 
+let x_last = 0;
+let y_last = 0;
+let z_last = 0;
+
+let isSending = false;
+
+let point_select = {}; //id đang chọn
+point_select.frame = -1;
+point_select.id = -1;
+
 let  frame_selected = -1; // Frame hiện tại đang chọn 
 let  frame_count = 0;   // đếm số frame hiện có
 let  current_frame_box = null ; // Frame hiện tại đang đc click
+let product_selecting = null;   // Sản phẩm đang chọn
 let id_img = 0;
+
 
 exit_add_capture_product.addEventListener("click",()=>{
       fetch('/captureproduct/exit')
@@ -62,7 +76,7 @@ btn_function_capture_product.addEventListener("click",function(){
         });
              
         // });
-        if(!get_camera_connection()){ write_log_capture_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kết nối với Camera."); return;}
+        
     
 });
 
@@ -212,6 +226,7 @@ function create_table_product(data) {
        tbody.innerHTML = "";
        console.log(data)
        let id = data?.product_choose?._id;
+       product_selecting = id;
        let name = `${id}.${data?.product_choose?._name}`;
        let x = data?.infor_iai?.limit_x_max;
        max_point_run.x = x;
@@ -259,20 +274,174 @@ btn_add_point.addEventListener("click",()=>{
 
     current_frame_box.appendChild(img_item);
     img_item.addEventListener("click",()=>{
+        point_select.frame = frame_selected ;  //Gán id vào frame hiện tại.
+        point_select.id = img_item.dataset.id;
+        console.log(`Point đang click frame: ${point_select.frame} id: ${point_select.id }`);
         write_log_capture_clear("✍️ Nhập vị trí cần chụp ảnh.")
-        console.log("ID thật:", img_item.dataset.id);
+        // console.log("ID thật:", img_item.dataset.id);
         console.log("Tên hiển thị:", img_text.textContent);
-           create_table_controler(2);
+           create_table_controler(point_select);
+           container_driver(point_select,max_point_run.x,max_point_run.y,max_point_run.z);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     });
     id_img++;
 });
 
 
+function container_driver(point_select_current,Max_X,Max_Y,Max_Z){
+
+                const input_x = document.getElementById(`input-x-${point_select_current.id}`);input_x.type = "number";
+                const input_y = document.getElementById(`input-y-${point_select_current.id}`);input_y.type = "number";
+                const input_z = document.getElementById(`input-z-${point_select_current.id}`);input_z.type = "number";
+        
+                input_x.value = x_last;
+                input_y.value = y_last;
+                input_z.value = z_last;
+
+        
+                const btn_increase_x = document.getElementById(`btn-inc-x-${point_select_current.id}`);
+                const btn_decrease_x = document.getElementById(`btn-dec-x-${point_select_current.id}`);
+                const btn_increase_y = document.getElementById(`btn-inc-y-${point_select_current.id}`);
+                const btn_decrease_y = document.getElementById(`btn-dec-y-${point_select_current.id}`);
+                const btn_increase_z = document.getElementById(`btn-inc-z-${point_select_current.id}`);
+                const btn_decrease_z = document.getElementById(`btn-dec-z-${point_select_current.id}`);
+                const btn_run          = document.getElementById(`btn-run-${point_select_current.id}`);  // May cai nay khong can du lieu frame nen cu de no chay bang id du idtrung nhung n o 1 nhanh khac
+
+
+                const btn_capture      = document.getElementById(`btn-capture-${point_select_current.frame}-${point_select_current.id}`);
+                const btn_erase_master = document.getElementById(`btn-erase-${point_select_current.frame}-${point_select_current.id}`);
+                // if (
+                //     list_point[index]?.x == null ||
+                //     list_point[index]?.y == null ||
+                //     list_point[index]?.z == null ||
+                //     list_point[index]?.brightness == null
+                //     ) 
+                //                     {
+                //                         input_x.value = list_point[index]?.x ?? 0;
+                //                         input_y.value = list_point[index]?.y ?? 0;
+                //                         input_z.value = list_point[index]?.z ?? 0;
+                //                         input_k.value = list_point[index]?.brightness ?? 0;
+                //                     } else {
+                //                         input_x.value = list_point[index].x;
+                //                         input_y.value = list_point[index].y;
+                //                         input_z.value = list_point[index].z;
+                //                         input_k.value = list_point[index].brightness;
+                //                     }
+        
+                const handleIncreaseX = () => HandleClickBtnIncrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value);
+                const handleDecreaseX = () => HandleClickBtnDecrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value);
+
+                const handleIncreaseY = () => HandleClickBtnIncrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value);
+                const handleDecreaseY = () => HandleClickBtnDecrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value);
+
+                const handleIncreaseZ = () => HandleClickBtnIncrease_Z(input_z, Max_Z, input_x.value, input_y.value, input_z.value);
+                const handleDecreaseZ = () => HandleClickBtnDecrease_Z(input_z, Max_Z, input_x.value, input_y.value, input_z.value);
+
+
+                const handleRun       = () => HandleClickBtnRun(input_x.value, input_y.value, input_z.value);
+
+
+                const handleCapture   = () => HandleClickBtnCapture( point_select_current.frame, point_select_current.id, input_x.value, input_y.value, input_z.value);
+                // const handleErase     = () => HandleClickBtnEraseMaster(index);
+
+                // Gắn event (trước khi add thì remove trước để tránh trùng)
+                btn_increase_x.removeEventListener("click", handleIncreaseX);
+                btn_increase_x.addEventListener("click", handleIncreaseX);
+
+                btn_decrease_x.removeEventListener("click", handleDecreaseX);
+                btn_decrease_x.addEventListener("click", handleDecreaseX);
+
+                btn_increase_y.removeEventListener("click", handleIncreaseY);
+                btn_increase_y.addEventListener("click", handleIncreaseY);
+
+                btn_decrease_y.removeEventListener("click", handleDecreaseY);
+                btn_decrease_y.addEventListener("click", handleDecreaseY);
+
+                btn_increase_z.removeEventListener("click", handleIncreaseZ);
+                btn_increase_z.addEventListener("click", handleIncreaseZ);
+
+                btn_decrease_z.removeEventListener("click", handleDecreaseZ);
+                btn_decrease_z.addEventListener("click", handleDecreaseZ);
+
+                btn_run.removeEventListener("click", handleRun);
+                btn_run.addEventListener("click", handleRun);
+
+                // btn_capture.removeEventListener("click", handleCapture);
+                btn_capture.addEventListener("click", handleCapture);
+
+                // btn_erase_master.removeEventListener("click", handleErase);
+                // btn_erase_master.addEventListener("click", handleErase);
+
+}
+
+async function sendPoint(x, y, z) {
+    if (isSending) {
+      console.warn("⚠️ Đang gửi dữ liệu, vui lòng đợi...");
+      write_log_capture_clear("⚠️ Đang gửi dữ liệu vui lòng đợi ...")
+      return null; 
+    }
+    isSending = true; 
+    try {
+      const response = await fetch(`/captureproduct/run_point`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ x, y, z})
+      });
+      const data = await response.json();
+      console.log("data?.status",data);
+      if (data?.status){
+        write_log_capture_clear("✅ Gửi dữ liệu thành công.");
+        return true;
+      }
+       write_log_capture_clear(data.message);//Server gui du lieu bi qua han
+       return null;
+    } catch (error) {
+      console.error('Lỗi khi gửi điểm:', error);
+      alert('❌ Gửi dữ liệu thất bại.');
+      return null;
+    } finally {
+      isSending = false; 
+    }
+}
+
+function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
+    let status_check = validatePoint(input_x_value,input_y_value,input_z_value,max_point_run.x ,max_point_run.y ,max_point_run.z);
+    if(!status_check){
+    //   console.log("Dữ liệu không hợp lệ");
+    //   write_log_capture_clear("❌ Dữ liệu không nằm trong giới hạn trục.\n✅ Hãy kiểm tra lại\n");
+      return;
+    }
+    sendPoint(input_x_value,input_y_value,input_z_value);    
+}
+
+
 btn_add_frame.addEventListener("click",function(){
     
     write_log_capture_clear("");
-    console.log("Bạn vừa click vào thêm frame");
+    // console.log("Bạn vừa click vào thêm frame");
     
 
     const div_box_frame = document.createElement("div");
@@ -392,42 +561,45 @@ btn_add_frame.addEventListener("click",function(){
         
 });
  
-function HandleClickBtnCapture(index,x,y,k){
+function HandleClickBtnCapture(frame_id,point_id, x , y , z){
     console.log("-Đã nhấn vào chụp-");
-    postData("/captureproduct/capture", { "status": "200OK","index":index,"x":x,"y":y,"k":k})
-    .then(data => {
-        if (data?.status == "ok"){
-            // renderMaster(data);
-            // write_log_capture_clear("✔️ Chụp ảnh thành công \n✅ Hãy chụp điểm tiếp theo.");
-        }
-    });
+    let status_check = validatePoint(x,y,z,max_point_run.x ,max_point_run.y ,max_point_run.z);
+    if (status_check){
+            postData("/captureproduct/capture",{"product_selecting":product_selecting,"id_frame":frame_id,"id_point":point_id,"x":x,"y":y,"z":z})
+            .then(data => {
+                if (data?.status == "ok"){
+                    // renderMaster(data);
+                    // write_log_capture_clear("✔️ Chụp ảnh thành công \n✅ Hãy chụp điểm tiếp theo.");
+                }
+        });
+    }
 }
 
+   
 
-
-function create_table_controler(index){
+function create_table_controler(point_select_current){
       anonymous.innerHTML = "";
-      anonymous.appendChild(createInputRow("Nhập x:", "X là số nguyên dương", `input-x-${index}`));
-      anonymous.appendChild(createInputRow("Nhập y:", "Y là số nguyên dương", `input-y-${index}`));
-      anonymous.appendChild(createInputRow("Nhập z:", "Z là số nguyên dương", `input-z-${index}`));
+      anonymous.appendChild(createInputRow("Nhập x:", "X là số nguyên dương", `input-x-${point_select_current.id}`));
+      anonymous.appendChild(createInputRow("Nhập y:", "Y là số nguyên dương", `input-y-${point_select_current.id}`));
+      anonymous.appendChild(createInputRow("Nhập z:", "Z là số nguyên dương", `input-z-${point_select_current.id}`));
 
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-x-${index}`, icon: "../static/img/add1.png", alt: "Tăng X", text: "Tăng X"},
-          {id: `btn-dec-x-${index}`, icon: "../static/img/minus.png", alt: "Giảm X", text: "Giảm X"}
+          {id: `btn-inc-x-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng X", text: "Tăng X"},
+          {id: `btn-dec-x-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm X", text: "Giảm X"}
       ]));
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-y-${index}`, icon: "../static/img/add1.png", alt: "Tăng Y", text: "Tăng Y"},
-          {id: `btn-dec-y-${index}`, icon: "../static/img/minus.png", alt: "Giảm Y", text: "Giảm Y"}
+          {id: `btn-inc-y-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng Y", text: "Tăng Y"},
+          {id: `btn-dec-y-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm Y", text: "Giảm Y"}
       ]));
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-z-${index}`, icon: "../static/img/add1.png", alt: "Tăng Z", text: "Tăng Z"},
-          {id: `btn-dec-z-${index}`, icon: "../static/img/minus.png", alt: "Giảm Z", text: "Giảm Z"}
+          {id: `btn-inc-z-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng Z", text: "Tăng Z"},
+          {id: `btn-dec-z-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm Z", text: "Giảm Z"}
       ]));
 
       anonymous.appendChild(createButtonRow([
-          {id: `btn-run-${index}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy"},
-          {id: `btn-capture-${index}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
-          {id: `btn-erase-master-${index}`, icon: "../static/img/eraser (5).png", alt: "Xóa ảnh", text: "Xóa ảnh"}
+          {id: `btn-run-${point_select_current.id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy"},
+          {id: `btn-capture-${point_select_current.frame}-${point_select_current.id}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
+          {id: `btn-erase-${point_select_current.frame}-${point_select_current.id}`, icon: "../static/img/eraser (5).png", alt: "Xóa ảnh", text: "Xóa ảnh"}
       ]));                  
       anonymous.style.display = "block";
 }
@@ -451,11 +623,12 @@ function createInputRow(labelText, placeholder, id = null) {
 
     return div;
 }
-btn_stream_video.addEventListener("click",()=>{
-    wrap_canvas.style.display = "none";
-     console.log("đã nhấn nút Stream video");
-     show_video_product();
 
+btn_stream_video.addEventListener("click",()=>{
+     wrap_canvas.style.display = "none";
+     console.log("đã nhấn nút Stream video");
+     if(!get_camera_connection()){ write_log_capture_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kiểm tra kết nối.\n"); return;}
+     show_video_product();
 });
 
 
@@ -481,61 +654,126 @@ function createButtonRow(buttons) {
     return div;
 }
 
+// Hàm kiểm tra một giá trị có hợp lệ hay không
+function isInvalid(value) {
+  let num = Number(value);
+  return (
+    value === null ||        // null
+    value === undefined ||   // undefined
+    value === "" ||          // rỗng
+    isNaN(num) ||            // không phải số
+    !Number.isInteger(num)   // không phải số nguyên
+  );
+}
 
-function HandleClickBtnIncrease_X(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value){
+
+// Hàm validate toàn bộ điểm
+function validatePoint(x, y, z, Limit_x, Limit_y, Limit_z) {
+    console.log("Dữ liệu trước khi chạy",x, y, z, Limit_x, Limit_y, Limit_z);
+    if (
+      isInvalid(x) || 
+      isInvalid(y) || 
+      isInvalid(z) || 
+      isInvalid(Limit_x) ||
+      isInvalid(Limit_y) ||
+      isInvalid(Limit_z) 
+    ) {
+      write_log_capture_clear(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
+      console.log(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
+      return false;  // trả về false thay vì string
+    }
+
+    // Ép kiểu int sau khi đã check hợp lệ
+    x = parseInt(x);
+    y = parseInt(y);
+    z = parseInt(z);
+    Limit_x = parseInt(Limit_x);
+    Limit_y = parseInt(Limit_y);
+    Limit_z = parseInt(Limit_z);
+
+    // Các điều kiện giới hạn
+    if (x < 0 || y < 0 || z < 0 ) {
+      write_log_capture_clear(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
+      console.log(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
+      return false;
+    }
+    if (x > Limit_x) {
+      write_log_capture_clear(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`)
+      console.log(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`);
+      return false;
+    }
+    if (y > Limit_y) {
+      write_log_capture_clear(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`)
+      console.log(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`);
+      return false;
+    }
+    if (z > Limit_z) {
+        write_log_capture_clear(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
+      console.log(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
+      return false;
+    }
+    console.log("✅ Dữ liệu hợp lệ");
+    return true; // hợp lệ
+}
+
+
+
+
+function HandleClickBtnIncrease_X(element,max_element,input_x_value,input_y_value,input_z_value){
        let status_check = CheckData(element,"X",input_x_value,max_element);
        if(status_check){
           console.log("input_x_value", input_x_value);
          element.value = parseInt(input_x_value) + 1;
-         HandleClickBtnRun(element.value,input_y_value,input_z_value,input_k_value);
+         HandleClickBtnRun(element.value,input_y_value,input_z_value);
        }
 
 }
-function HandleClickBtnDecrease_X(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value) {
+function HandleClickBtnDecrease_X(element,max_element,input_x_value,input_y_value,input_z_value) {
     let new_value = parseInt(input_x_value) - 1;
     let status_check = CheckData(element,"X", new_value, max_element);
     if (status_check) {
         element.value = new_value; 
-        HandleClickBtnRun(element.value,input_y_value,input_z_value,input_k_value);
+        HandleClickBtnRun(element.value,input_y_value,input_z_value);
     } else {
         element.value = 0; 
     }
 }   
 
-function HandleClickBtnIncrease_Y(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value){
+function HandleClickBtnIncrease_Y(element,max_element,input_x_value,input_y_value,input_z_value){
        let status_check = CheckData(element,"Y",input_y_value,max_element);
        if(status_check){
          element.value = parseInt(input_y_value) + 1;
-          HandleClickBtnRun(input_x_value,element.value,input_z_value,input_k_value);
+          HandleClickBtnRun(input_x_value,element.value,input_z_value);
        }
 }
-function HandleClickBtnDecrease_Y(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value){
+function HandleClickBtnDecrease_Y(element,max_element,input_x_value,input_y_value,input_z_value){
     let new_value = parseInt(input_y_value) - 1;
     let status_check = CheckData(element,"Y", new_value, max_element);
     if (status_check) {
         element.value = new_value; 
-        HandleClickBtnRun(input_x_value,element.value,input_z_value,input_k_value);
+        HandleClickBtnRun(input_x_value,element.value,input_z_value);
     } else {
         element.value = 0; 
     }
 }
 
-function HandleClickBtnIncrease_K(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value){
-        let status_check = CheckData(element,"K",input_k_value,max_element);
+function HandleClickBtnIncrease_Z(element,max_element,input_x_value,input_y_value,input_z_value){
+        let status_check = CheckData(element,"Z",input_z_value,max_element);
         if(status_check){
-          element.value = parseInt(input_k_value) + 1;
-           HandleClickBtnRun(input_x_value,input_y_value,input_z_value,element.value);
-    } 
+          element.value = parseInt(input_z_value) + 1;
+          HandleClickBtnRun(input_x_value,input_y_value,element.value);
+        }
 }
-function HandleClickBtnDecrease_K(element,max_element,input_x_value,input_y_value,input_z_value,input_k_value){
-    let new_value = parseInt(input_k_value) - 1;
-    let status_check = CheckData(element,"K", new_value, max_element);
+function HandleClickBtnDecrease_Z(element,max_element,input_x_value,input_y_value,input_z_value){
+    let new_value = parseInt(input_z_value) - 1;
+    let status_check = CheckData(element,"Z", new_value, max_element);
     if (status_check) {
         element.value = new_value; 
-        HandleClickBtnRun(input_x_value,input_y_value,input_z_value,element.value);
+        HandleClickBtnRun(input_x_value,input_y_value,element.value);
     } else {
         element.value = 0; 
     }
+
 }
 
 function CheckData(element,str_name, data, value_max) {

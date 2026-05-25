@@ -20,5 +20,9 @@ class QueueConfig:
     SIZE_QUEUE_IMG_CALIBRATION = 201
     name_queue_img_calibration  = "queue_calibration"   
 
+    SIZE_QUEUE_DATA_SEND_MCU = 500
+    SIZE_QUEUE_DATA_LISTEN_MCU = 500
+
+
 
 

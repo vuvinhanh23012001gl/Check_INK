@@ -1,0 +1,43 @@
+{
+    "1": [
+        {
+            "point_id": 102,
+            "x": 20,
+            "y": 200,
+            "z": 300,
+            "path_model_patch_core": "storage\\model\\patch_core\\1\\102",
+            "path_img_point": "storage\\img_points\\1\\102.jpg",
+            "path_img_retrain": "storage\\retrain\\patch_core\\1\\102",
+            "arr_polygon": [
+                [
+                    [
+                        10,
+                        10
+                    ],
+                    [
+                        100,
+                        10
+                    ],
+                    [
+                        100,
+                        100
+                    ]
+                ],
+                [
+                    [
+                        200,
+                        200
+                    ],
+                    [
+                        300,
+                        200
+                    ],
+                    [
+                        300,
+                        300
+                    ]
+                ]
+            ]
+        }
+    ]
+}

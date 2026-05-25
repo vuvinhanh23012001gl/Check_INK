@@ -3,14 +3,18 @@
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 # from app.utils import obj_queue,type_capture,name_queue_log_client
 
-from fastapi import APIRouter, WebSocket, Body, Depends
+from fastapi import APIRouter, WebSocket, Body, Depends,HTTPException
 from app.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
 from app.config import TypeSend
 import cv2
 import asyncio
+from pydantic import BaseModel
 
-
+class PointData(BaseModel):
+    x: float
+    y: float
+    z: float
 
 router = APIRouter(
     prefix="/captureproduct",
@@ -38,6 +42,44 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
             infor_iai = services.obj_iai_config.get_dict()
             # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
             return {"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+
+
+@router.post("/capture")
+async def capture(services: ServiceContainer = Depends(get_services),data: dict = Body(...)):
+    print("--------------Chụp ảnh point----------------")
+    product_selecting = data.get("product_selecting")
+    id_frame = data.get("id_frame")
+    id_point = data.get("id_point")
+    x = data.get("x")
+    y = data.get("y")
+    z = data.get("z")
+    print("product_selecting",product_selecting)
+    print("id_frame:", id_frame)
+    print("id_point:", id_point)
+    print("x:", x)
+    print("y:", y)
+    print("z:", z) 
+    choose_product_current = services.obj_choose_product.get_choose_product().data
+    if choose_product_current == product_selecting:
+        print("chọn đúng sản phảm")
+        pass
+    else:
+        print("chonj sai san pham")
+    
+       # UI_Capture
+    # choose_product_current = services.obj_choose_product.get_choose_product().data
+    # if choose_product_current == -1:
+    #     msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
+    #     # print(msg)
+    #     services.queue_log_send_client({"type": TypeSend.type_log_capture, "message": msg})
+    #     print("--------------Hết UI capture----------------")
+    #     return {"status": "error", "message": msg}
+    # else:
+    #     product_choose = services.obj_products_service.get_product_by_id(choose_product_current)
+    #     if product_choose.data:
+    #         infor_iai = services.obj_iai_config.get_dict()
+    #         # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+    #         return {"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
 
     
 
@@ -83,8 +125,22 @@ async def exit():
 #         # print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
 #         return {"status": "ok","path_arr_img": arr_path_img,"arr_point":arr_run_point,"inf_product":infor}
       
-
-
+@router.post("/run_point")
+async def run_point(data: PointData,services: ServiceContainer = Depends(get_services)):
+    x = data.x
+    y = data.y
+    z = data.z
+    print(f"Nhận tọa độ: X={x}, Y={y}, Z={z}")
+    if services.obj_iai_service.is_valid_position(x,y,z):
+        services.obj_com_service.send(x,y,z)
+        return {
+        "status":True,
+        "message": f"Đã nhận tọa độ ({x}, {y}, {z}) và xử lý không thành công."
+        }
+    return {
+        "status": False,
+        "message": f"Đã nhận tọa độ ({x}, {y}, {z}) và xử lý thành công."
+    }
 
 @router.websocket("/ws")
 async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_services_ws)):
@@ -108,7 +164,7 @@ async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_servi
                             await asyncio.sleep(1)
                             services.obj_camera.refesh_data()
                             services.obj_camera.init()
-                            services.queue_log_send_client.put({"type":TypeSend.type_log_capture,"message":"✅ Cammera Không được kết nối."})
+                            # services.queue_log_send_client.put({"type":TypeSend.type_log_capture,"message":"✅ Cammera Không được kết nối."}) #Gui duoc binh thuong
                 else:
                     await asyncio.sleep(0.01)
             except:

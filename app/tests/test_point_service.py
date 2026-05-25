@@ -44,14 +44,14 @@ def test_point_service():
     # # ADD
     # # =========================
 
-    # import numpy as np
-    # img = np.zeros(
-    #     (100, 100, 3),
-    #     dtype=np.uint8
-    # )
+    import numpy as np
+    img = np.zeros(
+        (100, 100, 3),
+        dtype=np.uint8
+    )
 
-    # res_add = service.add_point(product_id=3, point=point, img =  img)
-    # print_result("ADD POINT", res_add)
+    res_add = service.add_point(product_id=1, point=point, img =  img)
+    print_result("ADD POINT", res_add)
 
 
 

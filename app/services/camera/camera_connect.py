@@ -15,7 +15,7 @@ class Camera():
 
     DISPLAY_RESIZE_FACTOR = 1.0
     ERRO_TIMEOUT = "ErroTimeOutCapture"
-    TIMEOUT_WAIT_NEW_FRAME  = 1     # số giây để reconnect lại
+    TIMEOUT_WAIT_NEW_FRAME  = 10     # số giây để reconnect lại
     TIMEDELAY_TASK_THREAD_CAMERA = 0.1
 
     def __init__(self):

@@ -20,3 +20,6 @@ type = "CaptureProduct"
 ErroTimeOutCapture   #Loi chup anh Timeout
 Kich thuoc anh  
 2048 x 1536
+
+
+# Có 3 luồng hiện tại luôn bật luồng Conect camera,Luồng check conect COM . nếu con nect thành công sẽ có thêm 2 luồng TX RX của Com nữa

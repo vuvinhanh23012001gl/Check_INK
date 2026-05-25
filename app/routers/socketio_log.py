@@ -39,14 +39,15 @@ async def log_sender(app):
     services: ServiceContainer = app.state.services
     while True:
             await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
+            # print(services.obj_camera.get_is_connect())
             data_log = services.queue_log_send_client.get()
             if data_log is not None:
                 log_type = data_log.get("type",None)
                 if log_type == TypeSend.type_log_capture:
                     msg = data_log.get("message","")
-                    print("msg",msg)
+                    # print("msg",msg)
                     await sio.emit(TypeSend.type_log_capture, {"msg": msg}, namespace = NAMESPACE_LOG)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
   
 
 
