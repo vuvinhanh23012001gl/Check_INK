@@ -1,12 +1,15 @@
 from pathlib import Path
+import uuid
+
+
 class Point:
 
     def __init__(
         self,
         point_id: int,
-        x: float,
-        y: float,
-        z: float,
+        x:int,
+        y:int,
+        z:int,
 
 
         path_model_patch_core: str | Path | None = None,
@@ -232,11 +235,7 @@ class Point:
     # =========================
 
     def to_dict(self) -> dict:
-
         return {
-
-            "point_id": self.point_id,
-
             "x": self.x,
             "y": self.y,
             "z": self.z,

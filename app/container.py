@@ -4,13 +4,20 @@
 # from app.services.calculate_the_dimensions.handler_work_detect import ImageQueueTester 
 from app.services.camera import Camera
 # from app.services.product import ChooseProduct,ProductManager
-from app.services import ProductService,ChooseProductService,IAIService,ComService
+from app.services import ProductService,ChooseProductService,IAIService,ComService,PointService
 from app.services.log import Infor_Software,Config_SoftWare,Manager_Log
 from app.config import QueueConfig,TypeSend,IAIConfig
 from app.model import QueueManager,Worker
-from app.config import PATH_PRODUCT_MODEL,PATH_FILE_DATA_CONFIG_IAI
-from app.repository import ChooseProductRepository,ProductRepository
+from app.repository import ChooseProductRepository,ProductRepository,PointRepository
 import queue
+from app.validate import ValidateCaptureProduct
+from app.config import (
+    PATH_CONFIG_POINTS,
+    PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
+    PATH_FOLDER_IMG_COORDINATE_PRODUCT,
+    PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
+    BASE_DIR, PATH_PRODUCT_MODEL,PATH_FILE_DATA_CONFIG_IAI
+)
 
 # COM
 
@@ -55,7 +62,8 @@ class ServiceContainer:
         self.queue_listen_MCU = queue.Queue(maxsize=QueueConfig.SIZE_QUEUE_DATA_LISTEN_MCU)
 
         print("...----------------------------------.Init Service...-----------------------------.")
-        
+        #validate
+        self.obj_validate_capture_product = ValidateCaptureProduct()
         
         # Viết Cấu hình IAI xử dụng COM kết nối
         from app.manager.serial import ManagerSerial
@@ -66,10 +74,10 @@ class ServiceContainer:
         self.obj_serial_connect = SerialConnect(self.obj_com_reponsitory)
         self.obj_manager_serial = ManagerSerial(self.obj_serial_connect,self.queue_listen_MCU,self.queue_send_MCU)
         self.obj_com_service = ComService(self.obj_manager_serial)
-        
-        # Viet giao tiep voi COM da ok
 
-
+        self.obj_point_repository = PointRepository(PATH_CONFIG_POINTS)
+        self.obj_point_service = PointService(self.obj_point_repository,PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
+                                              PATH_FOLDER_IMG_COORDINATE_PRODUCT,PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,BASE_DIR)
         self.obj_camera = Camera()
         print("✔ Camera init")
         # self.obj_calibration = HandlerCalibration(self.obj_camera,

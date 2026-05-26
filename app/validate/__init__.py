@@ -1,0 +1,1 @@
+from .validate_capture_product import ValidateCaptureProduct

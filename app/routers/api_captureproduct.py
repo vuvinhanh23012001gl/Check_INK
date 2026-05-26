@@ -2,8 +2,8 @@
 # import sys
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 # from app.utils import obj_queue,type_capture,name_queue_log_client
-
-from fastapi import APIRouter, WebSocket, Body, Depends,HTTPException
+from app.model import Point
+from fastapi import APIRouter, WebSocket, Body, Depends
 from app.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
 from app.config import TypeSend
@@ -33,7 +33,7 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
     if choose_product_current == -1:
         msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
         # print(msg)
-        services.queue_log_send_client({"type": TypeSend.type_log_capture, "message": msg})
+        services.queue_log_send_client.put({"type": TypeSend.type_log_capture, "message": msg})
         print("--------------Hết UI capture----------------")
         return {"status": "error", "message": msg}
     else:
@@ -41,48 +41,81 @@ async def captureproduct_load(services: ServiceContainer = Depends(get_services)
         if product_choose.data:
             infor_iai = services.obj_iai_config.get_dict()
             # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
-            return {"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+            return {"data_point": services.obj_point_service.get_points_by_product_id(choose_product_current),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
 
+
+
+# print("product_selecting",product_selecting)
+# print("id_frame:", id_frame)
+# print("id_point:", id_point)
+# print("x:", x)
+# print("y:", y)
+# print("z:", z) 
 
 @router.post("/capture")
 async def capture(services: ServiceContainer = Depends(get_services),data: dict = Body(...)):
     print("--------------Chụp ảnh point----------------")
-    product_selecting = data.get("product_selecting")
-    id_frame = data.get("id_frame")
-    id_point = data.get("id_point")
-    x = data.get("x")
-    y = data.get("y")
-    z = data.get("z")
-    print("product_selecting",product_selecting)
-    print("id_frame:", id_frame)
-    print("id_point:", id_point)
-    print("x:", x)
-    print("y:", y)
-    print("z:", z) 
-    choose_product_current = services.obj_choose_product.get_choose_product().data
-    if choose_product_current == product_selecting:
-        print("chọn đúng sản phảm")
-        pass
-    else:
-        print("chonj sai san pham")
-    
-       # UI_Capture
-    # choose_product_current = services.obj_choose_product.get_choose_product().data
-    # if choose_product_current == -1:
-    #     msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-    #     # print(msg)
-    #     services.queue_log_send_client({"type": TypeSend.type_log_capture, "message": msg})
-    #     print("--------------Hết UI capture----------------")
-    #     return {"status": "error", "message": msg}
-    # else:
-    #     product_choose = services.obj_products_service.get_product_by_id(choose_product_current)
-    #     if product_choose.data:
-    #         infor_iai = services.obj_iai_config.get_dict()
-    #         # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
-    #         return {"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+    try:
+        product_selecting = int(data.get("product_selecting"))
+        id_frame = int(data.get("id_frame"))
+        id_point = int(data.get("id_point"))
+        x = int(data.get("x"))
+        y = int(data.get("y"))
+        z = int(data.get("z"))
+  
+    except Exception:
+        print("Lỗi kiểu đinh dạng gửi vào")
+        return {
+            "ok": False,
+            "error": "INVALID_INPUT",
+            "message": "Dữ liệu đầu vào không hợp lệ"
+        }
 
-    
-
+    if services.obj_choose_product.get_choose_product().data == product_selecting:
+        # se thay ham doi anh
+        import numpy as np
+        img = np.random.randint(
+                    0, 256,
+                    (200, 200, 3),
+                    dtype=np.uint8
+        )
+        status_check_point = services.obj_point_service.is_exists_product_and_point_id(product_selecting,id_point)
+        product_choose = services.obj_products_service.get_product_by_id(product_selecting)
+        infor_iai = services.obj_iai_config.get_dict()
+        if not status_check_point:
+                point = Point(id_point,x,y,z)
+                result_add_point = services.obj_point_service.add_point(product_selecting,id_frame,point,img)
+                if result_add_point.ok:
+                        print("tạo điểm mới thành công")
+                        return {
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data
+                        }
+                print("Tạo điểm mới thất bại")
+                return {
+                    "ok": False,
+                    "error": result_add_point.error,
+                    "message": result_add_point.message()
+                }
+        else:
+                print("Update điểm cũ đã có")
+                result_update  = services.obj_point_service.update_point(product_selecting,id_frame,id_point,x,y,z,img)
+                if result_update.ok:
+                        print("update điểm cũ thành công.")
+                        # return {
+                        #     "ok": True,
+                        #     "data": result_update.data,
+                        #     "message": "Success"
+                        #     }
+                            
+                        return {
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data
+                        }
+                print("update điểm cũ thất bại")
+                return {
+                    "ok": False,
+                    "error": result_update.error,
+                    "message": result_update.message()
+                }
 
 
 @router.get("/exit")
