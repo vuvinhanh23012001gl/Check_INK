@@ -10,6 +10,7 @@ from app.config import TypeSend
 import cv2
 import asyncio
 from pydantic import BaseModel
+from app.core import (Result,ErrorCode)
 
 class PointData(BaseModel):
     x: float
@@ -22,38 +23,148 @@ router = APIRouter(
 )
 
 
+# @router.post("/")
+# async def captureproduct_load(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
+#     print("--------------Vào UI capture----------------")
+#     status = payload.get("status")
+#     print("Status:", status)    # UI_Capture
+#     choose_product_current = services.obj_choose_product.get_choose_product()
+#     if choose_product_current.ok:
+#         if 
 
+#         return {"ok": choose_product_current.ok, "message": choose_product_current.message(),"error"}
+#     else:
+#         product_choose = services.obj_products_service.get_product_by_id(choose_product_current)
+#         if product_choose.data:
+#             infor_iai = services.obj_iai_config.get_dict()
+#             # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
+#             return {"data_point": services.obj_point_service.get_points_by_product_id(choose_product_current),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+        
 
 @router.post("/")
-async def captureproduct_load(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
+async def captureproduct_load(
+    services: ServiceContainer = Depends(get_services),
+    payload: dict = Body(...)
+):
     print("--------------Vào UI capture----------------")
     status = payload.get("status")
-    print("Status:", status)    # UI_Capture
+    print("Status:", status)
+    choose_product_current = services.obj_choose_product.get_choose_product()
+    print("choose_product_current",choose_product_current)
+    if not choose_product_current.ok:
+        return Result.Fail(choose_product_current.error).to_dict()
+    product_id = choose_product_current.data
+    product_result = services.obj_products_service.get_product_by_id(product_id)
+    if not product_result.ok:
+        return Result.Fail(product_result.error).to_dict()
+    product = product_result.data
+    infor_iai = services.obj_iai_config.get_dict()
+    points_result = services.obj_point_service.get_points_by_product_id(product_id)
+    return Result.Ok({
+        "product": product,
+        "infor_iai": infor_iai,
+        "data_point": points_result.data if points_result.ok else [],
+    }).to_dict()
+
+
+
+@router.get("/infor_product_and_iai")
+def infor_product_and_iai(services: ServiceContainer = Depends(get_services)):
     choose_product_current = services.obj_choose_product.get_choose_product().data
-    if choose_product_current == -1:
-        msg = " Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-        # print(msg)
-        services.queue_log_send_client.put({"type": TypeSend.type_log_capture, "message": msg})
-        print("--------------Hết UI capture----------------")
-        return {"status": "error", "message": msg}
-    else:
-        product_choose = services.obj_products_service.get_product_by_id(choose_product_current)
-        if product_choose.data:
-            infor_iai = services.obj_iai_config.get_dict()
-            # result = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
-            return {"data_point": services.obj_point_service.get_points_by_product_id(choose_product_current),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data}
+    if choose_product_current != -1:
+        infor_iai = services.obj_iai_config.get_dict()
+        result_product = services.obj_products_service.get_product_by_id(choose_product_current)
+        if result_product.ok:
+            return {"ok":True,"infor_iai":infor_iai,"product":result_product.data}
+        return {"ok":False,"infor_iai":None,"product":None,"messeage":result_product.message()}
+    return {"ok":False,"infor_iai":None,"product":None,"messeage":"Bạn chưa chọn loại sản phẩm.Hãy nhấn \"Chọn loại sản phẩm\""}
+    
+# @router.post("/capture")
+# async def capture(
+#     services: ServiceContainer = Depends(get_services),
+#     data: dict = Body(...)
+# ):
+#     print("--------------Chụp ảnh point----------------")
+#     try:
+#         product_selecting = int(data.get("product_selecting"))
+#         id_frame = int(data.get("id_frame"))
+#         id_point = int(data.get("id_point"))
+#         x = int(data.get("x"))
+#         y = int(data.get("y"))
+#         z = int(data.get("z"))
+#     except Exception:
+#         return Result.Fail("INVALID_INPUT").to_dict()
+#     result_product = services.obj_choose_product.get_choose_product()
+#     if result_product.data != product_selecting:
+#         return Result.Fail(result_product.error).to_dict()
+#     import numpy as np
+#     img = np.random.randint(
+#         0, 256,
+#         (200, 200, 3),
+#         dtype=np.uint8
+#     )
+#     status_check_point = (
+#         services.obj_point_service
+#         .is_exists_product_frame_point_id(
+#             product_selecting,
+#             id_frame,
+#             id_point
+#         )
+#     )
+#     if not status_check_point:
+#         print("Tạo điểm mới")
+#         point = Point(id_point, x, y, z)
+#         result_action = services.obj_point_service.add_point(
+#             product_selecting,
+#             id_frame,
+#             point,
+#             img
+#         )
 
 
+#     else:
+#         print("Update điểm cũ")
+#         result_action = services.obj_point_service.update_point(
+#             product_selecting,
+#             id_frame,
+#             id_point,
+#             x,
+#             y,
+#             z,
+#             img
+#         )
 
-# print("product_selecting",product_selecting)
-# print("id_frame:", id_frame)
-# print("id_point:", id_point)
-# print("x:", x)
-# print("y:", y)
-# print("z:", z) 
+#     if not result_action.ok:
+#         return Result.Fail(result_action.error).to_dict()
+
+#     product_result = services.obj_products_service.get_product_by_id(
+#         product_selecting
+#     )
+
+#     if not product_result.ok:
+#         return Result.Fail(product_result.error).to_dict()
+
+#     points_result = (
+#         services.obj_point_service
+#         .get_points_by_product_id(product_selecting)
+#     )
+
+#     if not points_result.ok:
+#         return Result.Fail(points_result.error).to_dict()
+
+#     infor_iai = services.obj_iai_config.get_dict()
+
+#     return Result.Ok({
+#         "product": product_result.data,
+#         "infor_iai": infor_iai,
+#         "data_point": points_result.data,
+#     }).to_dict()
+
+
 
 @router.post("/capture")
 async def capture(services: ServiceContainer = Depends(get_services),data: dict = Body(...)):
+
     print("--------------Chụp ảnh point----------------")
     try:
         product_selecting = int(data.get("product_selecting"))
@@ -62,13 +173,12 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
         x = int(data.get("x"))
         y = int(data.get("y"))
         z = int(data.get("z"))
-  
     except Exception:
         print("Lỗi kiểu đinh dạng gửi vào")
         return {
             "ok": False,
             "error": "INVALID_INPUT",
-            "message": "Dữ liệu đầu vào không hợp lệ"
+            "message": "Dữ liệu đầu vào không hợp lệ x y z id frame id_point có thể không phải là int"
         }
 
     if services.obj_choose_product.get_choose_product().data == product_selecting:
@@ -79,17 +189,17 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
                     (200, 200, 3),
                     dtype=np.uint8
         )
-        status_check_point = services.obj_point_service.is_exists_product_and_point_id(product_selecting,id_point)
-        product_choose = services.obj_products_service.get_product_by_id(product_selecting)
+        status_check_point = services.obj_point_service.is_exists_product_frame_point_id(product_selecting,id_frame,id_point)
+        product = services.obj_products_service.get_product_by_id(product_selecting)
         infor_iai = services.obj_iai_config.get_dict()
         if not status_check_point:
                 point = Point(id_point,x,y,z)
                 result_add_point = services.obj_point_service.add_point(product_selecting,id_frame,point,img)
                 if result_add_point.ok:
-                        print("tạo điểm mới thành công")
-                        return {
-                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data
-                        }
+                        print("Tạo điểm mới thành công.")
+                        return Result.Ok({
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,"infor_iai":infor_iai,"product":product.data
+                        }).to_dict()
                 print("Tạo điểm mới thất bại")
                 return {
                     "ok": False,
@@ -97,20 +207,14 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
                     "message": result_add_point.message()
                 }
         else:
-                print("Update điểm cũ đã có")
+                print("Update điểm cũ đã tồn tại.")
                 result_update  = services.obj_point_service.update_point(product_selecting,id_frame,id_point,x,y,z,img)
                 if result_update.ok:
-                        print("update điểm cũ thành công.")
-                        # return {
-                        #     "ok": True,
-                        #     "data": result_update.data,
-                        #     "message": "Success"
-                        #     }
-                            
-                        return {
-                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting),"status": "ok","infor_iai":infor_iai,"product_choose":product_choose.data
-                        }
-                print("update điểm cũ thất bại")
+                        print("update điểm cũ thành công.")  
+                        return Result.Ok({
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,"infor_iai":infor_iai,"product":product.data
+                        }).to_dict()
+                print("Update điểm cũ thất bại.Hãy kiễm tra lại nguyên nhân lỗi")
                 return {
                     "ok": False,
                     "error": result_update.error,
@@ -129,34 +233,7 @@ async def exit():
 
 
 
-# @router.post("/capture")
-# async def capture(
-#     services: ServiceContainer = Depends(get_services),
-#     status: str = Body(...), 
-#     index: int = Body(...), 
-#     x: float = Body(...), 
-#     y: float = Body(...), 
-#     k: float = Body(...)
-# ):
-   
-#     print("--- Nhấn nút chụp ảnh ---")
-#     choose_product_current = services.obj_choose_product.get_choose_product_pick()
-#     if choose_product_current == -1:
-#         msg = "Hiện tại chưa chọn sản phẩm. Vui lòng chọn sản phẩm trước khi chụp!"
-#         services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
-#         return {"status": "error"}
-#     else:
-#         status,frame =  services.obj_camera.capture_once(timeout=1)
-#         if not status :
-#             msg = "Lỗi trong quá trình lấy ảnh"
-#             services.queue_log_send_client({"type": TypeSend.type_capture, "message": msg})
-#             return {"status": "error"}
-#         services.obj_products_service.add_point_img_product(choose_product_current,frame)
-#         status,arr_path_img = services.obj_products_service.get_arr_path_img_roi_product_by_id(choose_product_current)
-#         arr_run_point = services.obj_products_service.get_arr_data_run_point_product_by_id(choose_product_current)
-#         infor = services.obj_products_service.get_infor_product(choose_product_current)
-#         # print("arr_path_img",arr_path_img,"\n arr_run_point",arr_run_point,"\ninfor",infor)
-#         return {"status": "ok","path_arr_img": arr_path_img,"arr_point":arr_run_point,"inf_product":infor}
+
       
 @router.post("/run_point")
 async def run_point(data: PointData,services: ServiceContainer = Depends(get_services)):
@@ -164,16 +241,22 @@ async def run_point(data: PointData,services: ServiceContainer = Depends(get_ser
     y = data.y
     z = data.z
     print(f"Nhận tọa độ: X={x}, Y={y}, Z={z}")
-    if services.obj_iai_service.is_valid_position(x,y,z):
-        services.obj_com_service.send(x,y,z)
+    if services.obj_com_service.is_running_com():
+        if services.obj_iai_service.is_valid_position(x,y,z):
+            services.obj_com_service.send(x,y,z)
+            return {
+            "status":True,
+            "message": f"✅Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
+            }
         return {
-        "status":True,
-        "message": f"Đã nhận tọa độ ({x}, {y}, {z}) và xử lý không thành công."
+            "status": False,
+            "message": f"⚠️Nhận điểm X:{x}, Y:{y}, Z:{z} nằm ngoài giới hạn trục."
         }
     return {
-        "status": False,
-        "message": f"Đã nhận tọa độ ({x}, {y}, {z}) và xử lý thành công."
-    }
+            "status": False,
+            "message": f"⚠️Cổng COM đang không kết nối.Gửi dữ liệu thất bại."
+        }
+    
 
 @router.websocket("/ws")
 async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_services_ws)):

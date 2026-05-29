@@ -154,14 +154,28 @@ export function drawImageContain(ctx, canvas, img) {
 
 }
 
+const COM_KEY = "com_connected";
+
+export function set_com_connection(isConnected) {
+    // Lưu trạng thái kết nối (true/false) dưới dạng string
+    sessionStorage.setItem(COM_KEY, isConnected ? "true" : "false");
+}
+
+export function get_com_connection() {
+    // Khởi tạo giá trị mặc định là false nếu chưa có trong session
+    if (sessionStorage.getItem(COM_KEY) === null) {
+        sessionStorage.setItem(COM_KEY, "false");
+    }
+    // Trả về kiểu Boolean chuẩn
+    return sessionStorage.getItem(COM_KEY) === "true";
+}
+
 
 const CAMERA_KEY = "camera_connected";
-
 export function set_camera_connection(isConnected) {
     // Lưu trạng thái kết nối (true/false) dưới dạng string
     sessionStorage.setItem(CAMERA_KEY, isConnected ? "true" : "false");
 }
-
 export function get_camera_connection() {
     // Khởi tạo giá trị mặc định là false nếu chưa có trong session
     if (sessionStorage.getItem(CAMERA_KEY) === null) {
@@ -234,25 +248,33 @@ export async function postData(url = "", data = {}) {
   return json;
 }
 
+export async function fetchGet(url, timeout = 10000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
-export async function fetchGet(url) {
     try {
         const response = await fetch(url, {
             method: "GET",
             headers: {
                 "Accept": "application/json"
-            }
+            },
+            signal: controller.signal
         });
+
+        clearTimeout(timer);
 
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
         }
+
         return await response.json();
+
     } catch (error) {
         console.error("Fetch GET error:", error);
         return null;
     }
 }
+
 
 export async function fetchGetSendData(url, data = {}) {
     try {

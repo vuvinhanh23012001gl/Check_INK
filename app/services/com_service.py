@@ -14,5 +14,6 @@ class ComService:
             self.manager.send_data(data_send)
         except:
             print("ép kiểu nhận về bị sai kiểm tra lại")
-       
+    def is_running_com(self):
+        return self.manager.is_running()
   

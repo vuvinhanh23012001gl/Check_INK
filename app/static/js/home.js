@@ -1,5 +1,5 @@
 // import {postData,scroll_content,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
-import {postData,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+import {postData,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection,set_com_connection, get_com_connection} from "./common_value.js"
 
 
 const status_judment = document.querySelector(".paner-main-status-product");
@@ -34,8 +34,17 @@ SocketData.on("status_camera", data =>{
   let status_connect  = data?.status;
   // console.log("dataxyz",data);
   set_camera_connection(status_connect);
+  // set_c(status_connect);
   isConect(status_connect,circle_status_connect_camera,label_status_connect_camera,"Camera");
-  isConect(false,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
+  // isConect(false,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
+});
+
+SocketData.on("status_com", data =>{
+  let status_connect  = data?.status;
+  set_com_connection(status_connect);
+  // console.log("heeewe",get_com_connection());
+  // console.log("com",status_connect);
+  isConect(status_connect,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
 });
 
 
@@ -159,20 +168,20 @@ function create_show_table(data) {
 //     // }
 // }
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Vào DOM");
+// document.addEventListener("DOMContentLoaded", () => {
+//   console.log("Vào DOM");
  
-  // const table = create_show_table(listData);
-  // div_show_point_detect.appendChild(table);
-  // setStatusOK();
-    // setStatusNG();
-  // setStatusWarning();
+//   // const table = create_show_table(listData);
+//   // div_show_point_detect.appendChild(table);
+//   // setStatusOK();
+//     // setStatusNG();
+//   // setStatusWarning();
 
-  postData("/data_home", {"status": "UI_Main"}).then(data => {
-        RenderDataHome(data) 
-        console.log('data',data);
-   }); 
-});
+//   postData("/data_home", {"status": "UI_Main"}).then(data => {
+//         RenderDataHome(data) 
+//         // console.log('data',data);
+//    }); 
+// });
 
 
    
@@ -188,7 +197,7 @@ function RenderDataHome(data){
     else{   
             const imgList = data?.path_arr_img;
 
-            console.log("Danh sách ảnh:", imgList);
+            // console.log("Danh sách ảnh:", imgList);
         //     imgList.forEach((imgPath, index) => {
         //         const div_create = document.createElement("div");
         //         div_create.className = "div-index-img-mater";

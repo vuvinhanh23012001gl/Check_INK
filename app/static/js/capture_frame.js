@@ -1,6 +1,7 @@
 // import {scroll_content,SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js"; co scroll
-import {SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js";
+import {SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product,fetchGet}from "./common_value.js";
 
+console.log("-- Mở File capture hình ảnh thành công --");
 const paner_capture_product = document.getElementById("paner-capture-product");
 const btn_function_capture_product = document.getElementById("header-ul-li-capture-product");
 const btn_add_frame = document.getElementById("btn-add-frame");
@@ -12,34 +13,42 @@ const btn_add_point = document.getElementById("btn-add-point");
 const scroll_container = document.querySelector(".scroll-container");
 
 
-// biến toàn cục luu mang data gửi lên
-let divCreateList = []; 
-
-
 let max_point_run ={}
 max_point_run.x =  0;
 max_point_run.y =  0;
 max_point_run.z = 0;
 
 
-let x_last = 0;
-let y_last = 0;
-let z_last = 0;
+let coordinate_after_taking_photo = {};
+coordinate_after_taking_photo.x = -1;
+coordinate_after_taking_photo.y = -1;
+coordinate_after_taking_photo.z = -1;
 
-let isSending = false;
+const selected = {
+    frame_id: -1,
+    point_id: -1
+};
 
-let point_select = {}; //id đang chọn
-point_select.frame = -1;
-point_select.id = -1;
-
-let  id_frame_selected = -1; // Frame hiện tại đang chọn 
-let  frame_count = 0;   // đếm số frame hiện có
+let isSending = false; //Biến này giúp đợi  tránh làm cho gửi quá nhiều lần tới IAI
 let  current_frame_box = null ; // Frame hiện tại đang đc click
-let product_selecting = null;   // Sản phẩm đang chọn
-let id_img = 0;
+let  id_product_selecting_now = null; //San pham dang chon
 
-let MAX_IMG_ADD_POINT = 1;
-let value_img_add_point = 0;
+
+
+//Soket io
+SocketLog.on("type_log_capture", (data) => {
+    console.log("---Mở SoketIO Capture Product---");
+    log_box.innerHTML += `<p>${data?.msg}</p>`;
+});
+
+// Action BTN
+btn_stream_video.addEventListener("click",()=>{
+     wrap_canvas.style.display = "none";
+     console.log("đã nhấn nút Stream video");
+     if(!get_camera_connection()){ write_log_capture_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kiểm tra kết nối.\n"); return;}
+     show_video_product();
+});
+
 
 exit_add_capture_product.addEventListener("click",()=>{
       fetch('/captureproduct/exit')
@@ -56,14 +65,50 @@ exit_add_capture_product.addEventListener("click",()=>{
 });
 
 
-SocketLog.on("type_log_capture", (data) => {
-    console.log("---Mở SoketIO Capture Product---");
-    log_box.innerHTML += `<p>${data?.msg}</p>`;
+
+btn_add_point.addEventListener("click", () => {
+    if (selected.frame_id == -1) {
+        write_log_capture_clear("❌Hãy click vào frame trước khi thêm điểm");
+        return;
+    }
+    // 🌟 THAY ĐỔI QUAN TRỌNG: Lấy ra đối tượng DOM mới nhất đang hiển thị trên màn hình
+    const real_frame_box = document.querySelector(`.box-frame[data-frame-id="${selected.frame_id}"] .img-box`);
+    
+    if (!real_frame_box) {
+        console.log("Không tìm thấy Frame thực tế trên giao diện!");
+        return;
+    }
+    // Cập nhật lại biến global cho đúng chuẩn
+    current_frame_box = real_frame_box; 
+
+    let break_function = false;
+    current_frame_box.querySelectorAll(".img-item").forEach((value, index) => {
+        if (value.dataset.has_icon_add_new) {
+            write_log_capture_clear("❌ Một Frame chỉ có một Point được thêm !");
+            break_function = true;
+        }
+    });
+
+    if (break_function) return;
+
+    const box_frame = current_frame_box.querySelectorAll(".img-item");
+    let arr_items_img_id = [];
+    for (const i of box_frame) {
+        arr_items_img_id.push(i.dataset.id);
+    }
+    
+    let id_new = generateNewId(arr_items_img_id);
+    let find_index_new = current_frame_box.querySelectorAll(".img-item").length; 
+    
+    let data_point = null;
+    // 🌟 Truyền phần tử DOM thật vừa tìm được vào hàm tạo
+    create_items_img(id_new, find_index_new, data_point, current_frame_box, selected.frame_id);
 });
 
 
+
 btn_function_capture_product.addEventListener("click",function(){       
-        console.log("Bạn vừa click vào chụp ảnh sản phẩm");
+        console.log("Click vào chụp ảnh sản phẩm");
         paner_capture_product.classList.add("active");
         video_product.style.width = "1365.33px";
         video_product.style.height = "1024px";
@@ -72,202 +117,74 @@ btn_function_capture_product.addEventListener("click",function(){
         wrap_canvas.style.display = "none";
         // write_log_capture_clear("✅ Nhấn \"Thêm master\" -> \"Ảnh master\" để mở video chụp ảnh.")
         postData("/captureproduct", {"status": "UI_Capture"}).then(data => {
-            // if (data?.status == "ok"){
-               renderMaster(data);
-         //   }
+            console.log("Data Receive:",data.data);
+            renderMaster(data?.data);
+            // console.log("data moi vao",data?.data);
         });
-             
-        // });
-        
-    
 });
+        
+               
+
 
 function renderMaster(data) {
-        // if (!data){
-        //     write_log_capture_clear("❌Lỗi Server tắt đi bật lại phần mềm !");
-        //     return;
-        // }
-        // if (data?.status == "error"){
-        //     write_log_capture_clear(`Lỗi từ server:${data?.message}`)
-        //     return;
-        // }
-       
-        create_table_product(data);
         scroll_container.innerHTML = "";
+        process_table_product(data);
         create_img_items(data.data_point);
-        
-
-
-        // const imgList = data?.path_arr_img;
-        // const list_point  = data?.arr_point;
-        // console.log(data);
-        // if(!imgList||!list_point){write_log_capture_clear("✔️ Loại sản phẩm mới chưa cấu hình chụp.\n✅ Hãy Chụp sản phẩm.");return;}
-        // if (!imgList || imgList.length === 0) {write_log_capture_clear("✔️Hệ thống chưa có ảnh master nào.\n✅ Hãy bắt đầu chụp ảnh và cấu hình");return}
-        // console.log("Danh sách điểm:", list_point);
-        // console.log("Danh sách ảnh:", imgList);
-        // imgList.forEach((imgPath, index) => {
-        //         const div_create = document.createElement("div");
-        //         div_create.className = "div-index-img-mater";
-        //         const h_create = document.createElement("p");
-        //         h_create.innerText = `Ảnh master ${index}`;
-        //         h_create.className = "p-index-img-master";
-
-        //         const img = document.createElement("img");
-        //         img.src = `${imgPath}?t=${Date.now()}`;  // dam bao  goi moi nhat
-        //         img.alt = "Ảnh sản phẩm";
-        //         img.style.width = "200px";
-        //         img.style.margin = "10px";
-
-        //         div_create.appendChild(img);
-        //         div_create.appendChild(h_create);
-        //         // scroll_content.appendChild(div_create);
-        //         divCreateList.push(div_create);
-        //         div_create.addEventListener("click",function(){
-        //                 clearn_div(divCreateList);
-        //                 div_create.classList.add("div_click");
-        //                 video_product.src =  `${imgPath}?t=${Date.now()}`;
-        //                 video_product.style.width = "1365.33px";
-        //                 video_product.style.height = "1024px";
-        //                 video_product.style.objectFit = "contain";   // QUAN TRỌNG
-        //                 video_product.style.display = "block";
-        //                 // const index = Array.from(scroll_content.children).indexOf(this);
-        //                 console.log("Ảnh master đang chỉ tới là:",index);
-        //                 create_table_controler(index);
-
-        //             //   const input_x = document.getElementById(`input-x-${index}`);input_x.type = "number";
-        //             //   const input_y = document.getElementById(`input-y-${index}`);input_y.type = "number";
-        //             //   const input_k = document.getElementById(`input-k-${index}`);input_k.type = "number";
-        //             //   const btn_increase_x = document.getElementById(`btn-inc-x-${index}`);
-        //             //   const btn_decrease_x = document.getElementById(`btn-dec-x-${index}`);
-        //             //   const btn_increase_y = document.getElementById(`btn-inc-y-${index}`);
-        //             //   const btn_decrease_y = document.getElementById(`btn-dec-y-${index}`);
-        //             //   const btn_increase_z = document.getElementById(`btn-inc-z-${index}`);
-        //             //   const btn_decrease_z = document.getElementById(`btn-dec-z-${index}`);
-        //             //   const btn_increase_k = document.getElementById(`btn-inc-k-${index}`);
-        //             //   const btn_decrease_k = document.getElementById(`btn-dec-k-${index}`);
-        //             //   const btn_run          = document.getElementById(`btn-run-${index}`);
-        //             //   const btn_capture      = document.getElementById(`btn-capture-${index}`);
-        //             //   const btn_erase_master = document.getElementById(`btn-erase-master-${index}`);
-        //             //   if (
-        //             //       list_point[index]?.x == null ||
-        //             //       list_point[index]?.y == null ||
-        //             //       list_point[index]?.z == null ||
-        //             //       list_point[index]?.brightness == null
-        //             //     ) 
-        //             //           {
-        //             //             input_x.value = list_point[index]?.x ?? 0;
-        //             //             input_y.value = list_point[index]?.y ?? 0;
-    
-        //             //             input_k.value = list_point[index]?.brightness ?? 0;
-        //             //           } else {
-        //             //             input_x.value = list_point[index].x;
-        //             //             input_y.value = list_point[index].y;
-        //             //             input_k.value = list_point[index].brightness;
-        //             //           }
-                             
-        //             //   // Khai báo các handler (function reference)
-        //             //   const handleIncreaseX = () => HandleClickBtnIncrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleDecreaseX = () => HandleClickBtnDecrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value, input_k.value);
-
-        //             //   const handleIncreaseY = () => HandleClickBtnIncrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleDecreaseY = () => HandleClickBtnDecrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value, input_k.value);
-
-        //             //   const handleIncreaseZ = () => HandleClickBtnIncrease_Z(input_z, Max_Z, input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleDecreaseZ = () => HandleClickBtnDecrease_Z(input_z, Max_Z, input_x.value, input_y.value, input_z.value, input_k.value);
-
-        //             //   const handleIncreaseK = () => HandleClickBtnIncrease_K(input_k, Max_K, input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleDecreaseK = () => HandleClickBtnDecrease_K(input_k, Max_K, input_x.value, input_y.value, input_z.value, input_k.value);
-
-        //             //   const handleRun       = () => HandleClickBtnRun(input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleCapture   = () => HandleClickBtnCapture(index, input_x.value, input_y.value, input_z.value, input_k.value);
-        //             //   const handleErase     = () => HandleClickBtnEraseMaster(index);
-
-        //             //   // Gắn event (trước khi add thì remove trước để tránh trùng)
-        //             //   btn_increase_x.removeEventListener("click", handleIncreaseX);
-        //             //   btn_increase_x.addEventListener("click", handleIncreaseX);
-
-        //             //   btn_decrease_x.removeEventListener("click", handleDecreaseX);
-        //             //   btn_decrease_x.addEventListener("click", handleDecreaseX);
-
-        //             //   btn_increase_y.removeEventListener("click", handleIncreaseY);
-        //             //   btn_increase_y.addEventListener("click", handleIncreaseY);
-
-        //             //   btn_decrease_y.removeEventListener("click", handleDecreaseY);
-        //             //   btn_decrease_y.addEventListener("click", handleDecreaseY);
-
-        //             //   btn_increase_z.removeEventListener("click", handleIncreaseZ);
-        //             //   btn_increase_z.addEventListener("click", handleIncreaseZ);
-
-        //             //   btn_decrease_z.removeEventListener("click", handleDecreaseZ);
-        //             //   btn_decrease_z.addEventListener("click", handleDecreaseZ);
-
-        //             //   btn_increase_k.removeEventListener("click", handleIncreaseK);
-        //             //   btn_increase_k.addEventListener("click", handleIncreaseK);
-
-        //             //   btn_decrease_k.removeEventListener("click", handleDecreaseK);
-        //             //   btn_decrease_k.addEventListener("click", handleDecreaseK);
-
-        //             //   btn_run.removeEventListener("click", handleRun);
-        //             //   btn_run.addEventListener("click", handleRun);
-
-        //             //   btn_capture.removeEventListener("click", handleCapture);
-        //             //   btn_capture.addEventListener("click", handleCapture);
-
-        //             //   btn_erase_master.removeEventListener("click", handleErase);
-        //             //   btn_erase_master.addEventListener("click", handleErase);
-        //         });
-        // });
 }
 
-function create_img_items(data){
-    // console.log("Data create_img_items",data?.data);
-    if (data?.ok){
+function create_img_items(points_and_box){
+        // console.log("Data create_img_items",data?.data);
         // console.log("data đúng của product");
-        let points_and_box = data?.data;
         // console.log("points_and_box",points_and_box);
         let index_frame = 0;
         for (const boxs in points_and_box){
             // console.log("boxs",boxs);
             let index_items = 0;
-            let div_img_box = create_box(boxs,index_frame);
+            let result_create_box = create_box(boxs,index_frame);
+            let div_img_box = result_create_box.div_img_box;
+            let div_box_frame = result_create_box.div_box_frame;
+            //Kiểm tra xem cái nào đang chọn thì chọn nó.
+            if (boxs == selected.frame_id){
+                // console.log("Vẫn còn nha");
+                div_box_frame.classList.add("box-frame-selected");
+            }
             // console.log("frame_current",frame_current);
             index_frame++;
             for (const items in points_and_box[boxs]){
                 // console.log("data nhan dc la",points_and_box[boxs][items]);
-                // create_box(items,index_items,points_and_box[boxs][items]);
-                create_items_img(items,index_items,points_and_box[boxs][items].path_img_point,div_img_box,boxs);
+                // console.log("dsaddsdsadsds123",items,points_and_box[boxs][items]);
+                let data_point =  points_and_box[boxs][items];
+                create_items_img(items,index_items,data_point,div_img_box,boxs);
                 index_items++;
             }
         }
-    }
 }
 
-function create_table_product(data) {
-       const tbody = document.querySelector(".product-table tbody");
-       if (!tbody){console.log("Bảng không tồn tại");return;
-    
-       }
-       if (!data){
-            log_box.innerHTML = "Bạn chưa chọn loại sản phẩm.Hãy nhấn \"Chọn loại sản phẩm\"";
-            return;
-       }
-       tbody.innerHTML = "";
-       console.log(data)
-       let id = data?.product_choose?._id;
-       product_selecting = id;
-       let name = `${id}.${data?.product_choose?._name}`;
-       let x = data?.infor_iai?.limit_x_max;
-       max_point_run.x = x;
-       let y = data?.infor_iai?.limit_y_max;
-       max_point_run.y = y;
-       let z = data?.infor_iai?.limit_z_max;
-       max_point_run.z = z;
 
+function process_table_product(data) {
+    //   console.log("process_table_product",data);
+       const tbody = document.querySelector(".product-table tbody");
+       if (!tbody){console.log("Bảng không tồn tại");
+        return;
+       }
+       tbody.innerHTML = "";  
+       let product = data?.product;
+       let infor_iai = data?.infor_iai;
+       let id = product?._id;
+       id_product_selecting_now = id;  
+       let name = `${id}.${product?._name}`;
+       let x = infor_iai?.limit_x_max;
+       max_point_run.x = x;
+       let y = infor_iai?.limit_y_max;
+       max_point_run.y = y;
+       let z = infor_iai?.limit_z_max;
+       max_point_run.z = z;
+       console.log(`Sản phẩm ${id}:${name}, max X:${x}, max Y:${y}, max Z:${z}`);
+    //    console.log(data)
     //    console.log(name)
     //    console.log(x)
     //    console.log(y)
     //    console.log(z)
-    
       const row = document.createElement("tr");
       row.innerHTML =  
       `<td>${name}</td>
@@ -279,26 +196,6 @@ function create_table_product(data) {
 };
 
 
-btn_add_point.addEventListener("click",()=>{
-    
-    if(id_frame_selected == -1){
-         console.log("Bạn chưa click vào Frame nào");
-        write_log_capture_clear("❌Hãy click vào frame trước khi thêm điểm");
-        return;
-    }
-    
-    const box_frame = current_frame_box.querySelectorAll(".img-item"); //box_frame la ca cai box
-    let arr_items_img_id = [];
-    for (const i of box_frame){
-        //  console.log("ID items IMG ",i.dataset.id);
-         arr_items_img_id.push(i.dataset.id);
-    }
-    console.log("Arr IMG imtem img ID",arr_items_img_id);
-    let id_new = generateNewId(arr_items_img_id);
-    let find_index_new  = current_frame_box.querySelectorAll(".img-item").length; 
-    console.log("Index new",find_index_new);
-    create_items_img(id_new,find_index_new,null,current_frame_box,id_frame_selected);
-});
 
 
 function generateNewId(arr){
@@ -308,28 +205,34 @@ function generateNewId(arr){
     return Math.max(...arr) + 1;
 }
 
-function container_driver(point_select_current,Max_X,Max_Y,Max_Z){
+function container_driver(selected,Max_X,Max_Y,Max_Z,x=null,y=null,z=null){
 
-                const input_x = document.getElementById(`input-x-${point_select_current.id}`);input_x.type = "number";
-                const input_y = document.getElementById(`input-y-${point_select_current.id}`);input_y.type = "number";
-                const input_z = document.getElementById(`input-z-${point_select_current.id}`);input_z.type = "number";
+                const input_x = document.getElementById(`input-x-${selected.point_id}`);input_x.type = "number";
+                const input_y = document.getElementById(`input-y-${selected.point_id}`);input_y.type = "number";
+                const input_z = document.getElementById(`input-z-${selected.point_id}`);input_z.type = "number";
         
-                input_x.value = x_last;
-                input_y.value = y_last;
-                input_z.value = z_last;
+                if (
+                    x !== null && x !== undefined && x !== -1 &&
+                    y !== null && y !== undefined && y !== -1 &&
+                    z !== null && z !== undefined && z !== -1
+                ) {
+                    input_x.value = x;
+                    input_y.value = y;
+                    input_z.value = z;
+                }
 
         
-                const btn_increase_x = document.getElementById(`btn-inc-x-${point_select_current.id}`);
-                const btn_decrease_x = document.getElementById(`btn-dec-x-${point_select_current.id}`);
-                const btn_increase_y = document.getElementById(`btn-inc-y-${point_select_current.id}`);
-                const btn_decrease_y = document.getElementById(`btn-dec-y-${point_select_current.id}`);
-                const btn_increase_z = document.getElementById(`btn-inc-z-${point_select_current.id}`);
-                const btn_decrease_z = document.getElementById(`btn-dec-z-${point_select_current.id}`);
-                const btn_run          = document.getElementById(`btn-run-${point_select_current.id}`);  // May cai nay khong can du lieu frame nen cu de no chay bang id du idtrung nhung n o 1 nhanh khac
+                const btn_increase_x = document.getElementById(`btn-inc-x-${selected.point_id}`);
+                const btn_decrease_x = document.getElementById(`btn-dec-x-${selected.point_id}`);
+                const btn_increase_y = document.getElementById(`btn-inc-y-${selected.point_id}`);
+                const btn_decrease_y = document.getElementById(`btn-dec-y-${selected.point_id}`);
+                const btn_increase_z = document.getElementById(`btn-inc-z-${selected.point_id}`);
+                const btn_decrease_z = document.getElementById(`btn-dec-z-${selected.point_id}`);
+                const btn_run          = document.getElementById(`btn-run-${selected.point_id}`);  // May cai nay khong can du lieu frame nen cu de no chay bang id du idtrung nhung n o 1 nhanh khac
 
 
-                const btn_capture      = document.getElementById(`btn-capture-${point_select_current.frame}-${point_select_current.id}`);
-                const btn_erase_master = document.getElementById(`btn-erase-${point_select_current.frame}-${point_select_current.id}`);
+                const btn_capture      = document.getElementById(`btn-capture-${selected.frame_id}-${selected.point_id}`);
+                const btn_erase_master = document.getElementById(`btn-erase-${selected.frame_id}-${selected.point_id}`);
                 // if (
                 //     list_point[index]?.x == null ||
                 //     list_point[index]?.y == null ||
@@ -361,7 +264,7 @@ function container_driver(point_select_current,Max_X,Max_Y,Max_Z){
                 const handleRun       = () => HandleClickBtnRun(input_x.value, input_y.value, input_z.value);
 
 
-                const handleCapture   = () => HandleClickBtnCapture( point_select_current.frame, point_select_current.id, input_x.value, input_y.value, input_z.value);
+                const handleCapture   = () => HandleClickBtnCapture( selected.frame_id, selected.point_id, input_x.value, input_y.value, input_z.value);
                 // const handleErase     = () => HandleClickBtnEraseMaster(index);
 
                 // Gắn event (trước khi add thì remove trước để tránh trùng)
@@ -410,9 +313,9 @@ async function sendPoint(x, y, z) {
         body: JSON.stringify({ x, y, z})
       });
       const data = await response.json();
-      console.log("data?.status",data);
+    //   console.log("data?.status",data);
       if (data?.status){
-        write_log_capture_clear("✅ Gửi dữ liệu thành công.");
+        write_log_capture_clear(data?.message);
         return true;
       }
        write_log_capture_clear(data.message);//Server gui du lieu bi qua han
@@ -438,106 +341,22 @@ function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
 
 
 btn_add_frame.addEventListener("click",function(){
-    
+    let arr_id_frame = [];
+    scroll_container.querySelectorAll(".box-frame").forEach(frame => {
+        arr_id_frame.push(frame.dataset.frameId)
+    });
+    // console.log("arr_id_frame",arr_id_frame);
+
     write_log_capture_clear("");
-    const index_box = scroll_container.querySelectorAll(".box-frame").length
+    let new_id_frame = generateNewId(arr_id_frame);
+    let length_arr_frame = arr_id_frame.length;  // Length la index
     // console.log("Bạn vừa click vào thêm frame");
-    create_box(frame_count,index_box);
-    frame_count ++;  //đếm xem có bao nhiêu frame 
-
-
-    // const div_create = document.createElement("div");
-    // div_create.className = "div-index-img-mater";
-
-    // const h_create = document.createElement("p");
-    // h_create.innerText = `Ảnh master`;
-    // h_create.className = "p-index-img-master";
-
-    // const img = document.createElement("img");
-    // img.src = "./static/img/plus.png";
-    // img.alt = "Click vào đây để chụp ảnh";
-    // img.style.padding = "35px";
-    // img.style.width = "200px";
-    
-    // div_create.appendChild(img);
-    // div_create.appendChild(h_create);
-    // scroll_content.appendChild(div_create); 
-    // div_create.addEventListener("click", function() {
-
-    //     show_video_product();
-    //     console.log("Mở camera để chụp ảnh master");
-    //     // const index = Array.from(scroll_content.children).indexOf(this);
-    //     console.log("Index của khung master vừa thêm:", index);
-    //     create_table_controler(index);
-
-    //         const input_x = document.getElementById(`input-x-${index}`);input_x.type = "number";
-    //         const input_y = document.getElementById(`input-y-${index}`);input_y.type = "number";
-    //         const input_k = document.getElementById(`input-k-${index}`);input_k.type = "number";
-            
-
-    //         input_x.value = 1;  // vi du
-    //         input_y.value = 1;
-    //         input_k.value = 1;
-
-    //         const btn_increase_x = document.getElementById(`btn-inc-x-${index}`);
-    //         const btn_decrease_x = document.getElementById(`btn-dec-x-${index}`);
-    //         const btn_increase_y = document.getElementById(`btn-inc-y-${index}`);
-    //         const btn_decrease_y = document.getElementById(`btn-dec-y-${index}`);
-    //         const btn_increase_k = document.getElementById(`btn-inc-k-${index}`);
-    //         const btn_decrease_k = document.getElementById(`btn-dec-k-${index}`);
-
-    //         const btn_run          = document.getElementById(`btn-run-${index}`);
-    //         const btn_capture      = document.getElementById(`btn-capture-${index}`);
-    //         const btn_erase_master = document.getElementById(`btn-erase-master-${index}`);
-
-    //         //     // Khai báo các handler (function reference)
-    //         // const handleIncreaseX = () => HandleClickBtnIncrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value, input_k.value);
-    //         // const handleDecreaseX = () => HandleClickBtnDecrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value, input_k.value);
-
-    //         // const handleIncreaseY = () => HandleClickBtnIncrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value, input_k.value);
-    //         // const handleDecreaseY = () => HandleClickBtnDecrease_Y(input_y, Max_Y, input_x.value, input_y.value, input_z.value, input_k.value);
-
-    //         // const handleIncreaseK = () => HandleClickBtnIncrease_K(input_k, Max_K, input_x.value, input_y.value, input_z.value, input_k.value);
-    //         // const handleDecreaseK = () => HandleClickBtnDecrease_K(input_k, Max_K, input_x.value, input_y.value, input_z.value, input_k.value);
-
-    //         // const handleRun       = () => HandleClickBtnRun(input_x.value, input_y.value, input_z.value, input_k.value);
-    //         const handleCapture   = () => HandleClickBtnCapture(index, input_x.value, input_y.value, input_k.value);
-    //         // const handleErase     = () => HandleClickBtnEraseMaster(index);
-
-    //         // Gắn event (trước khi add thì remove trước để tránh trùng)
-    //         // btn_increase_x.removeEventListener("click", handleIncreaseX);
-    //         // btn_increase_x.addEventListener("click", handleIncreaseX);
-
-    //         // btn_decrease_x.removeEventListener("click", handleDecreaseX);
-    //         // btn_decrease_x.addEventListener("click", handleDecreaseX);
-
-    //         // btn_increase_y.removeEventListener("click", handleIncreaseY);
-    //         // btn_increase_y.addEventListener("click", handleIncreaseY);
-
-    //         // btn_decrease_y.removeEventListener("click", handleDecreaseY);
-    //         // btn_decrease_y.addEventListener("click", handleDecreaseY);
-
-    //         // btn_increase_k.removeEventListener("click", handleIncreaseK);
-    //         // btn_increase_k.addEventListener("click", handleIncreaseK);
-
-    //         // btn_decrease_k.removeEventListener("click", handleDecreaseK);
-    //         // btn_decrease_k.addEventListener("click", handleDecreaseK);
-
-    //         // btn_run.removeEventListener("click", handleRun);
-    //         // btn_run.addEventListener("click", handleRun);
-
-    //         btn_capture.removeEventListener("click", handleCapture);
-    //         btn_capture.addEventListener("click", handleCapture);
-
-    //         // btn_erase_master.removeEventListener("click", handleErase);
-    //         // btn_erase_master.addEventListener("click", handleErase);
-
-    // });
-        
+    create_box(new_id_frame,length_arr_frame);
 });
 
-function create_box( box_id,index){
-    console.log(`Vào hàm create_box có box_id = ${box_id}, index:${index}`);
+
+function create_box(box_id,index){
+    console.log(`Tạo box ID= ${box_id},Index:${index}`);
     const div_box_frame = document.createElement("div");
     div_box_frame.className = "box-frame";
     div_box_frame.dataset.frameId = box_id; // gán id cho frame
@@ -551,54 +370,62 @@ function create_box( box_id,index){
         const id = div_box_frame.dataset.frameId;
         div_box_frame.classList.add("box-frame-selected");
         console.log("Bạn vừa click vào frame:", id);
-        id_frame_selected = id;
+        selected.frame_id = id;
         current_frame_box = div_img_box; // lưu frame hiện tại
     });
     div_box_frame.appendChild(div_text_box_frame);
     div_box_frame.appendChild(div_img_box);
     scroll_container.appendChild(div_box_frame);
-    return div_img_box
+    return {div_img_box,div_box_frame}
 }
  
 
+function getValue(data_value, coordinate_value,element_input) {
+    if (data_value !== null && data_value !== undefined) {
+        return data_value;
+    }
+    if (coordinate_value === -1) {
+        return 0;
+    }
+    return coordinate_value;
+}
 
-function create_items_img(id, index , src=null, frame_box =null, frame_id =  null){
-    console.log(`Point ID:${id},Index:${index}`);
+
+function create_items_img(id, index ,data_point=null, frame_box =null, frame_id =  null){
     const img_text = document.createElement("div");
     img_text.className = "img-text";
     img_text.textContent = `Ảnh ${index}`;
     const img_img = document.createElement("img");
     img_img.className = "img_show_point";
     const img_item = document.createElement("div");
-    if (!src) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon
-        
-        
-        
-        e{{}{{}{}{}{{}}}}
-        
-        
-        
-        
-        _add_new = true;} else {img_img.src = src;}
+    if (data_point==null) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon_add_new = true; console.log("vao tao anh r")} else {img_img.src = data_point.path_img_point;}
     img_item.className = "img-item";
     img_item.dataset.id = id;
     img_item.appendChild(img_img);
     img_item.appendChild(img_text);
-    // console.log("frame_box",frame_box);
     if (frame_box){
             frame_box.appendChild(img_item);
             img_item.addEventListener("click",()=>{
                     // Cập nhật các biến global
+                    frame_box.querySelectorAll(".img-item").forEach(items => {
+                        items.classList.remove("active");
+                    });
+                    img_item.classList.add("active");
                     current_frame_box = frame_box; //đối tượng dom
-                    point_select.frame = frame_id ;  //Gán id vào frame hiện tại.
-                    point_select.id = img_item.dataset.id;  
-                    id_frame_selected = frame_id;
-                    console.log(`Point đang click frame: ${point_select.frame} id: ${point_select.id }`);
+                    selected.point_id = Number(img_item.dataset.id);  
+                    selected.frame_id = Number(frame_id);
+                    console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.point_id}`);
                     write_log_capture_clear("✍️ Nhập vị trí cần chụp ảnh.")
-                            // console.log("ID thật:", img_item.dataset.id);
+                    // console.log("ID thật:", img_item.dataset.id);
                     // console.log("Tên hiển thị:", img_text.textContent);
-                    create_table_controler(point_select);
-                    container_driver(point_select,max_point_run.x,max_point_run.y,max_point_run.z);
+                    let x = getValue(data_point?.x, coordinate_after_taking_photo.x);
+                    let y = getValue(data_point?.y, coordinate_after_taking_photo.y);
+                    let z = getValue(data_point?.z, coordinate_after_taking_photo.z);
+                    console.log("coordinate x",x);
+                    console.log("coordinate y",y);
+                    console.log("coordinate z",z);
+                    create_table_controler(selected);
+                    container_driver(selected,max_point_run.x,max_point_run.y,max_point_run.z,x,y,z);
                     return;
         });
     }
@@ -611,49 +438,62 @@ function create_items_img(id, index , src=null, frame_box =null, frame_id =  nul
 
  
 function HandleClickBtnCapture(frame_id,point_id, x , y , z){
-    console.log("-Đã nhấn vào chụp-");
+
+    coordinate_after_taking_photo.x = x;
+    coordinate_after_taking_photo.y = y;
+    coordinate_after_taking_photo.z = z;
+    console.log("----Đã nhấn vào chụp-----");
+
+    if (current_frame_box){
+    console.log("Frame box hiện tại đang click là:",current_frame_box);
+    current_frame_box.querySelectorAll(".img-item").forEach((value ,index) => {
+        // console.log("index",index,"value",value.dataset.has_icon_add_new);
+        if (value.dataset.has_icon_add_new){
+            // console.log("datsadds tat duoc nha");
+            delete value.dataset.has_icon_add_new;
+        }
+    });}
+
     let status_check = validatePoint(x,y,z,max_point_run.x ,max_point_run.y ,max_point_run.z);
     if (status_check){
-            postData("/captureproduct/capture",{"product_selecting":product_selecting,"id_frame":frame_id,"id_point":point_id,"x":x,"y":y,"z":z})
+            console.log(`Check truoc khi gui product_selecting ${id_product_selecting_now} frame id ${frame_id} point_id ${point_id} x ${x},y ${y} z${z}`);
+            postData("/captureproduct/capture",{"product_selecting":id_product_selecting_now,"id_frame":frame_id,"id_point":point_id,"x":x,"y":y,"z":z})
             .then(data => {
-                // if (data?.ok){
-                    renderMaster(data);
-                    // write_log_capture_clear("✔️ Chụp ảnh thành công \n✅ Hãy chụp điểm tiếp theo.");
-                //}
+                    renderMaster(data?.data);
+                    // console.log("data chup anh",data?.data);
         });
     }
 }
 
 
 
-
-
-function create_table_controler(point_select_current){
+function create_table_controler(selected){
       anonymous.innerHTML = "";
-      anonymous.appendChild(createInputRow("Nhập x:", "X là số nguyên dương", `input-x-${point_select_current.id}`));
-      anonymous.appendChild(createInputRow("Nhập y:", "Y là số nguyên dương", `input-y-${point_select_current.id}`));
-      anonymous.appendChild(createInputRow("Nhập z:", "Z là số nguyên dương", `input-z-${point_select_current.id}`));
+      anonymous.appendChild(createInputRow("Nhập x:", "X là số nguyên dương", `input-x-${selected.point_id}`));
+      anonymous.appendChild(createInputRow("Nhập y:", "Y là số nguyên dương", `input-y-${selected.point_id}`));
+      anonymous.appendChild(createInputRow("Nhập z:", "Z là số nguyên dương", `input-z-${selected.point_id}`));
 
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-x-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng X", text: "Tăng X"},
-          {id: `btn-dec-x-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm X", text: "Giảm X"}
+          {id: `btn-inc-x-${selected.point_id}`, icon: "../static/img/add1.png", alt: "Tăng X", text: "Tăng X"},
+          {id: `btn-dec-x-${selected.point_id}`, icon: "../static/img/minus.png", alt: "Giảm X", text: "Giảm X"}
       ]));
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-y-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng Y", text: "Tăng Y"},
-          {id: `btn-dec-y-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm Y", text: "Giảm Y"}
+          {id: `btn-inc-y-${selected.point_id}`, icon: "../static/img/add1.png", alt: "Tăng Y", text: "Tăng Y"},
+          {id: `btn-dec-y-${selected.point_id}`, icon: "../static/img/minus.png", alt: "Giảm Y", text: "Giảm Y"}
       ]));
       anonymous.appendChild(createButtonRow([
-          {id: `btn-inc-z-${point_select_current.id}`, icon: "../static/img/add1.png", alt: "Tăng Z", text: "Tăng Z"},
-          {id: `btn-dec-z-${point_select_current.id}`, icon: "../static/img/minus.png", alt: "Giảm Z", text: "Giảm Z"}
+          {id: `btn-inc-z-${selected.point_id}`, icon: "../static/img/add1.png", alt: "Tăng Z", text: "Tăng Z"},
+          {id: `btn-dec-z-${selected.point_id}`, icon: "../static/img/minus.png", alt: "Giảm Z", text: "Giảm Z"}
       ]));
 
       anonymous.appendChild(createButtonRow([
-          {id: `btn-run-${point_select_current.id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy"},
-          {id: `btn-capture-${point_select_current.frame}-${point_select_current.id}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
-          {id: `btn-erase-${point_select_current.frame}-${point_select_current.id}`, icon: "../static/img/eraser (5).png", alt: "Xóa ảnh", text: "Xóa ảnh"}
+          {id: `btn-run-${selected.point_id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy"},
+          {id: `btn-capture-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
+          {id: `btn-erase-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/eraser (5).png", alt: "Xóa ảnh", text: "Xóa ảnh"}
       ]));                  
       anonymous.style.display = "block";
 }
+
 
 
 function createInputRow(labelText, placeholder, id = null) {
@@ -675,12 +515,7 @@ function createInputRow(labelText, placeholder, id = null) {
     return div;
 }
 
-btn_stream_video.addEventListener("click",()=>{
-     wrap_canvas.style.display = "none";
-     console.log("đã nhấn nút Stream video");
-     if(!get_camera_connection()){ write_log_capture_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kiểm tra kết nối.\n"); return;}
-     show_video_product();
-});
+
 
 
 
@@ -705,67 +540,9 @@ function createButtonRow(buttons) {
     return div;
 }
 
-// Hàm kiểm tra một giá trị có hợp lệ hay không
-function isInvalid(value) {
-  let num = Number(value);
-  return (
-    value === null ||        // null
-    value === undefined ||   // undefined
-    value === "" ||          // rỗng
-    isNaN(num) ||            // không phải số
-    !Number.isInteger(num)   // không phải số nguyên
-  );
-}
 
 
-// Hàm validate toàn bộ điểm
-function validatePoint(x, y, z, Limit_x, Limit_y, Limit_z) {
-    console.log("Dữ liệu trước khi chạy",x, y, z, Limit_x, Limit_y, Limit_z);
-    if (
-      isInvalid(x) || 
-      isInvalid(y) || 
-      isInvalid(z) || 
-      isInvalid(Limit_x) ||
-      isInvalid(Limit_y) ||
-      isInvalid(Limit_z) 
-    ) {
-      write_log_capture_clear(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
-      console.log(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
-      return false;  // trả về false thay vì string
-    }
 
-    // Ép kiểu int sau khi đã check hợp lệ
-    x = parseInt(x);
-    y = parseInt(y);
-    z = parseInt(z);
-    Limit_x = parseInt(Limit_x);
-    Limit_y = parseInt(Limit_y);
-    Limit_z = parseInt(Limit_z);
-
-    // Các điều kiện giới hạn
-    if (x < 0 || y < 0 || z < 0 ) {
-      write_log_capture_clear(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
-      console.log(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
-      return false;
-    }
-    if (x > Limit_x) {
-      write_log_capture_clear(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`)
-      console.log(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`);
-      return false;
-    }
-    if (y > Limit_y) {
-      write_log_capture_clear(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`)
-      console.log(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`);
-      return false;
-    }
-    if (z > Limit_z) {
-        write_log_capture_clear(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
-      console.log(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
-      return false;
-    }
-    console.log("✅ Dữ liệu hợp lệ");
-    return true; // hợp lệ
-}
 
 
 
@@ -773,7 +550,7 @@ function validatePoint(x, y, z, Limit_x, Limit_y, Limit_z) {
 function HandleClickBtnIncrease_X(element,max_element,input_x_value,input_y_value,input_z_value){
        let status_check = CheckData(element,"X",input_x_value,max_element);
        if(status_check){
-          console.log("input_x_value", input_x_value);
+        //   console.log("input_x_value", input_x_value);
          element.value = parseInt(input_x_value) + 1;
          HandleClickBtnRun(element.value,input_y_value,input_z_value);
        }
@@ -827,6 +604,88 @@ function HandleClickBtnDecrease_Z(element,max_element,input_x_value,input_y_valu
 
 }
 
+
+
+function write_log_capture_clear(text){
+    log_box.textContent = text;
+}
+
+function write_log_capture_append(text){
+    log_box.textContent += text;
+}
+
+
+//validate
+function validate_render_data(data){
+    if (data?.error_code == 5002){ 
+            const tbody = document.querySelector(".product-table tbody");
+            if (!tbody){console.log("Bảng không tồn tại");
+                return;
+            }
+            tbody.innerHTML = "";  
+            const row = document.createElement("tr");
+            let name = "?"; let x = "?"; let y = '?';let z = "?";
+            row.innerHTML =  
+                `<td>${name}</td>
+                    <td>${x}</td>
+                    <td>${y}</td>
+                    <td>${z}</td>
+                    `;
+            tbody.appendChild(row);            
+            write_log_capture_clear("❌ Hiện tại chưa chọn sản phẩm.\n✅ Hãy chọn lại sản phấm.");
+            return;
+    }
+}
+
+// Hàm validate toàn bộ điểm
+function validatePoint(x, y, z, Limit_x, Limit_y, Limit_z) {
+    // console.log("Dữ liệu trước khi chạy",x, y, z, Limit_x, Limit_y, Limit_z);
+    if (
+      isInvalid(x) || 
+      isInvalid(y) || 
+      isInvalid(z) || 
+      isInvalid(Limit_x) ||
+      isInvalid(Limit_y) ||
+      isInvalid(Limit_z) 
+    ) {
+      write_log_capture_clear(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
+      console.log(`❌ Các giá trị X, Y, Z, K và giới hạn phải là số nguyên hợp lệ và không được để trống`);
+      return false;  // trả về false thay vì string
+    }
+
+    // Ép kiểu int sau khi đã check hợp lệ
+    x = parseInt(x);
+    y = parseInt(y);
+    z = parseInt(z);
+    Limit_x = parseInt(Limit_x);
+    Limit_y = parseInt(Limit_y);
+    Limit_z = parseInt(Limit_z);
+
+    // Các điều kiện giới hạn
+    if (x < 0 || y < 0 || z < 0 ) {
+      write_log_capture_clear(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
+      console.log(`❌ Giá trị X, Y, Z, K phải lớn hơn hoặc bằng 0`);
+      return false;
+    }
+    if (x > Limit_x) {
+      write_log_capture_clear(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`)
+      console.log(`❌ Giá trị X phải nhỏ hơn hoặc bằng ${Limit_x}`);
+      return false;
+    }
+    if (y > Limit_y) {
+      write_log_capture_clear(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`)
+      console.log(`❌ Giá trị Y phải nhỏ hơn hoặc bằng ${Limit_y}`);
+      return false;
+    }
+    if (z > Limit_z) {
+        write_log_capture_clear(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
+      console.log(`❌ Giá trị Z phải nhỏ hơn hoặc bằng ${Limit_z}`);
+      return false;
+    }
+    // console.log("✅ Dữ liệu hợp lệ");
+    return true; // hợp lệ
+}
+
 function CheckData(element,str_name, data, value_max) {
     if (str_name == null || data == null || value_max == null ||element.value == ""||element.value == null ) {
         console.log(`⚠️ Dữ liệu "${str_name}" không có giá trị`);
@@ -838,7 +697,6 @@ function CheckData(element,str_name, data, value_max) {
         console.log(`❌ Giá trị "${str_name}" phải lớn hơn hoặc bằng 0`);
         log_box.innerHTML = `❌ Giá trị "${str_name}" phải lớn hơn hoặc bằng 0`;
         element.value = 0;
-        console.log("vao day");
         return false;
     }
 
@@ -848,17 +706,21 @@ function CheckData(element,str_name, data, value_max) {
          element.value = value_max;
         return false;
     }
-    console.log("data",data);
+    // console.log("data",data);
     console.log(`✅ Giá trị ${str_name} hợp lệ`);
     log_box.innerHTML = `✅ Giá trị ${str_name} hợp lệ`;
     return true;
 }
 
 
-function write_log_capture_clear(text){
-    log_box.textContent = text;
-}
-
-function write_log_capture_append(text){
-    log_box.textContent += text;
+// Hàm kiểm tra một giá trị có hợp lệ hay không
+function isInvalid(value) {
+  let num = Number(value);
+  return (
+    value === null ||        // null
+    value === undefined ||   // undefined
+    value === "" ||          // rỗng
+    isNaN(num) ||            // không phải số
+    !Number.isInteger(num)   // không phải số nguyên
+  );
 }

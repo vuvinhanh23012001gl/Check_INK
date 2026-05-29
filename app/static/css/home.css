@@ -1357,6 +1357,11 @@ form label {
 .img-item:hover{
     transform: scale(1.03);
 }
+.img-item.active{
+    box-shadow: 0 0 12px rgba(0,255,200,0.9);
+    transform: scale(1.05);
+    border: 2px solid #00ffd5;
+}
 
 
 /* ẢNH */

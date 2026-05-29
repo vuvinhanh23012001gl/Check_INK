@@ -22,3 +22,12 @@ class Result:
         if self.ok:
             return f"<Result OK data={type(self.data)}>"
         return f"<Result FAIL error={self.error}>"
+    
+    def to_dict(self):
+        return {
+            "ok": self.ok,
+            "data": self.data,
+            "error_code": self.error.value if self.error else None,
+            "error_name": self.error.name if self.error else None,
+            "message": self.message()
+        }

@@ -9,8 +9,8 @@ import {wrap_canvas,video_product,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE,show_video_pro
     drawImageContain,coordinate,getMousePositionInCanvas,CLICK_DELAY
     ,drawPoint,drawTransparentLine,isPointOnLineSegment,drawTextOnLine,SocketLog,SocketData,fetchGet
 } from "./common_value.js"
-console.log("-- Vào cấu hình calibration--");
 
+console.log("-- Mở File calibration thành công --");
 
 const paner_draw_calibration = document.getElementById("paner-calibration");
 const header_ul_li_draw_calibration = document.getElementById("header-ul-li-draw-calibration");

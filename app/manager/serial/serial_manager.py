@@ -279,3 +279,12 @@ class ManagerSerial:
         self.running_check = False
         self.close_thread_receive_and_send()
         self.serial_com.close_port()
+
+    def is_running(self):
+        return (
+            self.com_is_open
+            and self.rx_thread
+            and self.rx_thread.is_alive()
+            and self.tx_thread
+            and self.tx_thread.is_alive()
+        )

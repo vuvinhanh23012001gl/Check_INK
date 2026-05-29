@@ -143,18 +143,22 @@ class PointService:
     # CHECK PRODUCT + POINT EXISTS
     # =====================================
 
-    def is_exists_product_and_point_id(
+    def is_exists_product_frame_point_id(
         self,
         product_id: int,
+        frame_id: int,
         point_id: int
     ) -> bool:
+
         if product_id not in self.points:
             return False
-        product_frames = self.points[product_id]
-        for frame_dict in product_frames.values():
-            if point_id in frame_dict:
-                return True
-        return False
+
+        if frame_id not in self.points[product_id]:
+            return False
+
+        frame_dict = self.points[product_id][frame_id]
+
+        return point_id in frame_dict
     # =====================================
     # SAVE
     # =====================================
@@ -558,6 +562,7 @@ class PointService:
             frame_id,
             point_id
         )
+        print(product_id,frame_id,point_id)
         if not result_find.ok:
             return Result.Fail(ErrorCode.POINT_NOT_FOUND)
         point: Point = result_find.data
