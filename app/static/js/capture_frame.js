@@ -1,5 +1,5 @@
 // import {scroll_content,SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js"; co scroll
-import {SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product,fetchGet}from "./common_value.js";
+import {SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js";
 
 console.log("-- Mở File capture hình ảnh thành công --");
 const paner_capture_product = document.getElementById("paner-capture-product");
@@ -11,8 +11,9 @@ const log_box   = document.getElementById("log-box");
 const exit_add_capture_product  = document.getElementById("exit-add-capture-product");
 const btn_add_point = document.getElementById("btn-add-point");
 const scroll_container = document.querySelector(".scroll-container");
-
-
+const btn_erase_frame =  document.getElementById("btn-erase-frame");
+const btn_run_frame   = document.getElementById("btn-run-frame");
+const btn_run_product = document.getElementById("btn-run-product");
 let max_point_run ={}
 max_point_run.x =  0;
 max_point_run.y =  0;
@@ -233,24 +234,8 @@ function container_driver(selected,Max_X,Max_Y,Max_Z,x=null,y=null,z=null){
 
                 const btn_capture      = document.getElementById(`btn-capture-${selected.frame_id}-${selected.point_id}`);
                 const btn_erase_master = document.getElementById(`btn-erase-${selected.frame_id}-${selected.point_id}`);
-                // if (
-                //     list_point[index]?.x == null ||
-                //     list_point[index]?.y == null ||
-                //     list_point[index]?.z == null ||
-                //     list_point[index]?.brightness == null
-                //     ) 
-                //                     {
-                //                         input_x.value = list_point[index]?.x ?? 0;
-                //                         input_y.value = list_point[index]?.y ?? 0;
-                //                         input_z.value = list_point[index]?.z ?? 0;
-                //                         input_k.value = list_point[index]?.brightness ?? 0;
-                //                     } else {
-                //                         input_x.value = list_point[index].x;
-                //                         input_y.value = list_point[index].y;
-                //                         input_z.value = list_point[index].z;
-                //                         input_k.value = list_point[index].brightness;
-                //                     }
-        
+             
+       
                 const handleIncreaseX = () => HandleClickBtnIncrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value);
                 const handleDecreaseX = () => HandleClickBtnDecrease_X(input_x, Max_X, input_x.value, input_y.value, input_z.value);
 
@@ -262,10 +247,9 @@ function container_driver(selected,Max_X,Max_Y,Max_Z,x=null,y=null,z=null){
 
 
                 const handleRun       = () => HandleClickBtnRun(input_x.value, input_y.value, input_z.value);
-
-
                 const handleCapture   = () => HandleClickBtnCapture( selected.frame_id, selected.point_id, input_x.value, input_y.value, input_z.value);
-                // const handleErase     = () => HandleClickBtnEraseMaster(index);
+                const handleErase     = () => HandleClickBtnEraseItemProduct(selected.frame_id,selected.point_id);
+         
 
                 // Gắn event (trước khi add thì remove trước để tránh trùng)
                 btn_increase_x.removeEventListener("click", handleIncreaseX);
@@ -289,13 +273,35 @@ function container_driver(selected,Max_X,Max_Y,Max_Z,x=null,y=null,z=null){
                 btn_run.removeEventListener("click", handleRun);
                 btn_run.addEventListener("click", handleRun);
 
-                // btn_capture.removeEventListener("click", handleCapture);
                 btn_capture.addEventListener("click", handleCapture);
 
-                // btn_erase_master.removeEventListener("click", handleErase);
-                // btn_erase_master.addEventListener("click", handleErase);
-
+                btn_erase_master.removeEventListener("click", handleErase);
+                btn_erase_master.addEventListener("click", handleErase);
+                
+         
+               
 }
+
+btn_erase_frame.addEventListener("click",()=>{
+    console.log("selected.id_product_selecting_now ",id_product_selecting_now );
+    if (!id_product_selecting_now ){
+        write_log_capture_clear("Hiện tại chưa chọn loại model. Hãy chọn loại model cần xóa trước");
+        return;
+    }
+    if (selected.frame_id == -1){
+        write_log_capture_clear("Hãy chọn loại Frame cần xóa trước.");
+        return;
+    }
+    console.log(`Xóa Frame Product = ${id_product_selecting_now} Item Frame ID = ${selected.frame_id}`);
+    postData("/captureproduct/erase_frame",{"id_product_selecting_now":id_product_selecting_now,"FrameID":selected.frame_id}).then(data => {
+        console.log("Data Receive Erase Frame",data?.data);
+        renderMaster(data?.data);
+    });
+});
+
+  
+
+
 
 async function sendPoint(x, y, z) {
     if (isSending) {
@@ -398,7 +404,7 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
     const img_img = document.createElement("img");
     img_img.className = "img_show_point";
     const img_item = document.createElement("div");
-    if (data_point==null) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon_add_new = true; console.log("vao tao anh r")} else {img_img.src = data_point.path_img_point;}
+    if (data_point==null) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon_add_new = true;} else {img_img.src = data_point.path_img_point;}
     img_item.className = "img-item";
     img_item.dataset.id = id;
     img_item.appendChild(img_img);
@@ -407,9 +413,12 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
             frame_box.appendChild(img_item);
             img_item.addEventListener("click",()=>{
                     // Cập nhật các biến global
-                    frame_box.querySelectorAll(".img-item").forEach(items => {
+                    scroll_container.querySelectorAll(".box-frame").forEach(frame => {
+                            frame.querySelectorAll(".img-item").forEach(items => {
                         items.classList.remove("active");
                     });
+                    });
+                
                     img_item.classList.add("active");
                     current_frame_box = frame_box; //đối tượng dom
                     selected.point_id = Number(img_item.dataset.id);  
@@ -434,7 +443,56 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
     }
 }
 
+btn_run_frame.addEventListener("click",()=>{
 
+    console.log(`RunFrame Send Product ID:${id_product_selecting_now},Frame ID:${selected.frame_id}`);
+    if (id_product_selecting_now == -1){
+        console.log("Hiện tại bạn chưa chọn loại sản phẩm");
+        return;
+    }
+    if (selected.frame_id == -1){
+        console.log("Hiện tại bạn chưa chọn Frame cần chạy");
+        return;
+    }
+    postData("/captureproduct/run_frame", {"ProductID":id_product_selecting_now,"FrameID":selected.frame_id}).then(data => {
+            console.log("Data Receive RunFrame:",data);
+    });
+
+});
+
+btn_run_product.addEventListener("click",()=>{
+    console.log(`RunProduct Send Product ID:${id_product_selecting_now}}`);
+    if (id_product_selecting_now == -1){
+        console.log("Hiện tại bạn chưa chọn loại sản phẩm");
+        return;
+    }
+    postData("/captureproduct/run_product", {"ProductID":id_product_selecting_now}).then(data => {
+            console.log("Data Receive RunProduct:",data);
+    });
+
+});
+
+
+function HandleClickBtnEraseItemProduct(FrameID,PointID){
+    console.log(`Đã nhấn vào xóa ${FrameID},${PointID}`);
+    if (!id_product_selecting_now ){
+        write_log_capture_clear("Hiện tại chưa chọn loại model. Hãy chọn loại model cần xóa trước");
+        return;
+    }
+    if (FrameID == -1){
+        write_log_capture_clear("Bạn chưa chọn Frame nào. Hãy chọn ảnh trong Frame cần xóa");
+        return;
+    }
+    if (PointID == -1){
+        write_log_capture_clear("Bạn chưa chọn bức ảnh nào. Hãy chọn bức ảnh cần xóa");
+        return;
+    }
+
+    postData("/captureproduct/erase_item_img",{"id_product_selecting_now":id_product_selecting_now,"FrameID":FrameID,"PointID":PointID}).then(data => {
+        console.log("Data Receive Erase Items IMG",data?.data);
+        renderMaster(data?.data);
+    });
+}
 
  
 function HandleClickBtnCapture(frame_id,point_id, x , y , z){
@@ -456,7 +514,7 @@ function HandleClickBtnCapture(frame_id,point_id, x , y , z){
 
     let status_check = validatePoint(x,y,z,max_point_run.x ,max_point_run.y ,max_point_run.z);
     if (status_check){
-            console.log(`Check truoc khi gui product_selecting ${id_product_selecting_now} frame id ${frame_id} point_id ${point_id} x ${x},y ${y} z${z}`);
+            console.log(`Data gửi chụp ảnh Product:${id_product_selecting_now} Frame ID:${frame_id} Point ID${point_id} X:${x},Y:${y} Z:${z}`);
             postData("/captureproduct/capture",{"product_selecting":id_product_selecting_now,"id_frame":frame_id,"id_point":point_id,"x":x,"y":y,"z":z})
             .then(data => {
                     renderMaster(data?.data);
@@ -487,10 +545,11 @@ function create_table_controler(selected){
       ]));
 
       anonymous.appendChild(createButtonRow([
-          {id: `btn-run-${selected.point_id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy"},
+          {id: `btn-run-${selected.point_id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy điểm"},
           {id: `btn-capture-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
-          {id: `btn-erase-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/eraser (5).png", alt: "Xóa ảnh", text: "Xóa ảnh"}
-      ]));                  
+          {id: `btn-erase-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/eraser (5).png", alt: "Xóa Ảnh", text: "Xóa ảnh"},
+          {id: `btn-run-frame-${selected.frame_id}`, icon: "../static/img/running.png", alt: "Chạy điểm", text: "Chạy frame"}
+      ])); 
       anonymous.style.display = "block";
 }
 

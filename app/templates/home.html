@@ -15,7 +15,6 @@
     <script src="../static/cnd/cnd_lybrary.js"></script>
     <title>Kiểm tra độ rộng hộp mực</title>
 </head>
-
 <body>
 
     <div class="header">
@@ -432,7 +431,7 @@
 
                 <!-- Nút điều khiển tất cả điểm -->
                 <div class="controls-all-points">
-                    <button class="btn-form-cap">
+                    <button class="btn-form-cap" id="btn-erase-frame">
                         <img src="../static/img/erase_draw_img.png" alt="Xóa frame">
                         Xóa frame
                     </button>
@@ -442,16 +441,21 @@
                     </button>
 
                     <button class="btn-form-cap" id="btn-add-point">
-                        <img src="../static/img/magnifying-glass.png" alt="Thêm điểm kiểm tra">
+                        <img src="../static/img/plus.png" alt="Thêm điểm kiểm tra">
                         Thêm điểm
                     </button>
                     <button class="btn-form-cap" id="btn-stream-video">
                         <img src="../static/img/live-stream-video.png" alt="Video Stream">
                          Stream Video
                     </button>
-                    <button class="btn-form-cap">
-                        <img src="../static/img/run.png" alt="Chạy các Master">
-                        Chạy thử
+                    <button class="btn-form-cap" id = "btn-run-frame">
+                        <img src="../static/img/running.png" alt="Chạy Frame">
+                        Chạy frame
+                    </button>
+
+                    <button class="btn-form-cap" id = "btn-run-product">
+                        <img src="../static/img/run.png" alt="Chạy sản phẩm">
+                        Chạy sản phẩm
                     </button>
 
                     <button class="btn-form-cap" id="exit-add-capture-product">

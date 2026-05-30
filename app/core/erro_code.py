@@ -37,7 +37,7 @@ class ErrorCode(Enum):
     # =====================================
 
     DATA_INVALID = 5050
-
+    INVALID_INPUT = 5051
     # =====================================
     # FRAME
     # =====================================
@@ -51,6 +51,8 @@ class ErrorCode(Enum):
     POINT_NOT_FOUND = 6001
     POINT_ALREADY_EXISTS = 6002
     IMAGE_INVALID = 6003
+
+    FRAME_NOT_FOUND = 6050
 
     POINT_X_INVALID = 6004
     POINT_Y_INVALID = 6005
@@ -145,4 +147,13 @@ ERROR_MESSAGE = {
 
     ErrorCode.POINT_Z_INVALID:
         "[Lỗi] point.z không hợp lệ",
+
+    ErrorCode.INVALID_INPUT:
+    "[Lỗi] Dữ liệu đầu vào không hợp lệ",
+
+    ErrorCode.FRAME_NOT_FOUND:
+    "[Lỗi] Frame này đang không tồn tại",
 }
+
+# print(" ErrorCode.POINT_ALREADY_EXISTS", ErrorCode.POINT_ALREADY_EXISTS.name)
+# print(" ErrorCode.POINT_ALREADY_EXISTS", ErrorCode.POINT_ALREADY_EXISTS.value)

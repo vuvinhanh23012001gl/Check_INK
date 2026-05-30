@@ -716,10 +716,186 @@ class PointService:
             point_id
         ]
 
+        # =====================================
+        # DELETE EMPTY FRAME
+        # =====================================
+
+        if not self.points[
+            product_id
+        ][
+            frame_id
+        ]:
+
+            del self.points[
+                product_id
+            ][
+                frame_id
+            ]
+
+        # =====================================
+        # DELETE EMPTY PRODUCT
+        # =====================================
+
+        if not self.points[
+            product_id
+        ]:
+
+            del self.points[
+                product_id
+            ]
+
         self._save_points()
 
         return Result.Ok(
             point_delete
         )
+
+    def delete_frame(
+        self,
+        product_id: int,
+        frame_id: int
+    ) -> Result:
+        # 1. Ép kiểu đảm bảo tính chính xác khi tra cứu bộ nhớ
+        product_id = int(product_id)
+        frame_id = int(frame_id)
+
+        # 2. Kiểm tra xem product và frame có tồn tại không
+        product = self.points.get(product_id)
+        if not product:
+            return Result.Fail(ErrorCode.PRODUCT_NOT_FOUND)
+
+        frame = product.get(frame_id)
+        if not frame:
+            return Result.Fail(ErrorCode.FRAME_NOT_FOUND)
+
+        product_id_str = str(product_id)
+        frame_id_str = str(frame_id)
+
+        # Đường dẫn thư mục chứa model của frame này
+        path_model_folder = (
+            Path(self.path_base_patch_core) / product_id_str / frame_id_str
+        )
+        if path_model_folder.exists():
+            Folder.delete_folder(path_model_folder)
+
+        # Đường dẫn thư mục chứa ảnh tọa độ của frame này
+        path_img_folder = (
+            Path(self.path_base_img_coordinates) / product_id_str / frame_id_str
+        )
+        if path_img_folder.exists():
+            Folder.delete_folder(path_img_folder)
+
+        # Đường dẫn thư mục chứa ảnh retrain của frame này
+        path_retrain_folder = (
+            Path(self.path_base_img_coordinates_retrain) / product_id_str / frame_id_str
+        )
+        if path_retrain_folder.exists():
+            Folder.delete_folder(path_retrain_folder)
+
+        # =====================================
+        # XÓA KHỎI BỘ NHỚ (RAM)
+        # =====================================
+        
+        del self.points[product_id][frame_id]
+
+        # Nếu sau khi xóa frame mà product đó trống -> xóa luôn product khỏi bộ nhớ
+        if not self.points[product_id]:
+            del self.points[product_id]
+
+        # =====================================
+        # LƯU THAY ĐỔI VÀO DATABASE / FILE
+        # =====================================
+        
+        self._save_points()
+
+        return Result.Ok(frame_id)
     
+
+    def get_xyz_by_product_frame(
+            self,
+            product_id: int,
+            frame_id: int
+        ) -> Result:
+
+            # =====================================
+            # VALIDATE PRODUCT
+            # =====================================
+
+            if product_id not in self.points:
+
+                return Result.Fail(
+                    ErrorCode.PRODUCT_NOT_FOUND
+                )
+
+            # =====================================
+            # VALIDATE FRAME
+            # =====================================
+
+            if frame_id not in self.points[product_id]:
+
+                return Result.Fail(
+                    ErrorCode.FRAME_NOT_FOUND
+                )
+
+            # =====================================
+            # GET DATA
+            # =====================================
+
+            frame_dict = self.points[
+                product_id
+            ][
+                frame_id
+            ]
+
+            data = {}
+
+            for point_id, point in frame_dict.items():
+
+                data[point_id] = {
+
+                    "x": point.x,
+                    "y": point.y,
+                    "z": point.z
+
+                }
+
+            return Result.Ok(data)
     
+    def get_all_xyz_by_product_id(
+            self,
+            product_id: int
+        ) -> Result:
+
+            # =====================================
+            # CHECK PRODUCT
+            # =====================================
+
+            product = self.points.get(product_id)
+
+            if product is None:
+
+                return Result.Fail(
+                    ErrorCode.PRODUCT_NOT_FOUND
+                )
+
+            # =====================================
+            # BUILD DATA
+            # =====================================
+
+            data = {}
+
+            for frame_id, frame_dict in product.items():
+
+                data[frame_id] = []
+
+                for point_id, point in frame_dict.items():
+
+                    data[frame_id].append({
+                        "point_id": point_id,
+                        "x": point.x,
+                        "y": point.y,
+                        "z": point.z
+
+                    })
+
+            return Result.Ok(data)

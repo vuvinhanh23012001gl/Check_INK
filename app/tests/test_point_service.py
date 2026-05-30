@@ -71,54 +71,54 @@ def test_point_service():
     # TEST PARAM
     # =========================================
 
-    product_id = 1
+    # product_id = 1
 
-    frame_id = 0
+    # frame_id = 0
 
-    point_id = 0
+    # point_id = 0
 
-    # =========================================
-    # CREATE POINT
-    # =========================================
+    # # =========================================
+    # # CREATE POINT
+    # # =========================================
 
-    point = Point(
+    # point = Point(
 
-        point_id=point_id,
+    #     point_id=point_id,
 
-        x=20,
+    #     x=20,
 
-        y=200,
+    #     y=200,
 
-        z=300,
+    #     z=300,
 
-        arr_polygon=[
+    #     arr_polygon=[
 
-            [
+    #         [
 
-                (10, 10),
+    #             (10, 10),
 
-                (100, 10),
+    #             (100, 10),
 
-                (100, 100)
+    #             (100, 100)
 
-            ],
+    #         ],
 
-            [
+    #         [
 
-                (200, 200),
+    #             (200, 200),
 
-                (300, 200),
+    #             (300, 200),
 
-                (300, 300)
+    #             (300, 300)
 
-            ]
-        ]
-    )
-     # =========================================
-    # get_points_by_product_id
-    # =========================================
-    dict_data = service.get_points_by_product_id(1)
-    print(dict_data.data)
+    #         ]
+    #     ]
+    # )
+    #  # =========================================
+    # # get_points_by_product_id
+    # # =========================================
+    # dict_data = service.get_points_by_product_id(1)
+    # print(dict_data.data)
     
     # =========================================
     # CREATE IMAGE
@@ -401,6 +401,13 @@ def test_point_service():
     # #     "DELETE PRODUCT",
     # #     res_delete_product
     # # )
+    # # =========================================
+    # # DELETE Frame
+    # # =========================================
+    service.delete_frame(1,1)
+
+
+
 
         # =========================================
     # TEST EXISTS POINT ID
@@ -434,6 +441,11 @@ def test_point_service():
     #     f"+ Point ID 999999 exists:",
     #     not_exists
     # )
+    # data = service.get_xyz_by_product_frame(1,0).data
+    # print(data)
+
+    # data = service.get_all_xyz_by_product_id(1).data
+    # print(data)
 
 # =========================================
 # MAIN
