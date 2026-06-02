@@ -37,6 +37,7 @@ class PointService:
         self.points = (
             self._load_points()
         )
+        
 
     # =====================================
     # LOAD
@@ -899,3 +900,71 @@ class PointService:
                     })
 
             return Result.Ok(data)
+    
+
+    def get_all_retrain_paths_by_product_id(self,product_id: int) -> Result:
+        product = self.points.get(product_id)
+        if product is None:
+            return Result.Fail(
+                ErrorCode.PRODUCT_NOT_FOUND
+            )
+        paths = []
+        for frame_dict in product.values():
+            for point in frame_dict.values():
+                if point.path_img_retrain:
+                    paths.append(
+                        point.path_img_retrain
+                    )
+        return Result.Ok(paths)
+    
+
+
+    def get_retrain_paths_by_product_frame(
+        self,
+        product_id: int,
+        frame_id: int
+    ) -> Result:
+
+        # =====================================
+        # CHECK PRODUCT
+        # =====================================
+
+        product = self.points.get(product_id)
+
+        if product is None:
+            return Result.Fail(
+                ErrorCode.PRODUCT_NOT_FOUND
+            )
+
+        # =====================================
+        # CHECK FRAME
+        # =====================================
+
+        frame = product.get(frame_id)
+
+        if frame is None:
+            return Result.Fail(
+                ErrorCode.FRAME_NOT_FOUND
+            )
+
+        # =====================================
+        # BUILD FULL PATH
+        # =====================================
+
+        paths = []
+
+        for point in frame.values():
+
+            if not point.path_img_retrain:
+                continue
+
+            full_path = (
+                Path(self.path_base_storage)
+                / point.path_img_retrain
+            )
+
+            paths.append(
+                str(full_path)
+            )
+
+        return Result.Ok(paths)

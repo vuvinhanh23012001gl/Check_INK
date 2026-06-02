@@ -12,6 +12,7 @@ import asyncio
 from pydantic import BaseModel
 from app.core import (Result,ErrorCode)
 from app.validate import ValidateCaptureProduct
+from app.container import EnumMode
 class PointData(BaseModel):
     x: float
     y: float
@@ -24,17 +25,20 @@ router = APIRouter(
 
 @router.post("/run_frame")
 async def run_frame(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
-    print("Người dùng nhấn Run Frame")
-    frame_id_run =  payload.get("FrameID")
-    product_id =  payload.get("ProductID")
-    print(f"Frame ID RunFrame ProductID:{product_id},FrameID:{frame_id_run}")
-    try:
-        product_id = int(product_id)
-        frame_id_run = int(frame_id_run)
-    except Exception:
-        Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
-    result_run_frame = services.obj_point_service.get_xyz_by_product_frame(product_id,frame_id_run).data
-    print(result_run_frame)
+    print("vao run frame")
+    services.set_mode(EnumMode.MODE_RUN_ONE_FRAME)
+    
+    # print("Người dùng nhấn Run Frame")
+    # frame_id_run =  payload.get("FrameID")
+    # product_id =  payload.get("ProductID")
+    # print(f"Frame ID RunFrame ProductID:{product_id},FrameID:{frame_id_run}")
+    # try:
+    #     product_id = int(product_id)
+    #     frame_id_run = int(frame_id_run)
+    # except Exception:
+    #     Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
+    # result_run_frame = services.obj_point_service.get_xyz_by_product_frame(product_id,frame_id_run).data
+    # print(result_run_frame)
     return {
         "name": "Ánh",
         "age": 25
@@ -156,13 +160,8 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
         }
 
     if services.obj_choose_product.get_choose_product().data == product_selecting:
-        # se thay ham doi anh
-        import numpy as np
-        img = np.random.randint(
-                    0, 256,
-                    (200, 200, 3),
-                    dtype=np.uint8
-        )
+        status_cam,img = services.obj_camera.capture_once(1)
+        print("status camera",status_cam)
         status_check_point = services.obj_point_service.is_exists_product_frame_point_id(product_selecting,id_frame,id_point)
         product = services.obj_products_service.get_product_by_id(product_selecting)
         infor_iai = services.obj_iai_config.get_dict()

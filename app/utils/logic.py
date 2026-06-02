@@ -2,7 +2,6 @@ import re
 import numpy as np
 import cv2
 
-
 class Logic():
     @staticmethod
     def is_valid_id(id_value) -> bool:
@@ -159,3 +158,11 @@ class Logic():
             return {"status": False, "message": "Hai điểm calibration không được trùng nhau"}
 
         return {"status": True}
+    
+    @staticmethod
+    def is_all_int_strings(lst):
+        """Hàm này dùng để kiểm tra xem tất cả phần tử trong danh sách có phải là số nguyên hợp lệ hay không."""
+        try:
+            return all(isinstance(int(item), int) for item in lst)
+        except:
+            return False

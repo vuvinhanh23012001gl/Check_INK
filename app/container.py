@@ -11,6 +11,10 @@ from app.model import QueueManager,Worker
 from app.repository import ChooseProductRepository,ProductRepository,PointRepository
 import queue
 from app.validate import ValidateCaptureProduct
+from enum import Enum,auto
+import threading
+import webbrowser
+
 from app.config import (
     PATH_CONFIG_POINTS,
     PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
@@ -18,11 +22,17 @@ from app.config import (
     PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
     BASE_DIR, PATH_PRODUCT_MODEL,PATH_FILE_DATA_CONFIG_IAI
 )
+class EnumMode(Enum):
+                MODE_DEAFAULT =  auto()
+                MODE_JUDGEMENT = auto()
+                MODE_RUN_SERVICE = auto()
 
-# COM
+                MODE_RUN_ONE_FRAME = auto()
+
 
 class ServiceContainer:
     def __init__(self):
+        
 
         #Load config
         print("---------------Load config-----------")
@@ -61,6 +71,8 @@ class ServiceContainer:
         self.queue_send_MCU = queue.Queue(maxsize=QueueConfig.SIZE_QUEUE_DATA_SEND_MCU)
         self.queue_listen_MCU = queue.Queue(maxsize=QueueConfig.SIZE_QUEUE_DATA_LISTEN_MCU)
 
+        self._mode = EnumMode.MODE_DEAFAULT
+        self._lock_mode = threading.Lock()
         print("...----------------------------------.Init Service...-----------------------------.")
         #validate
         self.obj_validate_capture_product = ValidateCaptureProduct()
@@ -110,8 +122,8 @@ class ServiceContainer:
         # self.obj_img_queue_capture_test = ImageQueueTester(self.obj_detect)
         # self.obj_img_queue_capture_test.start()
 
-        import webbrowser
-        import threading
+
+       
         def open_browser():
             webbrowser.open("http://127.0.0.1:8000")
         threading.Thread(target = open_browser).start()
@@ -119,7 +131,14 @@ class ServiceContainer:
         print("..--------------------------------.. init Complete ...----------------------------------.")
     def stop(self):
         print("....Stopping Service....")
-        # Viết các hàm thoát ở đây
+
+    def set_mode(self, mode: EnumMode):
+        with self._lock_mode:
+                self._mode = mode
+
+    def get_mode(self) -> EnumMode:
+        with self._lock_mode:
+                return self._mode
 
 
 def create_container():

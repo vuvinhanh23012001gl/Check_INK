@@ -404,7 +404,7 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
     const img_img = document.createElement("img");
     img_img.className = "img_show_point";
     const img_item = document.createElement("div");
-    if (data_point==null) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon_add_new = true;} else {img_img.src = data_point.path_img_point;}
+    if (data_point==null) {img_img.src = "../static/img/plus.png";img_item.dataset.has_icon_add_new = true;} else {img_img.src = `${data_point.path_img_point}?v=${Math.random()}`;}
     img_item.className = "img-item";
     img_item.dataset.id = id;
     img_item.appendChild(img_img);
@@ -548,7 +548,6 @@ function create_table_controler(selected){
           {id: `btn-run-${selected.point_id}`, icon: "../static/img/run_point_location.png", alt: "Chạy", text: "Chạy điểm"},
           {id: `btn-capture-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/camera.png", alt: "Chụp", text: "Chụp"},
           {id: `btn-erase-${selected.frame_id}-${selected.point_id}`, icon: "../static/img/eraser (5).png", alt: "Xóa Ảnh", text: "Xóa ảnh"},
-          {id: `btn-run-frame-${selected.frame_id}`, icon: "../static/img/running.png", alt: "Chạy điểm", text: "Chạy frame"}
       ])); 
       anonymous.style.display = "block";
 }

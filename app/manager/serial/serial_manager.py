@@ -232,16 +232,12 @@ class ManagerSerial:
 
 
     def get_data_from_queue(self):
-
         if self.rx_queue.empty():
-
             return None
-
         return self.rx_queue.get()
 
 
     def clear_tx_queue(self):
-
         with self.tx_queue.mutex:
             size = len(
                 self.tx_queue.queue

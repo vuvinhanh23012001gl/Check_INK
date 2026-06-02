@@ -39,6 +39,11 @@ class Camera():
         self._capture_one = False    # Flag to capture one image
         self._captured_image = None   # Captured image buffer
 
+        # Viết chụp ảnh triger bằng Camera
+        self.nodemap = None
+        self.trigger_software = None
+        self.trigger_mode = False
+
         self.init()
 
     def refesh_data(self):
@@ -70,12 +75,13 @@ class Camera():
             self.st_device = st_system.create_first_device()
             self.st_datastream = self.st_device .create_datastream()
             print('Device=', self.st_device.info.display_name)
-            nodemap = self.st_device.remote_port.nodemap
+            # nodemap = self.st_device.remote_port.nodemap  #cu
+            self.nodemap = self.st_device.remote_port.nodemap
             if os.path.exists(PATH_FEATUERES_CFG_CAM):
                 print("Tìm thấy file mô hình")
                 featurebag = st.create_featurebag()
                 featurebag.store_file_to_bag(PATH_FEATUERES_CFG_CAM)
-                featurebag.load(nodemap, verify=True)
+                featurebag.load(self.nodemap, verify=True)
                 print("Camera config loaded compelete")
                 self.create_task_camera()
                 self.camera_lost = False
@@ -83,17 +89,78 @@ class Camera():
             else:
                 print("Không tìm thấy file mô hình features.cfg")
                 print("--------- Init Camera thất bại -------")
-                
         except:
             self.camera_lost = True
             print("--------- Init Camera thất bại -------")
             
 
+    def enable_software_trigger(self):
+        try:
+            try:
+                self.set_enumeration(
+                    "TriggerSelector",
+                    "FrameStart"
+                )
+            except:
+                self.set_enumeration(
+                    "TriggerSelector",
+                    "ExposureStart"
+                )
+            self.set_enumeration(
+                "TriggerMode",
+                "On"
+            )
+            self.set_enumeration(
+                "TriggerSource",
+                "Software"
+            )
+            self.trigger_software = st.PyICommand(
+                self.nodemap.get_node(
+                    "TriggerSoftware"
+                )
+            )
+            self.trigger_mode = True
+            print("Software Trigger Enabled")
+            return True
+        except Exception as e:
+            print("Enable Trigger Error:", e)
+            return False 
+        
+    def disable_software_trigger(self):
+        try:
+            self.set_enumeration(
+                "TriggerMode",
+                "Off"
+            )
+            self.trigger_mode = False
+            print("Software Trigger Disabled")
+        except Exception as e:
+            print("Disable Trigger Error:", e)
+
+
+    def send_trigger(self):
+        if not self.trigger_mode:
+            return False
+        try:
+            self.trigger_software.execute()
+            return True
+        except Exception as e:
+            print("Trigger Error:", e)
+            return False
+        
+    def set_enumeration(self, enum_name, entry_name):
+        enum_node = st.PyIEnumeration(
+            self.nodemap.get_node(enum_name)
+        )
+        entry_node = st.PyIEnumEntry(
+            enum_node[entry_name]
+        )
+        enum_node.set_entry_value(entry_node)
 
     def get_is_connect(self):
         with self.lock_connect:
             return self._isConnect   
-        
+
     def set_is_connect(self, value: bool):
         with self.lock_connect:
             self._isConnect = value
@@ -122,12 +189,10 @@ class Camera():
                     self.st_datastream.unregister_callback()
                 except Exception:
                     pass
-
                 try:
                     self.st_datastream.stop_acquisition()
                 except Exception:
                     pass
-
                 self.st_datastream = None
         except Exception as e:
             print("[Release] Datastream error:", e)
@@ -147,6 +212,11 @@ class Camera():
             print("[Camera] StApi terminated")
         except Exception as e:
             print("[Release] StApi terminate error:", e)
+        try:
+            self.disable_software_trigger()
+            print("[Release] Trigger thành công.")
+        except:
+            print("[Release] Trigger thất bại.")
 
         # 4. Reset state nội bộ
         self._image = None
@@ -157,19 +227,21 @@ class Camera():
         print("---Release camera thành công -- ")
 
 
-
-    def capture_once(self,timeout = 1):
-        """Chụp ảnh một lần trả về (True,ảnh) nếu chụp thành công ngược lại (False, "ErroTimeOutCapture")"""
+    def capture_once(self, timeout=1):
         with self._lock_capture:
             self._captured_image = None
             self._capture_one = True
         self._capture_event.clear()
+        if self.trigger_mode:
+            if not self.send_trigger():
+                self._capture_one = False
+                return False, "TriggerError"
         ok = self._capture_event.wait(timeout)
         if not ok:
+            self._capture_one = False
             print("Capture Error image timeout")
-            return False,Camera.ERRO_TIMEOUT
-        # cv2.imwrite("captured_image.jpg",self._captured_image)
-        return True,self._captured_image
+            return False, Camera.ERRO_TIMEOUT
+        return True, self._captured_image
     
 
 
@@ -205,12 +277,9 @@ class Camera():
         return duplicate
     
 
-
-
     def datastream_callback(self, handle=None, context=None):
         """
         Callback to handle events from DataStream.
-
         :param handle: handle that trigger the callback.
         :param context: user data passed on during callback registration.
         """
@@ -230,10 +299,8 @@ class Camera():
                     if not(pixel_format_info.is_mono or
                            pixel_format_info.is_bayer):
                         return
-
                     # Get raw image data.
                     data = st_image.get_image_data()
-
                     # Perform pixel value scaling if each pixel component is
                     # larger than 8bit. Example: 10bit Bayer/Mono, 12bit, etc.
                     if pixel_format_info.each_component_total_bit_count > 8:
@@ -258,7 +325,6 @@ class Camera():
                             nparr = cv2.cvtColor(nparr, cv2.COLOR_BAYER_GB2RGB)
                         elif bayer_type == st.EStPixelColorFilter.BayerBG:
                             nparr = cv2.cvtColor(nparr, cv2.COLOR_BAYER_BG2RGB)
-
                     # Resize image and store to self._image.
                     nparr = cv2.resize(nparr, None,
                                        fx=Camera.DISPLAY_RESIZE_FACTOR,
@@ -274,7 +340,7 @@ class Camera():
                             self._capture_one = False
                             self._capture_event.set()
 
-    
+
     def run(self):
         cb_func = self.datastream_callback
         self.st_datastream.register_callback(cb_func)
@@ -324,10 +390,76 @@ class Camera():
             "timestamp_frequency": info.timestamp_frequency,
         }
     
+
+    def capture_image_trigger(self, folder_path, image_name, timeout=2):
+        """
+        Bật trigger -> chụp 1 ảnh -> lưu ảnh -> tắt trigger
+        Return:
+            (status, image, path_or_error)
+            Success:
+                True, img, image_path
+            Fail:
+                False, None, error_message
+        """
+        try:
+            os.makedirs(folder_path, exist_ok=True)
+            image_path = os.path.join(
+                folder_path,
+                image_name
+            )
+            print("Enable Trigger...")
+            status_open_trigger = self.enable_software_trigger()
+            if not status_open_trigger:
+                return False, None, "EnableTriggerFail"
+            with self._lock_capture:
+                self._captured_image = None
+                self._capture_one = True
+            self._capture_event.clear()
+            print("Send Trigger...")
+            status_send_trigger = self.send_trigger()
+            if not status_send_trigger:
+                self._capture_one = False
+                return False, None, "SendTriggerFail"
+            ok = self._capture_event.wait(timeout)
+            if not ok:
+                self._capture_one = False
+                return False, None, Camera.ERRO_TIMEOUT
+            if self._captured_image is None:
+                return False, None, "ImageIsNone"
+            img = self._captured_image.copy()
+            if os.path.isfile(image_path):
+                os.remove(image_path)
+            save_status = cv2.imwrite(image_path, img)
+            if not save_status:
+                return False, None, "SaveImageFail"
+            print("Save Image OK:", image_path)
+            return True, img, image_path
+        except Exception as e:
+            print("capture_image_trigger error:", e)
+            return False, None, str(e)
+        finally:
+            try:
+                self.disable_software_trigger()
+                print("Disable Trigger OK")
+            except Exception as e:
+                print("Disable Trigger Error:", e)
+        
+
+    
+    # def open_trigger(self):
+    #     # Ham nay vi du để bật mode trigger
+    #     status_open_trigger = self.enable_software_trigger()
+    #     send_trigger = self.send_trigger()
+    #     ok, img = self.capture_once(timeout=2)
+    #     print("status_open_trigger",status_open_trigger,"send_trigger",send_trigger)
+    #     if ok:
+    #         cv2.imwrite("test.jpg", img)
+
 # c1 = Camera()
 # while True:
 #     img = c1.image
 #     if img is not None:
+#         # c1.open_trigger()
 #         cv2.imshow("image", img)
 #     if c1.camera_lost:
 #         print("Main: reconnect camera")

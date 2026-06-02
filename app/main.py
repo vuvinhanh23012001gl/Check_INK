@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
 from app.container import create_container
-
+from app.pipeline import Pipeline
+from enum import Enum
 from app.routers import (
     camera_router,
     software_router,
@@ -20,6 +21,7 @@ from app.routers import (
 async def lifespan(fastapi_app: FastAPI):
     print("🚀 Đang khởi tạo tài nguyên...")
     fastapi_app.state.services = create_container()
+    pipeline =  Pipeline(fastapi_app.state.services)
     asyncio.create_task(log_sender(fastapi_app))
     yield 
     print("🛑 Đang dọn dẹp tài nguyên...")

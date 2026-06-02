@@ -1,5 +1,5 @@
 {
-    "device_port": "COM3",
+    "device_port": "COM16",
     "baudrate": 115200,
     "bytesize": 8,
     "parity": "N",

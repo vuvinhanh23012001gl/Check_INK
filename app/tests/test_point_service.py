@@ -404,7 +404,7 @@ def test_point_service():
     # # =========================================
     # # DELETE Frame
     # # =========================================
-    service.delete_frame(1,1)
+    # service.delete_frame(1,1)
 
 
 
@@ -447,10 +447,18 @@ def test_point_service():
     # data = service.get_all_xyz_by_product_id(1).data
     # print(data)
 
+    # get_all_retrain_paths_by_product_id
+    # result = service.get_all_retrain_paths_by_product_id(1) # tra ve lop path danh sach nhung foler retrain
+    # print("Danh sách đường dẫn ảnh retrain",str(result.data))
+
+    # test path
+    result = service.get_retrain_paths_by_product_frame(1,0)
+    print(result.data)
+
 # =========================================
 # MAIN
 # =========================================
 
 if __name__ == "__main__":
-    test_point_service()
+    # test_point_service()
     # python -m app.tests.test_point_service
