@@ -2,30 +2,466 @@ from .inference_unet import InferenceUnet
 import numpy as np
 import cv2
 from skimage.morphology import skeletonize
-
+from scipy.spatial.distance import cdist
+from scipy.spatial import cKDTree
+from app.config import UnetCofigAutoDetectLineMaster
 class PredictionUnet:
     
-    def __init__(self,infeUnet:InferenceUnet):
-        self.infeUnet = infeUnet
+    def __init__(self,config : UnetCofigAutoDetectLineMaster, infeUnet:InferenceUnet):
 
+        self.infeUnet = infeUnet
+        self.unet_config = config
+    
+    def get_mask_and_polygon(self,img):
+        mask = self.infeUnet.get_mask(img)
+        polygons = self.find_polygons(mask,self.infeUnet.config.epsilon_ratio,self.infeUnet.config.min_area)  #C hinh lai duong polygon
+        
+        
 
     def run(self,img):
-        mask = self.infeUnet.predict(img)
-        mask_clean = self.clean_mask_opening(mask,self.infeUnet.config.kernel) # Loc nhieu xung quanh, lam sach mask
-        polygon  = self.find_polygons(mask_clean,self.infeUnet.config.epsilon_ratio,self.infeUnet.config.min_area)  #Chinh lai duong polygon
+        skeleton = self.get_skeleton(mask)  # Lấy điểm dọc
+        center_points = self.get_main_skeleton_points(skeleton)
+        center_points = self.sample_skeleton_points(center_points,spacing = 80)  # Lấy các sample 
+        self.draw_points(img,center_points)
+
+        polygon  = self.find_polygons(mask,self.infeUnet.config.epsilon_ratio,self.infeUnet.config.min_area)  #Chinh lai duong polygon
         self.draw_polygons(img,polygon)
-        self.show_mask(mask_clean)
-        img, lines = self.extract_perpendicular_lines(
-            img,
+        # self.show_mask(mask_clean)
+        polygon_points = self.get_polygon_points(
             polygon,
-            step=1,
-            line_length=20
+            spacing=20
+        )
+        self.draw_polygon_points(
+            img,
+            polygon_points,
+            radius=2,
+            color=(255, 0, 0)
+        )
+        lines = self.extract_width_lines(
+            polygon,
+            polygon_points,
+            center_points,search_length = 300,min_length= 10,max_length=300
+        )
+        lines = self.filter_close_lines(
+            lines,
+            min_spacing=20
+        )
+        lines = self.extend_lines(
+                lines,
+                extend_length=20
+            )
+
+   
+
+        for line in lines:
+            cv2.line(
+                img,
+                line["p1"],
+                line["p2"],
+                (255,255,0),
+                1
+            )
+
+        
+
+ 
+        self.show_img(img)
+    def draw_polygon_points(
+        self,
+        image,
+        polygon_points,
+        radius=2,
+        color=(0, 0, 255),
+        thickness=-1
+    ):
+        """
+        Vẽ các điểm sinh ra từ get_polygon_points()
+
+        Parameters
+        ----------
+        image : np.ndarray
+
+        polygon_points : list
+            Output của get_polygon_points()
+
+        radius : int
+
+        color : tuple
+            BGR
+
+        thickness : int
+        """
+
+        for item in polygon_points:
+
+            p = item["point"]
+
+            x = int(round(p[0]))
+            y = int(round(p[1]))
+
+            cv2.circle(
+                image,
+                (x, y),
+                radius,
+                color,
+                thickness
+            )
+
+        return image
+    
+
+    def extend_lines(
+        self,
+        lines,
+        extend_length=10
+    ):
+
+        extended_lines = []
+
+        for line in lines:
+
+            p1 = np.array(
+                line["p1"],
+                dtype=np.float32
+            )
+
+            p2 = np.array(
+                line["p2"],
+                dtype=np.float32
+            )
+
+            direction = p2 - p1
+
+            length = np.linalg.norm(direction)
+
+            if length < 1:
+                continue
+
+            direction /= length
+
+            new_p1 = p1 - direction * extend_length
+            new_p2 = p2 + direction * extend_length
+
+            extended_lines.append({
+                "p1": (
+                    int(round(new_p1[0])),
+                    int(round(new_p1[1]))
+                ),
+                "p2": (
+                    int(round(new_p2[0])),
+                    int(round(new_p2[1]))
+                ),
+                "length": float(
+                    np.linalg.norm(
+                        new_p2 - new_p1
+                    )
+                )
+            })
+
+        return extended_lines
+    def line_segment_intersection(
+        self,
+        p1,
+        p2,
+        q1,
+        q2
+    ):
+
+        r = p2 - p1
+        s = q2 - q1
+
+        denom = r[0] * s[1] - r[1] * s[0]
+
+        if abs(denom) < 1e-8:
+            return None
+
+        qp = q1 - p1
+
+        t = (
+            qp[0] * s[1]
+            - qp[1] * s[0]
+        ) / denom
+
+        u = (
+            qp[0] * r[1]
+            - qp[1] * r[0]
+        ) / denom
+
+        # Giao điểm phải nằm trên cả 2 đoạn thẳng
+        if 0 <= t <= 1 and 0 <= u <= 1:
+            return p1 + t * r
+
+        return None
+    def extract_width_lines(
+        self,
+        polygons,
+        polygon_points,
+        center_points,
+        search_length=1000,
+        min_length=5,
+        max_length=100
+    ):
+        lines = []
+        if len(center_points) == 0:
+            return lines
+        tree = cKDTree(center_points)
+        for item in polygon_points:
+            p = item["point"].astype(np.float32)
+            poly_idx = item["poly_idx"]
+            edge_idx = item["edge_idx"]
+
+            poly = polygons[poly_idx]
+            pts = poly.reshape(-1, 2).astype(np.float32)
+
+            a = pts[edge_idx]
+            b = pts[(edge_idx + 1) % len(pts)]
+
+            # center gần nhất
+            _, idx = tree.query(p)
+            center = center_points[idx].astype(np.float32)
+
+            # vector cạnh
+            edge = b - a
+            edge_len = np.linalg.norm(edge)
+
+            if edge_len < 1:
+                continue
+
+            tangent = edge / edge_len
+
+            # pháp tuyến
+            normal = np.array(
+                [-tangent[1], tangent[0]],
+                dtype=np.float32
+            )
+
+            # hướng pháp tuyến về center
+            if np.dot(normal, center - p) < 0:
+                normal *= -1
+
+            # điểm cuối của tia dò
+            ray_end = p + normal * search_length
+
+            intersections = []
+
+            # tìm giao điểm với tất cả cạnh polygon
+            for poly2 in polygons:
+
+                pts2 = poly2.reshape(-1, 2).astype(np.float32)
+                n2 = len(pts2)
+
+                for i in range(n2):
+
+                    s1 = pts2[i]
+                    s2 = pts2[(i + 1) % n2]
+
+                    inter = self.line_segment_intersection(
+                        p,
+                        ray_end,
+                        s1,
+                        s2
+                    )
+
+                    if inter is None:
+                        continue
+
+                    dist = np.linalg.norm(inter - p)
+
+                    # bỏ giao điểm tại chính P
+                    if dist > 1:
+                        intersections.append(
+                            (dist, inter)
+                        )
+
+            if len(intersections) == 0:
+                continue
+
+            # lấy giao điểm gần nhất theo hướng normal
+            intersections.sort(key=lambda x: x[0])
+
+            length = intersections[0][0]
+            p2 = intersections[0][1]
+
+            # lọc độ dài
+            if length < min_length:
+                continue
+
+            if length > max_length:
+                continue
+
+            lines.append({
+                "p1": (
+                    int(round(p[0])),
+                    int(round(p[1]))
+                ),
+                "p2": (
+                    int(round(p2[0])),
+                    int(round(p2[1]))
+                ),
+                "length": float(length)
+            })
+
+        return lines
+
+    def get_polygon_points(
+        self,
+        polygons,
+        spacing=10
+    ):
+
+        polygon_points = []
+
+        for poly_idx, poly in enumerate(polygons):
+
+            pts = poly.reshape(-1, 2).astype(np.float32)
+
+            if len(pts) < 2:
+                continue
+
+            pts = np.vstack([pts, pts[0]])
+
+            remain = 0.0
+
+            for edge_idx in range(len(pts) - 1):
+
+                p1 = pts[edge_idx]
+                p2 = pts[edge_idx + 1]
+
+                edge = p2 - p1
+                edge_len = np.linalg.norm(edge)
+
+                if edge_len < 1e-6:
+                    continue
+
+                direction = edge / edge_len
+
+                d = remain
+
+                while d <= edge_len:
+
+                    point = p1 + direction * d
+
+                    polygon_points.append({
+                        "point": point.copy(),
+                        "poly_idx": poly_idx,
+                        "edge_idx": edge_idx
+                    })
+
+                    d += spacing
+
+                remain = d - edge_len
+
+        return polygon_points
+
+    def draw_points(
+            self,
+            img,
+            points,
+            radius=2,
+            color=(0, 0, 255),
+            thickness=-1
+        ):
+            """
+            Vẽ các điểm lên ảnh
+
+            Parameters
+            ----------
+            img : np.ndarray
+                Ảnh BGR
+
+            points : np.ndarray
+                [[x,y], [x,y], ...]
+
+            radius : int
+                Bán kính điểm
+
+            color : tuple
+                Màu BGR
+
+            thickness : int
+                -1 => tô kín
+            """
+
+            for x, y in points:
+                cv2.circle(
+                    img,
+                    (int(x), int(y)),
+                    radius,
+                    color,
+                    thickness
+                )
+
+            return img
+    
+
+
+    def sample_skeleton_points(self,
+    points,
+            spacing=10
+        ):
+
+            if len(points) < 2:
+                return points
+
+            sampled = [points[0]]
+
+            accumulated = 0
+
+            for i in range(1, len(points)):
+
+                d = np.linalg.norm(
+                    points[i] - points[i - 1]
+                )
+
+                accumulated += d
+
+                if accumulated >= spacing:
+                    sampled.append(points[i])
+                    accumulated = 0
+
+            return np.array(sampled)
+    
+
+    def get_main_skeleton_points(self,skeleton):
+
+        ys, xs = np.where(skeleton > 0)
+        points = np.column_stack((xs, ys))
+
+        if len(points) < 2:
+            return points
+
+        # tìm 2 đầu xa nhất
+        D = cdist(points, points)
+
+        start_idx, end_idx = np.unravel_index(
+            np.argmax(D),
+            D.shape
         )
 
-        img = self.draw_perpendicular_lines(img, lines)
-        self.show_img(img)
-        return  mask_clean ,polygon
-        
+        start = points[start_idx]
+
+        ordered = [start]
+        remain = points.tolist()
+        remain.remove(start.tolist())
+        current = start
+        while remain:
+            dists = np.linalg.norm(
+                np.array(remain) - current,
+                axis=1
+            )
+            idx = np.argmin(dists)
+            current = np.array(remain.pop(idx))
+            ordered.append(current)
+        return np.array(ordered)
+
+    def get_skeleton(self,mask):
+            skeleton = skeletonize(mask > 0)
+            return skeleton.astype(np.uint8)
+    def get_skeleton_points(self,skeleton):
+            ys, xs = np.where(skeleton > 0)
+            points = np.column_stack((xs, ys))
+            return points
+    
 
 
     def clean_mask_opening(self, mask, kernel_size=3, iterations=1):
@@ -130,78 +566,64 @@ class PredictionUnet:
 
         return image
     
-    def extract_perpendicular_lines(
-        self,
-        image,
-        polygons,
-        step=1,
-        line_length=30
-    ):
+    def filter_close_lines(self, lines, min_spacing=20):
         """
-        Trích các đường vuông góc (normal lines) từ polygon theo bước sampling
-        """
+        Loại bỏ các line gần nhau hoặc cắt nhau.
 
-        h, w = image.shape[:2]
-        lines = []
-
-        for poly in polygons:
-            pts = poly.reshape(-1, 2)
-            n = len(pts)
-
-            if n < 3:
-                continue
-
-            for i in range(0, n, step):
-
-                # lấy điểm trước - hiện tại - sau (giảm nhiễu)
-                p_prev = pts[i - 1]
-                p_next = pts[(i + 1) % n]
-
-                # tangent vector ổn định hơn
-                dx = p_next[0] - p_prev[0]
-                dy = p_next[1] - p_prev[1]
-
-                norm = np.sqrt(dx * dx + dy * dy) + 1e-6
-
-                tx = dx / norm
-                ty = dy / norm
-
-                # vector vuông góc
-                nx = -ty
-                ny = tx
-
-                # điểm trung tâm
-                cx, cy = pts[i]
-
-                # 2 đầu đoạn vuông góc
-                x1 = int(cx - nx * line_length)
-                y1 = int(cy - ny * line_length)
-                x2 = int(cx + nx * line_length)
-                y2 = int(cy + ny * line_length)
-
-                # check trong image
-                if (0 <= x1 < w and 0 <= x2 < w and
-                    0 <= y1 < h and 0 <= y2 < h):
-
-                    lines.append(((x1, y1), (x2, y2)))
-
-        return image, lines
-    
-    def draw_perpendicular_lines(
-        self,
-        image,
-        lines,
-        color=(0, 0, 255),
-        thickness=1
-    ):
-        """
-        Vẽ các đường vuông góc đã được extract
-        Parameters:
-            image: ảnh gốc
-            lines: list[((x1,y1),(x2,y2))]
+        Rule:
+        - Nếu 2 line cắt nhau (distance ~ 0) -> loại line thứ 2
+        - Nếu khoảng cách giữa 2 line < min_spacing -> loại line thứ 2
+        - So sánh full pairwise
         """
 
-        for (p1, p2) in lines:
-            cv2.line(image, p1, p2, color, thickness)
+        if len(lines) == 0:
+            return []
 
-        return image
+        kept = []
+
+        def point_segment_distance(p, a, b):
+            """Khoảng cách từ điểm p tới segment ab"""
+            ap = p - a
+            ab = b - a
+            ab_len2 = np.dot(ab, ab)
+
+            if ab_len2 < 1e-8:
+                return np.linalg.norm(ap)
+
+            t = np.dot(ap, ab) / ab_len2
+            t = np.clip(t, 0.0, 1.0)
+
+            proj = a + t * ab
+            return np.linalg.norm(p - proj)
+
+        def line_distance(l1, l2):
+            """approx distance between 2 segments"""
+            a1 = np.array(l1["p1"], dtype=np.float32)
+            a2 = np.array(l1["p2"], dtype=np.float32)
+            b1 = np.array(l2["p1"], dtype=np.float32)
+            b2 = np.array(l2["p2"], dtype=np.float32)
+
+            # sample 2 endpoints mỗi line (đủ cho case line detection của bạn)
+            dists = [
+                point_segment_distance(a1, b1, b2),
+                point_segment_distance(a2, b1, b2),
+                point_segment_distance(b1, a1, a2),
+                point_segment_distance(b2, a1, a2),
+            ]
+            return min(dists)
+
+        for i, line in enumerate(lines):
+            keep = True
+
+            for j, other in enumerate(kept):
+                dist = line_distance(line, other)
+
+                # cắt nhau hoặc gần quá
+                if dist < min_spacing:
+                    keep = False
+                    break
+
+            if keep:
+                kept.append(line)
+
+        return kept

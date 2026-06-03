@@ -11,6 +11,7 @@ import cv2
 
 
 class InferenceUnet(BaseAI):
+
     def __init__(self,config:UnetConfig = None):
         self.config = config
         self.device =  None
@@ -34,7 +35,7 @@ class InferenceUnet(BaseAI):
         ).to(self.device)
         self.model.load_state_dict(torch.load(self.config.path, map_location = self.device))
         self.model.eval()
-       
+    
     
     def preprocess(self,image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -50,7 +51,11 @@ class InferenceUnet(BaseAI):
         return torch.from_numpy(image).to(self.device)
     
 
-
+    def get_mask(self,img):
+        mask_raw = self.predict(img)   # Lấy mask
+        mask_clean = self.clean_mask_opening(mask_raw,self.config.kernel) # Loc nhieu xung quanh, lam sach mask
+        return mask_clean
+    
     def predict(self,image):
         h, w = image.shape[:2]
         x = self.preprocess(image)
@@ -89,3 +94,23 @@ class InferenceUnet(BaseAI):
 
 
 
+    def clean_mask_opening(self, mask, kernel_size=3, iterations=1):
+        """
+            Làm sạch mask bằng phép Morphology Opening (Erosion + Dilation)
+            Parameters:
+                mask (np.ndarray): Ảnh mask nhị phân (0 hoặc 255)
+                kernel_size (int): Kích thước kernel (ví dụ: 3 → kernel 3x3)
+                iterations (int): Số lần lặp phép morphology
+            Returns:
+                np.ndarray: Mask đã được làm sạch
+        """
+        mask = mask.astype(np.uint8)
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        mask_clean = cv2.morphologyEx(
+                mask,
+                cv2.MORPH_OPEN,
+                kernel,
+                iterations=iterations
+            )
+        return mask_clean
+    

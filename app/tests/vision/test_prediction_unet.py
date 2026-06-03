@@ -7,11 +7,11 @@ def main():
     infer_unet = InferenceUnet(config)
     prediction = PredictionUnet(infer_unet)
 
-    img = cv2.imread(r"C:\Users\anhuv\Desktop\train\img_input\1.jpg")
+    img = cv2.imread(r"C:\Users\anhuv\Desktop\train\img_input\29.jpg")
 
     if img is None:
         raise ValueError("Không đọc được ảnh")
-    prediction.run(img)
+    prediction.run(img,)
 
 
 

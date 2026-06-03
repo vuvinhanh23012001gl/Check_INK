@@ -15,5 +15,9 @@ class UnetConfig:
     img_size: int = 512
     kernel: int = 7
     min_area: int = 1000
-    epsilon_ratio: float = 0.00007   # Tỷ lệ dọc đứng nhiều điểm trên polygon 
+    epsilon_ratio: float = 0.0017   # Tỷ lệ dọc đứng nhiều điểm trên polygon 
 
+
+@dataclass
+class UnetCofigAutoDetectLineMaster:
+    pass
