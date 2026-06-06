@@ -20,4 +20,11 @@ class UnetConfig:
 
 @dataclass
 class UnetCofigAutoDetectLineMaster:
-    pass
+    distance_between_points_center_point:int = 80 
+    edge_point_spacing_polygons:int = 20
+    intersection_detection_range:int = 300
+    minimum_allowable_width:int = 5
+    maximum_width_allowed:int = 300
+    minimum_length_to_remove_line:int = 20
+    length_extended_at_each_end:int = 20
+    

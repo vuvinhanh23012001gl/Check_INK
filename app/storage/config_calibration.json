@@ -1,13 +1,1 @@
-{
-    "calibration": 0.005502392344497608,
-    "name": "VinhAnh",
-    "reality": 1.05,
-    "numberCapture": 10,
-    "default": false,
-    "picture_ok": 10,
-    "picture_ng": 0,
-    "pixel_mean": 209.0,
-    "pixel_std": 0.0,
-    "cv": 0.0,
-    "scale_error_mm_per_pixel": 0.0
-}
+{}

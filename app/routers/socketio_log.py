@@ -39,8 +39,8 @@ async def log_sender(app):
     services: ServiceContainer = app.state.services
     while True:
             await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
-            await sio.emit("status_com", {"status":services.obj_com_service.is_running_com()}, namespace = NAMESPACE_DATA)
-            # print("services.obj_com_service.is_running_com()}",services.obj_com_service.is_running_com())
+            await sio.emit("status_com", {"status":services.obj_com_service.get_shake_hands_complete()}, namespace = NAMESPACE_DATA)
+
             # print(services.obj_camera.get_is_connect())
             data_log = services.queue_log_send_client.get()
             if data_log is not None:

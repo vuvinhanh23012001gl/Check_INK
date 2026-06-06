@@ -780,6 +780,35 @@
                 "path_img_point": "storage\\img_points\\2\\0\\33.jpg",
                 "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\33",
                 "arr_polygon": []
+            },
+            "34": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\34",
+                "path_img_point": "storage\\img_points\\2\\0\\34.jpg",
+                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\34",
+                "arr_polygon": []
+            },
+            "35": {
+                "x": 5,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\35",
+                "path_img_point": "storage\\img_points\\2\\0\\35.jpg",
+                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\35",
+                "arr_polygon": []
+            }
+        },
+        "1": {
+            "0": {
+                "x": 6,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": "storage\\model\\patch_core\\2\\1\\0",
+                "path_img_point": "storage\\img_points\\2\\1\\0.jpg",
+                "path_img_retrain": "storage\\retrain\\patch_core\\2\\1\\0",
+                "arr_polygon": []
             }
         }
     }

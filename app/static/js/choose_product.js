@@ -1,4 +1,4 @@
-import {fetchGet,fetchGetSendData} from "./common_value.js"
+import {fetchGet,fetchGetSendData} from "./utills/api.js";
 
 const choose_product = document.getElementById("choose-product"); 
 const overlay_choose_product = document.getElementById("overlay-choose-product");

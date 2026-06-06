@@ -214,21 +214,32 @@ async def run_point(data: PointData,services: ServiceContainer = Depends(get_ser
     y = data.y
     z = data.z
     print(f"Nhận tọa độ: X={x}, Y={y}, Z={z}")
-    if services.obj_com_service.is_running_com():
+    if services.obj_com_service.get_shake_hands_complete():
         if services.obj_iai_service.is_valid_position(x,y,z):
-            services.obj_com_service.send(x,y,z)
+            if  services.obj_com_service.get_shake_hands_complete():
+                status_resquest_control_services_arm_move = services.obj_com_service.send_and_wait(x,y,z)
+                if status_resquest_control_services_arm_move:
+                    return {
+                        "ok": True,
+                        "message": f"✅ Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
+                    }
+                return {
+                    "ok": False,
+                    "message": f"❌ Gửi điểm X:{x}, Y:{y}, Z:{z} thất bại."
+                }
             return {
-            "status":True,
-            "message": f"✅Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
-            }
+                    "ok": False,
+                    "message": f"❌ Quá trình bắt tay chưa thành công."
+                }
         return {
-            "status": False,
+            "ok": False,
             "message": f"⚠️Nhận điểm X:{x}, Y:{y}, Z:{z} nằm ngoài giới hạn trục."
         }
     return {
-            "status": False,
+            "ok": False,
             "message": f"⚠️Cổng COM đang không kết nối.Gửi dữ liệu thất bại."
         }
+    
     
 
 @router.websocket("/ws")

@@ -41,7 +41,7 @@ def data_format(arr_check):
 
 class StageIngest:
     # Lop nay ke noi COM Va chuan bi du lieu
-    LIMIT_LEN_MIN_DATA_COM = 6
+   
     def __init__(self,services:ServiceContainer):
 
         self.services = services
@@ -50,41 +50,28 @@ class StageIngest:
        
     def check_protocol_connect_com(self):
         if not self.protocol_connection_OK:
-                self.services.obj_manager_serial.send_data("200OK:")
-                if self.services.obj_manager_serial.get_rx_queue_size() > 0:
-                        data = self.services.obj_manager_serial.get_data_from_queue()
-                        # print("Data nhận được từ Queue ARM:", data)
-                        print(".")
-                        if("200OK," in data):
-                            if(len(data) <= StageIngest.LIMIT_LEN_MIN_DATA_COM):
-                                print("❌Độ dài dữ liệu gửi về ngắn....PC Gửi lại 200OK") 
-                                return False
-                            cut_data = data[StageIngest.LIMIT_LEN_MIN_DATA_COM:].split(",")
-                            print("Mảng ",cut_data)
-                            if cut_data == data[StageIngest.LIMIT_LEN_MIN_DATA_COM:]:
-                                print("❌Dữ liệu không có dấu phẩy....PC Gửi lại 200OK")
-                                return False
-                            # if (Logic.is_all_int_strings(cut_data) == False or len(cut_data) != 4):
-                            #     print("Dữ liệu tọa độ ban đầu không hợp lệ. Vui lòng kiểm tra lại.")
-                            #     return False
-                            if "200OK,000,000,000" in data:
-                                  print("........Nhan dung tin hieu dieu khien .....")
-                                  self.the_first_connect = False
-                                  self.services.obj_manager_serial.clear_rx_queue()  
-                                  self.services.obj_manager_serial.clear_tx_queue()
-                                  self.protocol_connection_OK = True
-                                  self.services.obj_manager_serial.send_data("move_to_org:")
-                                  print("Kết nối thành công.")
-                                  return True
-                return False
-        return True
-        
+                self.services.obj_manager_serial.clear_rx_queue()  
+                self.services.obj_manager_serial.clear_tx_queue()
+                self.services.obj_manager_serial.send_data("move_to_org:")
+                while True:
+                    if self.services.obj_manager_serial.get_rx_queue_size() > 0:
+                            data = self.services.obj_manager_serial.get_data_from_queue()
+                            print("Data nhận được từ Queue ARM:", data)
+                            if "has_returned_org:" in data:
+                                    print("........IAI về gốc thành công nha .....")
+                                    self.services.obj_manager_serial.clear_rx_queue()  
+                                    self.services.obj_manager_serial.clear_tx_queue()
+                                    self.protocol_connection_OK = True
+                                    self.services.obj_com_service.set_shake_hands_complete(True)
+                                    return True
+                    time.sleep(0.5)   
+    
+    
 
     def run(self):
         if not self.check_protocol_connect_com():
              time.sleep(0.5) # Sleep tranh 100% CPU
              return
-    
         if (self.services.get_mode() == EnumMode.MODE_RUN_ONE_FRAME):
             print("----Vào chế độ chạy Frame---")
             product = self.services.obj_choose_product.get_choose_product().data

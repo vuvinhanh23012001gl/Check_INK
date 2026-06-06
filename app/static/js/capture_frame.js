@@ -1,19 +1,26 @@
-// import {scroll_content,SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js"; co scroll
-import {SocketLog,postData,clearn_div,video_product,wrap_canvas,get_camera_connection,show_video_product}from "./common_value.js";
+
+import {scroll_container,SocketLog,canvasManager,
+    get_camera_connection,active_sceen_show_video,show_video_product}from "./common_value.js";  // Khoi ghein thi anh
+import {postData}from "./utills/api.js";
+
 
 console.log("-- Mở File capture hình ảnh thành công --");
 const paner_capture_product = document.getElementById("paner-capture-product");
-const btn_function_capture_product = document.getElementById("header-ul-li-capture-product");
+const header_btn_function_capture_product = document.getElementById("header-ul-li-capture-product");
 const btn_add_frame = document.getElementById("btn-add-frame");
 const btn_stream_video = document.getElementById("btn-stream-video");
 const anonymous =  document.getElementById("anonymous");
 const log_box   = document.getElementById("log-box");
 const exit_add_capture_product  = document.getElementById("exit-add-capture-product");
 const btn_add_point = document.getElementById("btn-add-point");
-const scroll_container = document.querySelector(".scroll-container");
 const btn_erase_frame =  document.getElementById("btn-erase-frame");
 const btn_run_frame   = document.getElementById("btn-run-frame");
 const btn_run_product = document.getElementById("btn-run-product");
+
+
+ 
+
+
 let max_point_run ={}
 max_point_run.x =  0;
 max_point_run.y =  0;
@@ -30,9 +37,9 @@ const selected = {
     point_id: -1
 };
 
-let isSending = false; //Biến này giúp đợi  tránh làm cho gửi quá nhiều lần tới IAI
 let  current_frame_box = null ; // Frame hiện tại đang đc click
 let  id_product_selecting_now = null; //San pham dang chon
+
 
 
 
@@ -44,7 +51,6 @@ SocketLog.on("type_log_capture", (data) => {
 
 // Action BTN
 btn_stream_video.addEventListener("click",()=>{
-     wrap_canvas.style.display = "none";
      console.log("đã nhấn nút Stream video");
      if(!get_camera_connection()){ write_log_capture_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kiểm tra kết nối.\n"); return;}
      show_video_product();
@@ -72,16 +78,12 @@ btn_add_point.addEventListener("click", () => {
         write_log_capture_clear("❌Hãy click vào frame trước khi thêm điểm");
         return;
     }
-    // 🌟 THAY ĐỔI QUAN TRỌNG: Lấy ra đối tượng DOM mới nhất đang hiển thị trên màn hình
     const real_frame_box = document.querySelector(`.box-frame[data-frame-id="${selected.frame_id}"] .img-box`);
-    
     if (!real_frame_box) {
         console.log("Không tìm thấy Frame thực tế trên giao diện!");
         return;
     }
-    // Cập nhật lại biến global cho đúng chuẩn
     current_frame_box = real_frame_box; 
-
     let break_function = false;
     current_frame_box.querySelectorAll(".img-item").forEach((value, index) => {
         if (value.dataset.has_icon_add_new) {
@@ -89,34 +91,25 @@ btn_add_point.addEventListener("click", () => {
             break_function = true;
         }
     });
-
     if (break_function) return;
-
     const box_frame = current_frame_box.querySelectorAll(".img-item");
     let arr_items_img_id = [];
     for (const i of box_frame) {
         arr_items_img_id.push(i.dataset.id);
     }
-    
     let id_new = generateNewId(arr_items_img_id);
     let find_index_new = current_frame_box.querySelectorAll(".img-item").length; 
-    
     let data_point = null;
-    // 🌟 Truyền phần tử DOM thật vừa tìm được vào hàm tạo
     create_items_img(id_new, find_index_new, data_point, current_frame_box, selected.frame_id);
 });
 
 
 
-btn_function_capture_product.addEventListener("click",function(){       
+
+header_btn_function_capture_product.addEventListener("click",function(){       
         console.log("Click vào chụp ảnh sản phẩm");
         paner_capture_product.classList.add("active");
-        video_product.style.width = "1365.33px";
-        video_product.style.height = "1024px";
-        video_product.style.objectFit = "contain";   // QUAN TRỌNG
-        video_product.style.display = "flex";
-        wrap_canvas.style.display = "none";
-        // write_log_capture_clear("✅ Nhấn \"Thêm master\" -> \"Ảnh master\" để mở video chụp ảnh.")
+        active_sceen_show_video();
         postData("/captureproduct", {"status": "UI_Capture"}).then(data => {
             console.log("Data Receive:",data.data);
             renderMaster(data?.data);
@@ -303,46 +296,23 @@ btn_erase_frame.addEventListener("click",()=>{
 
 
 
-async function sendPoint(x, y, z) {
-    if (isSending) {
-      console.warn("⚠️ Đang gửi dữ liệu, vui lòng đợi...");
-      write_log_capture_clear("⚠️ Đang gửi dữ liệu vui lòng đợi ...")
-      return null; 
-    }
-    isSending = true; 
-    try {
-      const response = await fetch(`/captureproduct/run_point`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ x, y, z})
-      });
-      const data = await response.json();
-    //   console.log("data?.status",data);
-      if (data?.status){
-        write_log_capture_clear(data?.message);
-        return true;
-      }
-       write_log_capture_clear(data.message);//Server gui du lieu bi qua han
-       return null;
-    } catch (error) {
-      console.error('Lỗi khi gửi điểm:', error);
-      alert('❌ Gửi dữ liệu thất bại.');
-      return null;
-    } finally {
-      isSending = false; 
-    }
-}
 
-function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
+
+async function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
     let status_check = validatePoint(input_x_value,input_y_value,input_z_value,max_point_run.x ,max_point_run.y ,max_point_run.z);
     if(!status_check){
     //   console.log("Dữ liệu không hợp lệ");
     //   write_log_capture_clear("❌ Dữ liệu không nằm trong giới hạn trục.\n✅ Hãy kiểm tra lại\n");
       return;
     }
-    sendPoint(input_x_value,input_y_value,input_z_value);    
+    let status_run_point = await postData("/captureproduct/run_point",{x:input_x_value,y:input_y_value,z:input_z_value});    
+    let status =  status_run_point?.ok;
+    let message = status_run_point?.message;
+    console.log("status_run_point",status_run_point);
+    if (status_run_point?.ok){
+        write_log_capture_clear(`[OK]${message}`);return;
+    }
+    write_log_capture_clear(`[NG]${message}`);return;
 }
 
 
@@ -386,7 +356,7 @@ function create_box(box_id,index){
 }
  
 
-function getValue(data_value, coordinate_value,element_input) {
+function getValue(data_value, coordinate_value) {
     if (data_value !== null && data_value !== undefined) {
         return data_value;
     }
@@ -418,7 +388,7 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
                         items.classList.remove("active");
                     });
                     });
-                
+                    canvasManager.show_img_items(img_img);
                     img_item.classList.add("active");
                     current_frame_box = frame_box; //đối tượng dom
                     selected.point_id = Number(img_item.dataset.id);  
@@ -782,3 +752,4 @@ function isInvalid(value) {
     !Number.isInteger(num)   // không phải số nguyên
   );
 }
+

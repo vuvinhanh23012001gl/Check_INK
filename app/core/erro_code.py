@@ -13,14 +13,13 @@ class ErrorCode(Enum):
     # =====================================
     # CALIBRATION
     # =====================================
-
-    CALIBRATION_TIMEOUT = 2000
-    CALIBRATION_TIMEOUT_IMG_INPUT = 2001
-    CALIBRATION_EMPTY_DATA = 2002
-    CALIBRATION_NOT_ENOUGH_SAMPLE = 2003
-    CALIBRATION_FILTERED_TOO_MUCH = 2004
-    CALIBRATION_MEDIAN_ZERO = 2005
-
+    CALIBRATION_ALREADY_EXISTS = 1500
+    CALIBRATION_NOT_FOUND = 1501
+    CALIBRATION_NOT_ENOUGH_SAMPLE = 1502
+    CALIBRATION_EMPTY_DATA  = 1503
+    CALIBRATION_INVALID_REAL_LENGTH = 1504
+    CALIBRATION_INVALID_MEAN = 1505
+    CALIBRATION_FILTERED_TOO_MUCH = 1506
     # =====================================
     # PRODUCT
     # =====================================
@@ -75,24 +74,15 @@ ERROR_MESSAGE = {
     # CALIBRATION
     # =====================================
 
-    ErrorCode.CALIBRATION_TIMEOUT:
-        "\n[Thất bại] Calibration timeout",
 
-    ErrorCode.CALIBRATION_TIMEOUT_IMG_INPUT:
-        "\n[Thất bại] Timeout khi chờ ảnh đầu vào calibration",
-
-    ErrorCode.CALIBRATION_EMPTY_DATA:
-        "\n[Thất bại] Không có dữ liệu pixel để tính toán calibration.",
-
-    ErrorCode.CALIBRATION_NOT_ENOUGH_SAMPLE:
-        "\n[Thất bại] Số lượng mẫu đo không đủ để tính toán calibration.",
-
-    ErrorCode.CALIBRATION_FILTERED_TOO_MUCH:
-        "\n[Thất bại] Dữ liệu sau khi lọc nhiễu không đủ để tính toán calibration.",
-
-    ErrorCode.CALIBRATION_MEDIAN_ZERO:
-        "\n[Thất bại] Giá trị pixel trung vị bằng 0, không thể tính toán calibration.",
-
+    ErrorCode.CALIBRATION_ALREADY_EXISTS :"[Cảnh báo] Calibartion đã tồn tại",
+    ErrorCode.CALIBRATION_NOT_FOUND :"[Cảnh báo] Không tìm thấy Calibration",
+    ErrorCode.CALIBRATION_NOT_ENOUGH_SAMPLE: "[Cảnh báo] Không đủ dữ liệu hiệu chuẩn",
+    ErrorCode.CALIBRATION_EMPTY_DATA: "[Cảnh báo] Dữ liệu hiệu chuẩn rỗng",
+    ErrorCode.CALIBRATION_INVALID_REAL_LENGTH: "[Cảnh báo] Chiều dài thực không hợp lệ",
+    ErrorCode.CALIBRATION_INVALID_MEAN: "[Lỗi] Giá trị trung bình pixel không hợp lệ (= 0)",
+    ErrorCode.CALIBRATION_FILTERED_TOO_MUCH: "[Cảnh báo] Lọc nhiễu quá nhiều, không đủ dữ liệu tin cậy",
+   
     # =====================================
     # PRODUCT
     # =====================================

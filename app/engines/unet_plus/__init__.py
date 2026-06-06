@@ -1,1 +1,2 @@
-from .prediction_unet import PredictionUnet,InferenceUnet
+from .inference_unet import InferenceUnet
+from .deployment_unet import DeploymentUnetUnet

@@ -12,7 +12,7 @@ from app.routers import (
     product_router,
     home_router,
     captureproduct_router,
-    sio,draw_regulations_router,calibration_router,
+    sio,draw_regulations_router,calibration_router,dimesional_calibration_router,
     log_sender,com_router
 )
 
@@ -45,6 +45,7 @@ def create_app():
     fastapi_app.include_router(draw_regulations_router)
     fastapi_app.include_router(calibration_router)
     fastapi_app.include_router(com_router)
+    fastapi_app.include_router(dimesional_calibration_router)
     # 🔥 QUAN TRỌNG NHẤT – wrap FastAPI bằng Socket.IO
     return socketio.ASGIApp(sio, fastapi_app)
 

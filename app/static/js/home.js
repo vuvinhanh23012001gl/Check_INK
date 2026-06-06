@@ -1,6 +1,6 @@
-// import {postData,scroll_content,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
-import {postData,clearn_div,video_product,wrap_canvas,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection,set_com_connection, get_com_connection} from "./common_value.js"
-
+// import {scroll_content,,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
+import {canvasManager,SocketData,SocketLog,set_camera_connection,set_com_connection, get_com_connection} from "./common_value.js"
+import {postData}from "./utills/api.js";
 
 const status_judment = document.querySelector(".paner-main-status-product");
 const log_judment = document.getElementById("log_judment");
@@ -14,15 +14,7 @@ const label_status_connect_com = document.getElementById("header-show-status");
 const circle_status_connect_com = document.getElementById("element-circle-status-com");
 let divCreateList_Home = [];
 
-// const SCROLL_STEP = 300;
-// btn_left.addEventListener("click", () => {
-//   scroll_content.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
-// });
-// btn_right.addEventListener("click", () => {
-//   scroll_content.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
-// });
 
-// scroll_container.addEventListener("scroll", Event_press_left_right);
 
 SocketData.on("data_output_judment", data =>{
   console.log("data judment :",data);
@@ -52,6 +44,8 @@ SocketLog.on("log_Home", (data) => {
     console.log("Dữ liệu sản phẩm nhận được log_Home :", data);
     log_judment.innerHTML += `<p>${data?.msg}</p>`;
 });
+
+
 function handle_judment_realtime(data)
 {
   let arr_line = data?.arr_line;
@@ -64,12 +58,11 @@ function handle_judment_realtime(data)
     div_show_point_detect.innerHTML = "";
     div_show_point_detect.appendChild(table);
         Run_div(index,status_judment_frame,divCreateList_Home);
-        video_product.src = `data:image/png;base64,${img_package}`; 
+     
         // CSS inline để ảnh không quá to làm vỡ bảng
-        video_product.style.width = `${WIDTH_IMG_SHAPE}px`;
-        video_product.style.height = `${HEIGH_IMG_SHAPE}px`;
-        wrap_canvas.style.display = "none";
-        video_product.style.display = "flex";
+   
+        canvasManager.setWrapCanvasVisible(false);
+   
         let status_judment = data?.judment;
         if (status_judment == undefined){
              setStatusDefault();
@@ -188,8 +181,8 @@ function create_show_table(data) {
 
 function RenderDataHome(data){
     // scroll_content.innerHTML = "";
-    video_product.style.display = "flex";
-    wrap_canvas.style.display = "None";
+
+    canvasManager.setWrapCanvasVisible(false);
     let status = data?.status;
     if (status == "erro"){
         console.log("Lỗi chọn sản phẩm ");
@@ -217,10 +210,7 @@ function RenderDataHome(data){
         //             clearn_div(divCreateList_Home);
         //             console.log("Ảnh master đang chỉ tới là", index);
         //             div_create.classList.add("div_click");
-        //             video_product.src = `${imgPath}?t=${Date.now()}`;  
-        //             video_product.style.width = "1365.33px";
-        //             video_product.style.height = "1024px";
-        //             video_product.style.display = "flex";
+        //        
         //         });
         // });
     }

@@ -3,21 +3,12 @@ from app.repository import PointRepository
 from app.services import PointService
 
 from app.config import (
-
     PATH_CONFIG_POINTS,
-
     PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
-
     PATH_FOLDER_IMG_COORDINATE_PRODUCT,
-
     PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
-
     BASE_DIR
 )
-
-import numpy as np
-
-
 # =========================================
 # PRINT RESULT
 # =========================================
@@ -452,13 +443,19 @@ def test_point_service():
     # print("Danh sách đường dẫn ảnh retrain",str(result.data))
 
     # test path
-    result = service.get_retrain_paths_by_product_frame(1,0)
-    print(result.data)
+    # result = service.get_retrain_paths_by_product_frame(1,0)
+    # print(result.data)
+
+    #test get_product_frame_id_tree
+    tree = service.get_product_frame_id_tree()
+    print(tree)
+
 
 # =========================================
 # MAIN
 # =========================================
 
 if __name__ == "__main__":
+    pass
     # test_point_service()
     # python -m app.tests.test_point_service
