@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <link rel="icon" type="image/png" href="../static/img/image.png">
     <link rel="stylesheet" href="../static/css/home.css">
     <link rel="stylesheet" href="../static/css/add_new_product.css">
@@ -16,26 +15,24 @@
     <title>Kiểm tra độ rộng hộp mực</title>
 </head>
 <body>
-
+    <!-- ==========================================
+         HEADER MENU
+         ========================================== -->
     <div class="header">
         <ul class="header-ul">
-
             <li class="header-ul-li" id="choose-product">
                 Chọn loại sản phẩm
             </li>
-
             <li class="header-ul-li" id="add-product">
                 Thêm xóa sản phẩm
             </li>
-
             <li class="header-ul-li">
-                Cấu hình master
+                Cài đặt dữ liệu
                 <img id="preview">
-
                 <ul class="header-ul-li-master">
                     <li id="header-ul-li-capture-product">Lấy ảnh mẫu</li>
                     <li id="header-ul-li-dimensional-calibration">Hiệu chuẩn kích thước</li>
-                    <li id="header-ul-li-draw-calibration">Cấu hình calibration</li>
+                    <li id="header-ul-li-adjustment-master">Điều chỉnh master</li>
                 </ul>
             </li>
 
@@ -58,18 +55,18 @@
 
             <!-- <li id="api-run" class="header-ul-li"></li> -->
 
-            <li
-                class="header-ul-li close"
-                style="text-align: center;padding-left: 70px;"
-                id="out-app"
-            >
+            <li class="header-ul-li close" id="out-app" style="text-align: center; padding-left: 70px;">
                 Thoát
             </li>
-
         </ul>
     </div>
 
+    <!-- ==========================================
+         WORKSPACE SPLIT FRAME
+         ========================================== -->
     <div class="split-frame">
+        
+        <!-- LEFT WORKSPACE: Image Master, Streaming and Status -->
         <div class="show-screen">
             <div class="show-img-master">
                 <div class="scroll-container">
@@ -91,7 +88,7 @@
                                     <div class="img-text">Ảnh 3</div>
                                 </div>
                                     <div class="img-item">
-                                    <img  src="https://picsum.photos/300/200?1">
+                                    <img   src="https://picsum.photos/300/200?1">
                                     <div class="img-text">Ảnh 1</div>
                                 </div>
 
@@ -225,28 +222,19 @@
                                 </div>
                         </div>
                         </div>  -->
-
-                
-
                 </div>
             </div>
 
             <div class="show-img">
-
-                <!-- <img id="show-img-preview" src="" alt="Ảnh preview" /> -->
-
                 <img alt="Video feed" id="video-product">
-
                 <div id="wrap-canvas">
                     <canvas id="canvasImage"></canvas>
                     <canvas id="canvasShape"></canvas>
                     <canvas id="canvasPreview"></canvas>
                 </div>
-
             </div>
-
+            video
             <div class="show-satus">
-
                 <p id="coordinate">Pixel: (0, 0)</p>
 
                 <div id="progress-container">
@@ -266,7 +254,6 @@
                 </div>
 
                 <div class="cluster">
-
                     <div class="header-show-item-conect item1">
                         <p id="element-circle-status-com" class="header-show-circle on"></p>
                         <h2 id="header-show-status">COM chờ kết nối...</h2>
@@ -280,17 +267,15 @@
                     <button id="toggleBtn" class="toggle-btn">
                         Ảnh phán định
                     </button>
-
                 </div>
-
             </div>
-
         </div>
 
+        <!-- RIGHT OPTIONS: Operational Control Panels -->
         <div class="show-option">
 
+            <!-- Panel: Main Status Log -->
             <div id="paner-main" class="paner active">
-
                 <div class="paner-main-status-product">
                     <!--chon run ok eg tuy vao trang thai phan dinh -->
                     --
@@ -301,33 +286,25 @@
                 </div>
 
                 <div class="paner-main-show-log" id="log_judment"></div>
-
             </div>
 
+            <!-- Panel: Drawing Inspection Regulations -->
             <div id="paner-draw-regulations" class="paner">
-
                 <div id="part-table-log">
-
                     <div class="log" id="log-regulations"></div>
-
                     <table class="table">
                         <tbody id="table"></tbody>
                     </table>
-
                 </div>
 
                 <div class="part-controler">
-
                     <button id="btn-all-erase">
                         <img src="../static/img/clean-up.png" alt="icon xóa tất cả">
                         Xóa tất cả dữ liệu line
                     </button>
 
                     <button id="btn-erase">
-                        <img
-                            src="../static/img/erase_draw_img.png"
-                            alt="icon xóa tất cả hình đã vẽ trong hình"
-                        >
+                        <img src="../static/img/erase_draw_img.png" alt="icon xóa tất cả hình đã vẽ trong hình">
                         Xóa dữ liệu quy định
                     </button>
 
@@ -340,69 +317,75 @@
                         <img src="../static/img/close.png" alt="Áp dụng và thoát">
                         Thoát
                     </button>
-
                 </div>
-
             </div>
 
+            <!-- Panel: Calibration Setup -->
             <div id="paner-calibration" class="paner">
-
                 <div id="part-table-log-calibrations">
-
                     <div class="log" id="log-calibration"></div>
+                    <div class="table">
+                        <div id="config-calibration">
+                            <!-- <table class="calibration-table">
+                                <tr>
+                                    <th>Tên Frame</th>
+                                    <td><input type="text"></td>
+                                </tr>
 
-                    <table class="table" id="table_calib">
-                        <tbody id="table_calibration"></tbody>
-                    </table>
+                                <tr>
+                                    <th>Tên line</th>
+                                    <td><input type="text"></td>
+                                </tr>
 
+                                <tr>
+                                    <th>Kích thước thực tế (mm)</th>
+                                    <td><input type="text"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Số lần chụp</th>
+                                    <td><input type="text"></td>
+                                </tr>
+                                
+                            </table>
+                            <div class="btn-accept-clean-line-calibration">
+                                <button class ="btn-clear">Xóa dữ liệu</button>
+                                <button class ="btn-accept">Chấp nhận</button> 
+                            </div> -->
+                        </div> 
+                        <div id="configuration-data-calibration"></div> 
+                    </div>
                 </div>
 
                 <div class="part-controler">
-
                     <button id="open-video-calibration">
-                        <img
-                            src="../static/img/live-stream-video.png"
-                            alt="Mở steam Camera"
-                        >
+                        <img src="../static/img/live-stream-video.png" alt="Mở steam Camera">
                         Video Stream Camera
                     </button>
 
                     <button id="run-point-calibration">
-                        <img
-                            src="../static/img/running.png"
-                            alt="Chạy điểm"
-                        >
+                        <img src="../static/img/running.png" alt="Chạy điểm">
                         Chạy điểm
                     </button>
 
                     <button id="calcular-calibration-button">
-                        <img
-                            src="../static/img/calculator.png"
-                            alt="Tính calibration"
-                        >
+                        <img src="../static/img/calculator.png" alt="Tính calibration">
                         Tính hệ số chính xác Calibration
                     </button>
 
                     <button id="cancel-calibration-button">
-                        <img
-                            src="../static/img/close_two.png"
-                            alt="Thoát"
-                        >
+                        <img src="../static/img/close_two.png" alt="Thoát">
                         Thoát
                     </button>
-
                 </div>
-
             </div>
 
+            <!-- Panel: Capture & Product Framework Setup -->
             <div id="paner-capture-product" class="paner add-capture-product">
-
+                
                 <!-- Bảng thông tin loại sản phẩm -->
-
                 <div class="panel-table">
-
                     <table class="product-table">
-
                         <thead>
                             <tr>
                                 <th>Tên sản phẩm</th>
@@ -411,18 +394,14 @@
                                 <th>Giới hạn trục z</th>
                             </tr>
                         </thead>
-
                         <tbody>
                         </tbody>
-
                     </table>
 
                     <div class="log log-area" id="log-box"></div>
-
                 </div>
 
                 <!-- Nút điều khiển 1 điểm -->
-
                 <div class="controls-single-point">
                     <div class="anonymous" id="anonymous">
                         <!--Chèn nội dung ở đây -->
@@ -435,8 +414,9 @@
                         <img src="../static/img/erase_draw_img.png" alt="Xóa frame">
                         Xóa frame
                     </button>
+                    
                     <button class="btn-form-cap" id="btn-add-frame">
-                    <img src="../static/img/product.png" alt="Thêm frame">
+                        <img src="../static/img/product.png" alt="Thêm frame">
                         Thêm frame
                     </button>
 
@@ -444,89 +424,59 @@
                         <img src="../static/img/plus.png" alt="Thêm điểm kiểm tra">
                         Thêm điểm
                     </button>
+                    
                     <button class="btn-form-cap" id="btn-stream-video">
                         <img src="../static/img/live-stream-video.png" alt="Video Stream">
-                         Stream Video
+                        Stream Video
                     </button>
-                    <button class="btn-form-cap" id = "btn-run-frame">
+                    
+                    <button class="btn-form-cap" id="btn-run-frame">
                         <img src="../static/img/running.png" alt="Chạy Frame">
                         Chạy frame
                     </button>
 
-                    <button class="btn-form-cap" id = "btn-run-product">
+                    <button class="btn-form-cap" id="btn-run-product">
                         <img src="../static/img/run.png" alt="Chạy sản phẩm">
                         Chạy sản phẩm
                     </button>
 
                     <button class="btn-form-cap" id="exit-add-capture-product">
-                        <img
-                            src="../static/img/close.png"
-                            alt="Thoát cài đặt chụp ảnh"   >
+                        <img src="../static/img/close.png" alt="Thoát cài đặt chụp ảnh">
                         Thoát
                     </button>
-
                 </div>
-
             </div>
 
         </div>
-
     </div>
+
+    <!-- ==========================================
+         OVERLAYS & POPUPS LAYERS
+         ========================================== -->
 
     <!-- show thông tin cam và -->
 
+    <!-- OVERLAY: Add New Product -->
     <div class="overlay-new-product" id="overlay-new-product">
-
+        
         <!-- ===== LEFT PANEL ===== -->
-
         <div class="left-panel">
-
             <h2>➕ Tạo loại sản phẩm</h2>
 
-            <form
-                method="post"
-                id="form-add-new-product"
-                action="/product/add"
-                enctype="multipart/form-data"
-            >
-
+            <form method="post" id="form-add-new-product" action="/product/add" enctype="multipart/form-data">
                 <label>ID</label>
-                <input
-                    type="number"
-                    name="id"
-                    placeholder="Nhập ID sản phẩm"
-                    min="1"
-                    required
-                >
+                <input type="number" name="id" placeholder="Nhập ID sản phẩm" min="1" required>
 
                 <label>Tên sản phẩm</label>
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Nhập tên cho sản phẩm"
-                    required
-                >
+                <input type="text" name="name" placeholder="Nhập tên cho sản phẩm" required>
 
                 <label>Mô tả</label>
-
-                <textarea
-                    name="description"
-                    placeholder="Nhập mô tả sản phẩm"
-                    required
-                ></textarea>
+                <textarea name="description" placeholder="Nhập mô tả sản phẩm" required></textarea>
 
                 <!-- Upload image -->
-
                 <div class="file-input">
                     <label>Ảnh sản phẩm (Vui lòng chọn file ảnh)</label>
-
-                    <input
-                        type="file"
-                        name="images"
-                        id="imageInput"
-                        accept="image/*"
-                        required
-                    >
+                    <input type="file" id="imageInput" name="images" accept="image/*" required>
                 </div>
 
                 <div class="preview-box">
@@ -536,27 +486,18 @@
                 <button type="submit" class="btn btn-create">
                     Tạo sản phẩm
                 </button>
-
             </form>
 
-            <button
-                type="button"
-                class="btn btn-exit"
-                id="close-add-product"
-            >
+            <button type="button" class="btn btn-exit" id="close-add-product">
                 ❌ Thoát
             </button>
-
         </div>
 
         <!-- ===== RIGHT PANEL ===== -->
-
         <div class="right-panel">
-
             <h2>📦 Sản phẩm hiện có</h2>
 
             <table id="table-product-list">
-
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -566,29 +507,17 @@
                         <th>Hành động</th>
                     </tr>
                 </thead>
-
             </table>
-
         </div>
-
     </div>
 
     <!-- ===== OVERLAY XÁC NHẬN XÓA ===== -->
-
-    <div
-        class="overlay-delete-product"
-        id="overlay-delete-product"
-        style="display: none;"
-    >
-
+    <div class="overlay-delete-product" id="overlay-delete-product" style="display: none;">
         <div class="delete-box">
-
             <h2 id="warning-title"></h2>
-
             <p id="warning-message"></p>
 
             <div class="delete-action">
-
                 <button class="btn btn-delete-confirm" id="btn-confirm-delete">
                     🗑️ Xóa
                 </button>
@@ -596,34 +525,26 @@
                 <button class="btn btn-delete-cancel" id="btn-cancel-delete">
                     ❌ Hủy
                 </button>
-
             </div>
-
         </div>
-
     </div>
 
+    <!-- OVERLAY: Choose Product -->
     <div class="overlay-choose-product" id="overlay-choose-product">
-
         <!-- ===== LEFT PANEL ===== -->
-
         <div class="block_choose-product">
-
             <h1 id="header">
                 Chọn sản phẩm cần kiểm tra
-                <span id="close-choose-product">X<span>
+                <span id="close-choose-product">X</span>
             </h1>
 
             <div id="container-chose-product"></div>
-
         </div>
-
     </div>
 
+    <!-- OVERLAY: Software Configurations -->
     <div id="overlay_config_software" style="display: none;">
-
         <div id="settings-box">
-
             <div id="config-log">
                 Cấu hình Log
             </div>
@@ -634,95 +555,65 @@
             </h2>
 
             <!-- ⚙️ Các tùy chọn log -->
-
             <div class="log-setting">
                 <span>Thời gian lưu log hình ảnh</span>
-                <input
-                    type="number"
-                    id="set-time-save-log-img"
-                    placeholder="Số ngày"
-                >
+                <input type="number" id="set-time-save-log-img" placeholder="Số ngày">
             </div>
 
             <div id="setting-log-image">
-
                 <span>Log hình ảnh</span>
-
                 <label id="switch-sound">
                     <input type="checkbox" id="set-sound">
                     <span id="slider-sound"></span>
                 </label>
-
             </div>
 
             <div class="log-setting">
                 <span>Thời gian lưu log Excel</span>
-                <input
-                    type="number"
-                    id="set-time-save-log-excell"
-                    placeholder="Số ngày"
-                >
+                <input type="number" id="set-time-save-log-excell" placeholder="Số ngày">
             </div>
 
             <div id="setting-log-product">
-
                 <span>Log sản phẩm Excell</span>
-
                 <label id="switch-notification">
                     <input type="checkbox" id="set-notification">
                     <span id="slider-notification"></span>
                 </label>
-
             </div>
 
             <div class="log-setting">
                 <span>Thời gian lưu log phần mềm</span>
-                <input
-                    type="number"
-                    id="set-time-save-log-software"
-                    placeholder="Số ngày"
-                >
+                <input type="number" id="set-time-save-log-software" placeholder="Số ngày">
             </div>
 
             <div id="setting-log-software">
-
                 <span>Log phần mềm</span>
-
                 <label id="switch-darkmode">
                     <input type="checkbox" id="set-darkmode" checked>
                     <span id="slider-darkmode"></span>
                 </label>
-
             </div>
 
             <div id="setting-log-cosole">
-
                 <span>Log cosole</span>
-
                 <label id="switch-cosole">
                     <input type="checkbox" id="set-cosole">
                     <span id="slider-cosole"></span>
                 </label>
-
             </div>
 
             <div id="setting-img-retraining">
-
                 <span>Image retraining</span>
-
                 <label id="switch-img-retraining">
                     <input type="checkbox" id="set-img-retraining">
                     <span id="slider-img-retraining"></span>
                 </label>
-
             </div>
 
             <!-- 🔘 Nút điều khiển -->
-
             <hr>
 
             <div id="config-img-process">
-
                 <div class="img-setting">
                     <label for="threshold">Ngưỡng nhận diện</label>
                     <input type="number" id="threshold">
@@ -732,11 +623,9 @@
                     <label for="config_weight">Cấu hình chiều cao vật</label>
                     <input type="number" id="config_weight">
                 </div>
-
             </div>
 
             <div id="buttons">
-
                 <button id="save-settings">
                     💾 Lưu cấu hình
                 </button>
@@ -744,14 +633,12 @@
                 <button id="close-settings">
                     ✖ Thoát
                 </button>
-
             </div>
-
         </div>
-
     </div>
 
     <script type="module" src="../static/js/controler.js"></script>
 
 </body>
 </html>
+

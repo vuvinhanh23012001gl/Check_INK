@@ -4,7 +4,7 @@ from fastapi import Request
 from app.container import ServiceContainer
 from app.core.dependencies import get_services
 from fastapi import APIRouter, Depends
-from app.config import TypeSend
+from app.config import TypeSend,TypeDataSendClient
 
 NAMESPACE_LOG = "/log"
 NAMESPACE_DATA = "/data"
@@ -40,8 +40,7 @@ async def log_sender(app):
     while True:
             await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
             await sio.emit("status_com", {"status":services.obj_com_service.get_shake_hands_complete()}, namespace = NAMESPACE_DATA)
-
-            # print(services.obj_camera.get_is_connect())
+    
             data_log = services.queue_log_send_client.get()
             if data_log is not None:
                 log_type = data_log.get("type",None)
@@ -49,60 +48,52 @@ async def log_sender(app):
                     msg = data_log.get("message","")
                     # print("msg",msg)
                     await sio.emit(TypeSend.type_log_capture, {"msg": msg}, namespace = NAMESPACE_LOG)
+                elif log_type == TypeSend.log_calibration:
+                    msg = data_log.get("message","")
+                    await sio.emit(TypeSend.log_calibration, {"msg": msg}, namespace= NAMESPACE_LOG)
+
+                    
+            data_send_client:dict = services.queue_data_send_client.get()   #Lay queue data
+            if data_send_client is not None:
+                data_type  = data_send_client.get("type",None)
+                data_data = data_send_client.get("data",None)
+                if TypeDataSendClient.data_calibration_send_client == data_type:
+                    await sio.emit(TypeDataSendClient.data_calibration_send_client, {"data": data_data}, namespace = NAMESPACE_DATA)
             await asyncio.sleep(0.5)
-  
+
+
+
+
+
+# gui data cho calibarion  #  {"type":TypeDataSendClient.data_calibration_send_client,"data":data} # services.queue_data_send_client.put({"type":TypeDataSendClient.data_calibration_send_client,"data":"test"})
+ # gui log cho calibarion        {"type":TypeDataSendClient.data_calibration_send_client,"data":data}     services.queue_log_send_client.put({"type":TypeSend.log_calibration,"msg":"vu vinh anh"})
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-    #         if log_type == TypeSend.log_calibration:
-    #             msg = data_log.get("message","")
-    #             await sio.emit(TypeSend.log_calibration, {"msg": msg}, namespace= NAMESPACE_LOG)
+          
     #         if log_type == TypeSend.log_home:
     #             msg = data_log.get("message","")
     #             await sio.emit(TypeSend.log_home, {"msg": msg}, namespace= NAMESPACE_LOG)
 
     #     data_send_client = services.queue_data_send_client.get()
     #     if data_send_client is not None:
-    #         if  data_send_client.get("type",None) == TypeSend.datatype_Calibration:
-    #              await sio.emit(TypeSend.datatype_Calibration, {"data": data_send_client}, namespace= NAMESPACE_DATA)  # Cai nay la anh
-    #         if data_send_client.get(TypeSend.datatype_Home,None):
-    #             # print("đã vào đây rồi nha cú bes")
-    #             # print(data_send_client)
-    #             await sio.emit(TypeSend.datatype_Home, {"msg":data_send_client}, namespace = NAMESPACE_DATA)
+#         if  data_send_client.get("type",None) == TypeSend.datatype_Calibration:
+#              await sio.emit(TypeSend.datatype_Calibration, {"data": data_send_client}, namespace= NAMESPACE_DATA)  # Cai nay la anh
+#         if data_send_client.get(TypeSend.datatype_Home,None):
+#             # print("đã vào đây rồi nha cú bes")
+#             # print(data_send_client)
+#             await sio.emit(TypeSend.datatype_Home, {"msg":data_send_client}, namespace = NAMESPACE_DATA)
 
-
-
-
-
-
-
-
-
-
-        # await asyncio.sleep(0.01)
-
-        
+# await asyncio.sleep(0.01)
 # obj_queue.put(name_queue_log_client,{"type":log_calibration,"message":result.message()})
 # obj_queue.put(name_queue_log_client,{"type":log_Home,"message":"log gui client"})
 # # await sio.emit(log_home, {"msg": "Chỗ này để hiển thi log."}, namespace= NAMESPACE_LOG)
-#     await sio.emit(log_home, {"msg": "Chỗ này để hiển thi log."}, namespace= NAMESPACE_LOG)
-    # test_send = {"type":type_capture,"message":"Test log CaptureProduct"}
-    # obj_queue.put(name_queue_log_client, test_send)
-
-        # # # await sio.emit(data_output_judment, {"msg": "xin chao em"}, namespace= NAMESPACE_DATA)
-        # # data_client = obj_queue.get(name_queue_data_client)
-        # # if data_client is not None:
-        # #     
-        # 
+#  await sio.emit(log_home, {"msg": "Chỗ này để hiển thi log."}, namespace= NAMESPACE_LOG)
+# test_send = {"type":type_capture,"message":"Test log CaptureProduct"}
+# obj_queue.put(name_queue_log_client, test_send)
+# # # await sio.emit(data_output_judment, {"msg": "xin chao em"}, namespace= NAMESPACE_DATA)
+# # data_client = obj_queue.get(name_queue_data_client)
+# # if data_client is not None:

@@ -683,14 +683,15 @@ class DeploymentUnetUnet:
                     (0, 0, 255),
                     -1        
                 )
+            cv2.imwrite("ket_qua.jpg", img)
             if len(intersections) != 2:
                 print(f"Số điểm cắt không hợp lệ: {len(intersections)} (Yêu cầu phải bằng 2)")
-                self.show_img(img)
-                return False, 0.0,img
+                #self.show_img(img)
+                return False, 0
             pixel_length = float(np.linalg.norm(intersections[0] - intersections[1]))
             print("pixel_length (Polygon):", pixel_length)
-            self.show_img(img)
-            return True, pixel_length,img
+            #self.show_img(img)
+            return True, pixel_length
 
 
     def draw_line(self, image, start_x, start_y, end_x, end_y, color=(0, 255, 0), thickness=2):

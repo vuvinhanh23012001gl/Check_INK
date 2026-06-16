@@ -380,3 +380,27 @@ class PointService:
                 id_tree[product_id_str][frame_id_str] = {}
         return id_tree
     
+    def is_exists_product_frame(self, product_id: int, frame_id: int) -> Result:
+        """
+        Chức năng: Kiểm tra cặp định danh Product ID và Frame ID hiện tại có đang tồn tại không.
+        Input: product_id (int), frame_id (int)
+        Output: Result.Ok(bool) True nếu tồn tại cặp ID, ngược lại Result.Fail kèm mã lỗi tương ứng
+        """
+        # 1. Kiểm tra ép kiểu dữ liệu đầu vào nếu là chuỗi (tương tự logic hàm add_point)
+        if not isinstance(product_id, int):
+            if isinstance(product_id, str):
+                try: product_id = int(product_id)
+                except Exception: return Result.Fail(ErrorCode.PRODUCT_ID_INVALID)
+            else: return Result.Fail(ErrorCode.PRODUCT_ID_INVALID)
+            
+        if not isinstance(frame_id, int):
+            if isinstance(frame_id, str):
+                try: frame_id = int(frame_id)
+                except Exception: return Result.Fail(ErrorCode.FRAME_ID_INVALID)
+            else: return Result.Fail(ErrorCode.FRAME_ID_INVALID)
+        # 2. Kiểm tra sự tồn tại trong bộ nhớ RAM self.points
+        if product_id not in self.points: 
+            return Result.Fail(ErrorCode.PRODUCT_NOT_FOUND)
+        if frame_id not in self.points[product_id]: 
+            return Result.Fail(ErrorCode.FRAME_NOT_FOUND)
+        return Result.Ok(True)

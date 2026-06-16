@@ -1,1 +1,50 @@
-{}
+{
+    "1": {
+        "0": {
+            "calculation_parameters": {
+                "number_capture": 10,
+                "name_item": "2",
+                "id_tems": "4",
+                "startX": 946,
+                "startY": 1176,
+                "endX": 926,
+                "endY": 1350,
+                "reality_mm": 0.1
+            },
+            "result_parameters": {
+                "pixel_mean": 47.65202713012695,
+                "pixel_std": 0.0,
+                "cv": 0.0,
+                "scale_mm_per_pixel": 0.0020985466101352316,
+                "scale_error_mm_per_pixel": 0.0,
+                "confidence": 1.0,
+                "samples_used": 10,
+                "samples_raw": 10,
+                "mad": 0.0
+            }
+        },
+        "1": {
+            "calculation_parameters": {
+                "number_capture": 6,
+                "name_item": "2",
+                "id_tems": "4",
+                "startX": 936,
+                "startY": 1166,
+                "endX": 948,
+                "endY": 1380,
+                "reality_mm": 1.0
+            },
+            "result_parameters": {
+                "pixel_mean": 47.398685455322266,
+                "pixel_std": 0.0,
+                "cv": 0.0,
+                "scale_mm_per_pixel": 0.021097631514329536,
+                "scale_error_mm_per_pixel": 0.0,
+                "confidence": 1.0,
+                "samples_used": 6,
+                "samples_raw": 6,
+                "mad": 0.0
+            }
+        }
+    }
+}

@@ -5,5 +5,7 @@ import "./config_software.js";
 import "./capture_frame.js";
 import "./home.js";
 import "./dimetional_calibration.js"
+import "./adjust_master.js"
+
 
 

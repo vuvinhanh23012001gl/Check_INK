@@ -569,8 +569,8 @@ html, body {
 
 .part-controler {
     max-width: 100%;
-    max-height: 40%;
-    margin-top: 10px;
+    max-height: 32%;
+    margin-top: 5px;
     background: #f9f9f9;
     padding: 12px;
     border-radius: 10px;
@@ -1343,6 +1343,16 @@ form label {
     background-color: rgb(7, 27, 20);
 }
 
+/* TEXT */
+.img-text{
+    padding: 2px;
+    padding-top: 4px;
+    font-size: 11px;
+    text-align: center;
+    background-color: #244b45;
+    color: #ffffff;
+    font-weight: 600;
+}
 
 /* BOX MỖI ẢNH */
 .img-item{
@@ -1362,6 +1372,24 @@ form label {
     border: 2px solid #00ffd5;
 }
 
+.img-item.active_hightlight {
+    transform: scale(1.05);
+    border: 2px solid #00ff88;
+    background: rgba(0, 255, 136, 0.05);
+
+    box-shadow:
+        0 0 10px rgba(0, 255, 136, 0.4),
+        0 0 20px rgba(0, 255, 136, 0.2);
+
+    z-index: 10;
+}
+.img-text.active_hightlight {
+    background: #00ff88;
+    color: #000;
+    font-weight: 600;
+
+    box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
 
 /* ẢNH */
 .img-item img{
@@ -1372,16 +1400,7 @@ form label {
 }
 
 
-/* TEXT */
-.img-text{
-    padding: 2px;
-    padding-top: 4px;
-    font-size: 11px;
-    text-align: center;
-    background-color: #244b45;
-    color: #ffffff;
-    font-weight: 600;
-}
+
 
 .img-box div:hover{
     transform: translateY(-2px);

@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    width: 100%;
+    
 }
 #part-table-log-calibrations {
     display: flex;
@@ -9,45 +11,236 @@
     background: #fff;
     padding: 10px;
     width: 100%;
-    height: 82%;
-    overflow-y: auto; /* ✅ đúng */
+    height: 110%;
+    overflow-y: auto; 
+    border-radius: 10px;
 }
 #log-calibration {
     flex-shrink: 0; /* 🔥 giữ log không bị co */
+    height:120px;
+    margin-bottom:7px;
 }
 /* ===== TABLE STYLE ===== */
-#table_calibration {
+
+#configuration-data-calibration {
     width:100%;
     border-collapse: collapse;
     table-layout: fixed;
-}
-/* Chia 2 cột bằng nhau */
-#table_calibration th,
-#table_calibration td {
-    width: 50%;
+    border: solid 1px rgb(158, 153, 153);
+    height: 100%;
+    border-radius: 6px;
 }
 
-/* Header */
-#table_calibration th {
-    text-align: left;
-    padding: 14px 20px;
-    color: #000000;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#config-calibration{
+    width: 100%;
+    border-radius: 10px;
+    border: solid 1px rgb(158, 153, 153);
+}
+.calibration-table {
+    width: 100%;
+    table-layout: fixed; 
+    border-collapse: collapse;
+    height: auto;
+}
+
+.calibration-table th,
+.calibration-table td {
+    padding: 12px 8px;  
+    font-size: 13px;   
+    word-wrap: break-word;
+}
+
+.calibration-table input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 6px;   
+    font-size: 13px;
+}
+
+.btn-accept-clean-line-calibration {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    margin-top: 5px;
+}
+.btn-accept-clean-line-calibration button {
+    padding:8px ;
+    margin-bottom: 5px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 600;
-    font-size: 15px;
-    background: #f5f5f5;
-    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    letter-spacing: 0.3px;
+}
+.btn-accept {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
 }
 
-/* Cell */
-#table_calibration td {
-    padding: 14px 40px;
-    border-bottom: 1px solid #eaeaea;
-   
+.btn-clear {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
 }
 
-/* Hover nhẹ */
-#table_calibration tr:hover {
-    background: #f9f9f9;
-    transition: 0.2s ease;
+.btn-accept-clean-line-calibration button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
+
+.btn-accept-clean-line-calibration button:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+}
+
+.btn-accept-clean-line-calibration button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.25);
+}
+
+
+
+
+
+
+
+/* ==========================================================================
+   BẢNG THÔNG SỐ ĐO (DIV GRID TABLE)
+   ========================================================================== */
+
+/* 1. Khung bọc tổng thể của bảng */
+.div-table {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 20px 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    font-size: 14px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    overflow: hidden; /* Để bo tròn góc không bị lẹm thanh header */
+}
+
+/* 2. Thanh Tiêu Đề (Header) - Đã tăng cỡ chữ và cho phép xuống dòng */
+.div-table-header {
+    display: flex;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px; /* ⬅️ Đã tăng từ 12px lên 14px (hoặc 15px tùy bạn muốn) */
+    letter-spacing: 0.75px;
+    border-bottom: 2px solid #004085;
+}
+
+/* Ghi đè riêng cho các cột thuộc nhóm Header để chữ được phép xuống dòng */
+.div-table-header .div-table-col {
+    padding: 14px 16px;
+    color: rgba(255, 255, 255, 0.95);
+    white-space: normal;    /* ⬅️ Cho phép xuống dòng tự nhiên khi text đầy */
+    word-break: break-word; /* ⬅️ Bẻ từ một cách thông minh nếu từ quá dài */
+    text-overflow: clip;    /* ⬅️ Bỏ dấu ba chấm (...) nếu có */
+    overflow: visible;      /* ⬅️ Hiển thị trọn vẹn chữ khi xuống dòng */
+}
+.div-table-header .div-table-col {
+    padding: 14px 16px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* 3. Phần Thân Bảng (Body) */
+.div-table-body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Từng dòng dữ liệu */
+.div-table-row {
+    display: flex;
+    border-bottom: 1px solid #edf2f7;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+/* Dòng cuối cùng không cần gạch chân */
+.div-table-row:last-child {
+    border-bottom: none;
+}
+
+/* Hiệu ứng khi di chuột qua các dòng */
+.div-table-row:hover {
+    background-color: #f7fafc;
+    cursor: pointer;
+}
+
+/* 4. Định dạng các Cột (Áp dụng cho cả Header và Row) */
+.div-table-col {
+    flex: 1; /* Chia đều độ rộng tất cả các cột bằng nhau */
+    padding: 12px 16px;
+    display: flex;
+    align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    justify-content: flex-start; /* Căn lề trái chữ */
+    box-sizing: border-box;
+    white-space: nowrap; /* Tránh chữ bị xuống dòng lung tung */
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* Cột đầu tiên (Line ID) nổi bật hơn */
+.div-table-col.line-id {
+    font-weight: 700;
+    color: #4a5568;
+    background-color: #f8f9fa;
+    border-right: 1px solid #edf2f7;
+    max-width: 100px; /* Thu nhỏ riêng cột ID lại vì nó ngắn */
+}
+.div-table-header .div-table-col:first-child {
+    max-width: 100px; /* Header của cột ID cũng thu nhỏ tương ứng */
+}
+
+/* 5. Nhãn Độ Tin Cậy (Confidence Badge) */
+.badge-confidence {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e6fffa;
+    color: #319795;
+    border: 1px solid #b2f5ea;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Tự động đổi màu Badge nếu đạt 100% cực kỳ uy tín */
+.badge-confidence:contains("100%") {
+    background-color: #f0fff4;
+    color: #38a169;
+    border-color: #c6f6d5;
+}

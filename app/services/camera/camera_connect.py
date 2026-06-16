@@ -46,6 +46,33 @@ class Camera():
 
         self.init()
 
+        
+    def display_captured_image(self, img, window_name="Captured Image", wait_time=2000):
+        """
+        Hiển thị ảnh sau khi chụp bằng OpenCV.
+        :param img: Khung hình (numpy array) cần hiển thị.
+        :param window_name: Tên của cửa sổ hiển thị.
+        :param wait_time: Thời gian hiển thị ảnh tính bằng mili-giây (ms). 
+                          Nếu truyền 0, cửa sổ sẽ giữ nguyên cho đến khi nhấn phím bất kỳ.
+        """
+        if img is None:
+            print("Không có ảnh để hiển thị (img is None)")
+            return False
+        
+        try:
+            # Tạo cửa sổ có thể thay đổi kích thước nếu ảnh quá lớn
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_name, img)
+            
+            print(f"Đang hiển thị ảnh trong {wait_time/1000} giây...")
+            cv2.waitKey(wait_time)
+            
+            # Đóng cửa sổ sau khi hết thời gian chờ
+            cv2.destroyWindow(window_name)
+            return True
+        except Exception as e:
+            print("Lỗi khi hiển thị ảnh:", e)
+            return False
     def refesh_data(self):
             
             self.camera_lost = False

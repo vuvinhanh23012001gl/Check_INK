@@ -13,8 +13,10 @@ SocketLog.connect();
 SocketData.connect();
 
  
-const WIDTH_IMG_SHAPE = 1365.33;
-const HEIGH_IMG_SHAPE = 1024;
+export const WIDTH_IMG_SHAPE = 1024;
+export const HEIGH_IMG_SHAPE = 768;
+
+
 
 
 

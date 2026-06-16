@@ -3,6 +3,9 @@ from app.container import ServiceContainer
 from app.core.dependencies import get_services
 from pydantic import BaseModel
 from app.core import (Result,ErrorCode)
+from app.validate import ValidateDimesionalCalibration
+from app.config import WIDTH_IMG_CAMERA_CAPTURE,HEIGHT_IMG_CAMERA_CAPTURE
+
 router = APIRouter(
     prefix="/dimesional_calibration",
     tags=["Dimesional_Calibration"]
@@ -11,6 +14,8 @@ class PointData(BaseModel):
     x: float
     y: float
     z: float
+class DataIn(BaseModel):
+    data: dict
 
 @router.get("/")
 def header_function(services: ServiceContainer = Depends(get_services)):
@@ -25,13 +30,14 @@ def header_function(services: ServiceContainer = Depends(get_services)):
         return Result.Fail(product_result.error).to_dict()
     product = product_result.data
     points_result = services.obj_point_service.get_points_by_product_id(product_id)
+    result_calibration = services.obj_service_calibration.get_calibration_dict_by_product(product_id)
     return Result.Ok({
+        "wid_img":WIDTH_IMG_CAMERA_CAPTURE,"hei_img":HEIGHT_IMG_CAMERA_CAPTURE,
         "product": product,
         "data_point": points_result.data if points_result.ok else [],
-        "data_dimesion":"",
+        "data_dimesion":result_calibration.data
     }).to_dict()
 
- 
 @router.post("/run_point_define_value")
 async def run_point_define_value(data:PointData,services: ServiceContainer = Depends(get_services)):
     print(data)
@@ -73,3 +79,20 @@ async def exit():
         "status": "ok",
         "redirect_url": "/"
 }
+
+@router.post("/calculater_calibration")
+async def calculater_calibration(data:DataIn,services: ServiceContainer = Depends(get_services)):
+    data_receive = data.data
+    print("data_receive",data_receive)
+    status_check,msg = ValidateDimesionalCalibration.validate_product_data_pure_python(data_receive)
+    if status_check:
+        print("Validate dữ liệu OK")
+        services.obj_unet_calib_search_coordinator.set_data_run(data_receive)
+        services.obj_unet_calib_search_coordinator.start_algorithm()
+    else:
+        print("Validate dữ liệu NG",msg)
+    return {
+            "ok": True,
+               
+                    }
+    

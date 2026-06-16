@@ -20,6 +20,7 @@ class ErrorCode(Enum):
     CALIBRATION_INVALID_REAL_LENGTH = 1504
     CALIBRATION_INVALID_MEAN = 1505
     CALIBRATION_FILTERED_TOO_MUCH = 1506
+    CALIBRATION_ID_TEMS_MISMATCH = 1507
     # =====================================
     # PRODUCT
     # =====================================
@@ -82,7 +83,7 @@ ERROR_MESSAGE = {
     ErrorCode.CALIBRATION_INVALID_REAL_LENGTH: "[Cảnh báo] Chiều dài thực không hợp lệ",
     ErrorCode.CALIBRATION_INVALID_MEAN: "[Lỗi] Giá trị trung bình pixel không hợp lệ (= 0)",
     ErrorCode.CALIBRATION_FILTERED_TOO_MUCH: "[Cảnh báo] Lọc nhiễu quá nhiều, không đủ dữ liệu tin cậy",
-   
+    ErrorCode.CALIBRATION_ID_TEMS_MISMATCH :"CALIBRATION_ID_TEMS_MISMATCH",
     # =====================================
     # PRODUCT
     # =====================================
