@@ -447,8 +447,10 @@ def test_point_service():
     # print(result.data)
 
     #test get_product_frame_id_tree
-    tree = service.get_product_frame_id_tree()
-    print(tree)
+    # tree = service.get_product_frame_id_tree()
+    # print(tree)
+    # result = service.get_point_tree_by_product_id("1")
+    # print("result",result.data)
 
 
 # =========================================
@@ -457,5 +459,5 @@ def test_point_service():
 
 if __name__ == "__main__":
     pass
-    # test_point_service()
+    test_point_service()
     # python -m app.tests.test_point_service

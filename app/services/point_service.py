@@ -380,6 +380,42 @@ class PointService:
                 id_tree[product_id_str][frame_id_str] = {}
         return id_tree
     
+
+    def get_point_tree_by_product_id(self, product_id: int) -> Result:
+            """
+            Chức năng: Lấy cây cấu trúc 3 cấp gồm Product ID -> Frame ID -> Point ID (để rỗng).
+            Input: product_id (int/str)
+            Output: Result.Ok(dict) -> Cấu trúc dạng chuỗi: {"product_id": {"frame_id": {"point_id": {}}}}
+                    hoặc Result.Fail nếu không tìm thấy sản phẩm.
+            """
+            # Tự ép kiểu và kiểm tra tính hợp lệ không qua hàm helper _parse_id
+            if not isinstance(product_id, int):
+                if isinstance(product_id, str):
+                    try: 
+                        product_id = int(product_id)
+                    except Exception: 
+                        return Result.Fail(ErrorCode.PRODUCT_ID_INVALID)
+                else: 
+                    return Result.Fail(ErrorCode.PRODUCT_ID_INVALID)
+
+            # Kiểm tra xem sản phẩm có tồn tại trong bộ nhớ RAM không
+            product = self.points.get(product_id)
+            if not product:
+                return Result.Fail(ErrorCode.PRODUCT_NOT_FOUND)
+
+            # Dựng cấu trúc cây
+            id_tree = {
+                str(product_id): {
+                    str(frame_id): {
+                        str(point_id): {}
+                        for point_id in point_dict.keys()
+                    }
+                    for frame_id, point_dict in product.items()
+                }
+            }
+            
+            return Result.Ok(id_tree)
+    
     def is_exists_product_frame(self, product_id: int, frame_id: int) -> Result:
         """
         Chức năng: Kiểm tra cặp định danh Product ID và Frame ID hiện tại có đang tồn tại không.

@@ -1,13 +1,13 @@
 import {fetchGet,postData} from "./utills/api.js"
 import {scroll_container,canvasManager,active_sceen_show_video,show_video_product,get_camera_connection,SocketData,SocketLog,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE}from "./common_value.js";
-import {DimesionalCalibrationDraw} from "./model/dimesional_calibration_draw.js"
+import {DimesionalCalibrationCanvas} from "./canvas/dimesional_calibration_canvas.js"
 import {}from "./utills/logic.js";
 
 
 
 const btn_calcular_calibration  =  document.getElementById("calcular-calibration-button");
 const header_dimetional_calibration = document.getElementById("header-ul-li-dimensional-calibration");
-const obj_draw_calibration = new DimesionalCalibrationDraw()
+const obj_draw_calibration = new DimesionalCalibrationCanvas()
 const paner_draw_calibration = document.getElementById("paner-calibration");
 const open_video_calibration = document.getElementById("open-video-calibration");
 const log_calibration       = document.getElementById("log-calibration");
@@ -54,9 +54,9 @@ let current_frame_box = null ; // Frame hiện tại đang đc click
 
 
 //đăng kí sự kiện khi click vào line
-obj_draw_calibration.on(DimesionalCalibrationDraw.NAME_EVENT_WHEN_CLICK_ON_LINE,func_callback_click_on_line_drawn);
-obj_draw_calibration.on(DimesionalCalibrationDraw.NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN,func_callback_click_right_mouse_on_line);
-obj_draw_calibration.on(DimesionalCalibrationDraw.NAME_EVENT_CHECK_LINE_EXIS,func_callback_check_line_exis);
+obj_draw_calibration.on(DimesionalCalibrationCanvas.NAME_EVENT_WHEN_CLICK_ON_LINE,func_callback_click_on_line_drawn);
+obj_draw_calibration.on(DimesionalCalibrationCanvas.NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN,func_callback_click_right_mouse_on_line);
+obj_draw_calibration.on(DimesionalCalibrationCanvas.NAME_EVENT_CHECK_LINE_EXIS,func_callback_check_line_exis);
 
 function func_callback_click_right_mouse_on_line() {
     console.log("Trước:", structuredClone(dict_lines_of_frames));

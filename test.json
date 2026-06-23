@@ -1,0 +1,47 @@
+{"measure":{
+            "feme_id1":{
+                "1":{
+                        "name":"line1",
+                        "level1":0.1,
+                        "level2":0.2,
+                        "level3":0.1,
+                        "level4":0.2,
+                        "level5":0.1,
+                        "check_bubble":true
+                },
+                "0":{
+                    
+                }
+
+                ,
+                "2":{
+                    
+                }
+            
+
+                }
+        },
+        "feme_id2":{
+                "1":{
+                        "name":"line1",
+                        "level1":0.1,
+                        "level2":0.2,
+                        "level3":0.1,
+                        "level4":0.2,
+                        "level5":0.1,
+                        "check_bubble":true
+                },
+                "0":{
+                    
+                }
+
+                ,
+                "2":{
+                    
+                }
+            
+
+                }
+}
+        
+

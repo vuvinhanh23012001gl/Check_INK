@@ -3,7 +3,7 @@ import * as draw from "../utills/draw.js";
 const NUMBER_OF_POINTS_ON_A_ATRAIGHT_LINE =  2 ;
 const DISTANCE_DEFINE_IS_POINT_IN_LINE_SEGMENT = 50;
 
-export class DimesionalCalibrationDraw {
+export class DimesionalCalibrationCanvas {
     static NAME_EVENT_WHEN_CLICK_ON_LINE = "EVENT_CLICK_ON_LINE"
     static NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN = "NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN"
     static  NAME_EVENT_CHECK_LINE_EXIS = "NAME_EVENT_CHECK_LINE_EXIS"
@@ -17,7 +17,6 @@ export class DimesionalCalibrationDraw {
         };
       
         this.isDrawing = false;
-        
         this.cout_click = 0
         this.start = {
             x: -1,
@@ -39,7 +38,6 @@ export class DimesionalCalibrationDraw {
     }
 
     emit(eventName, data = null) {
-        // Khi co su kien thi dán phần này vào
         if (!this.callbacks[eventName]) {
             return;
         }
@@ -142,14 +140,14 @@ export class DimesionalCalibrationDraw {
            if (status_check_point_in_line){
                 this.cout_click--;
                 this.emit(
-                    DimesionalCalibrationDraw.NAME_EVENT_WHEN_CLICK_ON_LINE,
+                    DimesionalCalibrationCanvas.NAME_EVENT_WHEN_CLICK_ON_LINE,
                     this.defined_line_segment
                 );
                 return;
            }
         // kiểm tra thuộc line hay chưa
-        this.emit(DimesionalCalibrationDraw.NAME_EVENT_CHECK_LINE_EXIS,this.defined_line_segment);
-        console.log("Sản phẩm đã tồn tại trong dữ liệu chưa",this.has_line_of_frame); //  this.emit(DimesionalCalibrationDraw.NAME_EVENT_CHECK_LINE_EXIS,this.defined_line_segment); sẽ thay đổi biến này.
+        this.emit(DimesionalCalibrationCanvas.NAME_EVENT_CHECK_LINE_EXIS,this.defined_line_segment);
+        console.log("Sản phẩm đã tồn tại trong dữ liệu chưa",this.has_line_of_frame); //  this.emit(DimesionalCalibrationCanvas.NAME_EVENT_CHECK_LINE_EXIS,this.defined_line_segment); sẽ thay đổi biến này.
         if (this.has_line_of_frame) return;
         
         console.log( "[Dimetional Calibration] Click:",pos.x,pos.y);
@@ -215,7 +213,7 @@ export class DimesionalCalibrationDraw {
                 this.reset();
                 canvasManager.clearShapeCanvas();
                 this.emit(
-                    DimesionalCalibrationDraw.NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN,this.defined_line_segment
+                    DimesionalCalibrationCanvas.NAME_EVENT_WHEN_CLICK_RIGHT_MOUSE_BTN,this.defined_line_segment
                 );
             }
         }

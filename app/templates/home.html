@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../static/css/draw_regulations.css">
     <link rel="stylesheet" href="../static/css/config_calibration.css">
     <link rel="stylesheet" href="../static/css/accept_erase_product.css">
+    <link rel="stylesheet" href="../static/css/adjust_master.css">
     <script src="../static/cnd/cnd_lybrary.js"></script>
     <title>Kiểm tra độ rộng hộp mực</title>
 </head>
@@ -233,7 +234,6 @@
                     <canvas id="canvasPreview"></canvas>
                 </div>
             </div>
-            video
             <div class="show-satus">
                 <p id="coordinate">Pixel: (0, 0)</p>
 
@@ -380,9 +380,200 @@
                 </div>
             </div>
 
+            <div id="panner-adjust-master" class="paner">
+                <div id ="panner-measure-weld-width" class = "tool-content">
+                    <div id="log-measure-weld-width" class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                    <div id="table-cof-tool-content-measure-weld-width"  class="table-cof-tool-content active">
+                        <!-- <table class="measure-weld-width-config-table">
+                            <tr class="config-row">
+                                <th class="config-label">Tên Line</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text">
+                                </td>
+                            </tr>
+                            <tr class="config-row">
+                                <th class="config-label">Level 1</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text"> 
+                                </td>
+                            </tr>
+
+                            <tr class="config-row">
+                                <th class="config-label">Level 2</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text">
+                                </td>
+                            </tr>
+
+                            <tr class="config-row">
+                                <th class="config-label">Level 3</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text">
+                                </td>
+                            </tr>
+                            <tr class="config-row">
+                                <th class="config-label">Level 4</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text">
+                                </td>
+                            </tr>
+                            <tr class="config-row">
+                                <th class="config-label">Level 5</th>
+                                <td class="config-value">
+                                    <input class="config-input" type="text">
+                                </td>
+                            </tr>
+                            <tr class="config-row">
+                                <th class="config-label">Kiểm tra bọt khí đường hàn</th>
+                                <td class="config-value">
+                                    <label class="switch" id="check-for-air-bubbles">
+                                        <input type="checkbox">
+                                        <span class="slider"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+
+                        BUTTONS nằm ngoài bảng -->
+                        <!-- <div class="config-actions">
+                            <button class="btn btn-accept">Chấp nhận</button>
+                            <button class="btn btn-clear">Xóa</button>
+                        </div> -->
+                    </div>
+                    <div id = "table-show-data-tool-content-measure-weld-width" class ="table-show-data-tool-content"></div> 
+                    </div>
+                    <div class="controler-tool">
+                        <button id="btnAutoRule" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/auto.png" alt="auto rule">
+                            Tự động quy ước
+                        </button>
+                        <button id="btnSaveFrameMeasureWeldWidth" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/save_1.png" alt="save frame">
+                            Lưu frame
+                        </button>
+                        <button id="btnClearFrameMeasureWeldWidth" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/eraser (5).png" alt="clear frame">
+                            Tẩy frame
+                        </button>
+                        <button id="btnExitMeasureWeldWidth" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
+                    </div>
+                </div>
+                <div class = "tool-content">
+                    <div class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div class ="table-cof-tool-content"> </div> 
+                        <div class ="table-show-data-tool-content"></div> 
+                    </div>
+                    <div class="controler-tool">
+                    </div>
+                </div>
+                <div class = "tool-content">
+                    <div class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div class ="table-cof-tool-content"> </div> 
+                        <div class ="table-show-data-tool-contenSSSt"></div> 
+                    </div>
+                    <div class="controler-tool">
+                    </div>
+                </div>
+                <div class = "tool-content">
+                    <div class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div class ="table-cof-tool-content"> </div> 
+                        <div class ="table-show-data-tool-content"></div> 
+                    </div>
+                    <div class="controler-tool">
+                    </div>
+                </div>
+                <div class = "tool-content">
+                    <div class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div class ="table-cof-tool-content"> </div> 
+                        <div class ="table-show-data-tool-content"></div> 
+                    </div>
+                    <div class="controler-tool">
+                    </div>
+                </div>
+                
+                <div class="fix-element">
+                    <div id = "choose-tool">
+                        <button id ="btn-measure-weld-width"class="tool-btn">
+                            <img src="../static/img/scale (1).png">
+                            <span>Đo độ rộng <br>đường hàn</span>
+                        </button>
+
+                        <button class="tool-btn">
+                            <img src="../static/img/graphic-design.png">
+                            <span>Đo khoảng <br> cách khe hàn</span>
+                        </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/ruler_blue.png">
+                            <span>Đo khoảng <br> cách mép film</span>
+                        </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/loupe.png">
+                            <span>Kiểm tra <br>ARM cover</span>
+                        </button>
+
+                        <button class="tool-btn">
+                            <img src="../static/img/investigation.png">
+                            <span>Kiểm tra <br>ARM sensor</span>
+                        </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/hematology.png">
+                            <span>Kiểm tra <br>lỗ thủng</span>
+                        </button>
+
+                        <button class="tool-btn">
+                            <img src="../static/img/digital (1).png">
+                            <span>Kiểm tra màng <br> bán thấm</span>
+                        </button>
+
+                        <button class="tool-btn">
+                            <img src="../static/img/corona.png">
+                            <span>Kiểm tra <br>dị vật</span>
+                        </button>
+
+                        <button class="tool-btn">
+                            <img src="../static/img/water-pipe.png">
+                            <span>Kiểm tra <br>vết xước ống</span>
+                        </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/leak.png">
+                            <span>Kiểm tra <br>mẻ đâu ống</span>
+                        </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/cooking-oil.png">
+                            <span>Kiểm tra <br>dầu mỡ bề mặt</span>
+                        </button>
+
+                    </div>
+                    <div id = "containner-control-master">
+                        <button>
+                            <img src="../static/img/save_icon.png" alt="Lưu">
+                            Lưu
+                        </button>
+                        <button>
+                            <img src="../static/img/paint-palette.png" alt="Hiển thị">
+                            Vẽ layout
+                        </button>
+                        <button id="cancel-calibration-button">
+                            <img src="../static/img/eraser (6).png" alt="Reset dữ liệu">
+                            Tẩy
+                        </button>
+                        <button>
+                            <img src="../static/img/closed.png" alt="Thoát">
+                            Thoát
+                        </button>
+                    </div>
+                </div>
+            </div>
             <!-- Panel: Capture & Product Framework Setup -->
             <div id="paner-capture-product" class="paner add-capture-product">
-                
                 <!-- Bảng thông tin loại sản phẩm -->
                 <div class="panel-table">
                     <table class="product-table">

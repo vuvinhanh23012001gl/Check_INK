@@ -148,36 +148,7 @@ function create_show_table(data) {
   table.appendChild(tbody);
   return table;
 }
-// function Event_press_left_right() {
-//     // const scroll_width = scroll_content.scrollWidth;
-//     const scroll_client = scroll_container.clientWidth;
-//     const scroll_left = scroll_container.scrollLeft;
-//     // if (scroll_width > scroll_client) {
-//     //   btn_left.style.display = scroll_left > 0 ? "block" : "none";
-//     //   btn_right.style.display = (scroll_left + scroll_client) < scroll_width ? "block" : "none";
-//     // } else {
-//     //   btn_left.style.display = "none";
-//     //   btn_right.style.display = "none";
-//     // }
-// }
 
-// document.addEventListener("DOMContentLoaded", () => {
-//   console.log("Vào DOM");
- 
-//   // const table = create_show_table(listData);
-//   // div_show_point_detect.appendChild(table);
-//   // setStatusOK();
-//     // setStatusNG();
-//   // setStatusWarning();
-
-//   postData("/data_home", {"status": "UI_Main"}).then(data => {
-//         RenderDataHome(data) 
-//         // console.log('data',data);
-//    }); 
-// });
-
-
-   
 
 function RenderDataHome(data){
     // scroll_content.innerHTML = "";

@@ -15,7 +15,7 @@
  * false -> điểm không nằm trên đoạn thẳng
  */
 
-export function isPointOnLineSegment(x1, y1, x2, y2, px, py, tolerance = 5) {
+export function isPointOnLineSegment(x1, y1, x2, y2, px, py, tolerance = 10) {
 
     const dx = x2 - x1;
     const dy = y2 - y1;
