@@ -1,17 +1,15 @@
 import json
 from pathlib import Path
-
+from app.config import PATH_CONFIG_CALIBRATION
+ 
 class CalibrationReponsitory:
-    def __init__(self, path_file):
+    def __init__(self):
         """
         Khởi tạo Repository quản lý file dữ liệu cấu hình các điểm (Points).
         Nếu file chưa tồn tại, tự động tạo file JSON rỗng ban đầu.
         """
-        self.path_file = Path(path_file)
+        self.path_file = Path(PATH_CONFIG_CALIBRATION)
         self.path_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        if not self.path_file.exists():
-            self.save_points({})
 
     def load_data(self) -> dict:
         """

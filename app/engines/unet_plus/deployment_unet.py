@@ -5,11 +5,11 @@ from skimage.morphology import skeletonize
 from scipy.spatial.distance import cdist
 from scipy.spatial import cKDTree
 from app.config import UnetCofigAutoDetectLineMaster
-
+import time
+from collections import defaultdict
 
 class DeploymentUnetUnet:
     def __init__(self,autoDetectLineMaster : UnetCofigAutoDetectLineMaster, infeUnet:InferenceUnet):
-
         self.infeUnet = infeUnet
         self.auto_detect_line_master = autoDetectLineMaster
     
@@ -22,26 +22,96 @@ class DeploymentUnetUnet:
         mask = self.infeUnet.get_mask(img)
         return mask
 
-    def automate_sampling_for_checking(self,img):
-        mask , polygon = self.get_mask_and_polygon(img)
-        skeleton = self.get_skeleton(mask)  # Lấy điểm dọc
+    # def automate_sampling_for_checking(self,img):
+    #     height, width = img.shape[:2]
+    #     mask , polygon = self.get_mask_and_polygon(img)
+    #     skeleton = self.get_skeleton(mask)  # Lấy điểm dọc
+    #     center_points = self.get_main_skeleton_points(skeleton)
+    #     center_points = self.sample_skeleton_points(center_points, spacing = self.auto_detect_line_master.distance_between_points_center_point)  # Lấy các sample 
+    #     polygon_points = self.get_polygon_points(polygon,spacing = self.auto_detect_line_master.edge_point_spacing_polygons)
+    #     lines = self.extract_width_lines(polygon, polygon_points, center_points, search_length = self.auto_detect_line_master.intersection_detection_range,
+    #                                      min_length = self.auto_detect_line_master.minimum_allowable_width,
+    #                                      max_length = self.auto_detect_line_master.maximum_width_allowed)
+    #     take_lines = self.filter_close_lines(lines,min_spacing = self.auto_detect_line_master.minimum_length_to_remove_line)
+    #     lines_final = self.extend_lines(take_lines, extend_length= self.auto_detect_line_master.length_extended_at_each_end)
+    #     # self.draw_points(img,center_points)
+    #     # self.draw_polygons(img,polygon)
+    #     # self.draw_mask(mask)
+    #     # self.draw_polygon_points(img,polygon_points,radius=2,color=(255,0,0))
+    #     # self.draw_lines(img,lines_final)
+    #     # self.show_img(img)
+    #     return lines_final,(width, height)
+
+
+    def automate_sampling_for_checking(self,img,edge_point_spacing_polygons = -1,length_line_extend = -1):
+        # neu  edge_point_spacing_polygons != -1 thi cho phep cau hinh tu ben ngoai
+        total_start = time.perf_counter()
+        height, width = img.shape[:2]
+        t = time.perf_counter()
+        mask, polygon = self.get_mask_and_polygon(img)
+        print(f"1. get_mask_and_polygon      : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+        skeleton = self.get_skeleton(mask)
+        print(f"2. get_skeleton             : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
         center_points = self.get_main_skeleton_points(skeleton)
-        center_points = self.sample_skeleton_points(center_points, spacing = self.auto_detect_line_master.distance_between_points_center_point)  # Lấy các sample 
-        polygon_points = self.get_polygon_points(polygon,spacing = self.auto_detect_line_master.edge_point_spacing_polygons)
-        lines = self.extract_width_lines(polygon, polygon_points, center_points, search_length = self.auto_detect_line_master.intersection_detection_range,
-                                         min_length = self.auto_detect_line_master.minimum_allowable_width,
-                                         max_length = self.auto_detect_line_master.maximum_width_allowed)
+        print(f"3. get_main_skeleton_points : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+   
+        center_points = self.sample_skeleton_points(
+            center_points,
+            spacing = self.auto_detect_line_master.distance_between_points_center_point
+        )
+        print(f"4. sample_skeleton_points   : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+        spacing = (
+            edge_point_spacing_polygons
+            if edge_point_spacing_polygons != -1
+            else self.auto_detect_line_master.edge_point_spacing_polygons
+        )
+        polygon_points = self.get_polygon_points(
+            polygon,
+            spacing = spacing
+        )
+        print(f"5. get_polygon_points       : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+        lines = self.extract_width_lines(
+            polygon,
+            polygon_points,
+            center_points,
+            search_length=self.auto_detect_line_master.intersection_detection_range,
+            min_length=self.auto_detect_line_master.minimum_allowable_width,
+            max_length=self.auto_detect_line_master.maximum_width_allowed
+        )
+        print(f"6. extract_width_lines      : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+        take_lines = self.filter_close_lines(
+            lines,
+            min_spacing=self.auto_detect_line_master.minimum_length_to_remove_line
+        )
+        print(f"7. filter_close_lines       : {time.perf_counter() - t:.3f} s")
+        t = time.perf_counter()
+        length_line = (
+            length_line_extend
+            if length_line_extend != -1
+            else self.auto_detect_line_master.length_extended_at_each_end
+        )
+        lines_final = self.extend_lines(
+            take_lines,
+            extend_length = length_line
+        )
+        print(f"8. extend_lines             : {time.perf_counter() - t:.3f} s")
+        print(f"\n===== TOTAL: {time.perf_counter() - total_start:.3f} s =====")
+        # self.draw_points(img,center_points)
+        # self.draw_polygons(img,polygon)
+        # self.draw_mask(mask)
+        # self.draw_polygon_points(img,polygon_points,radius=2,color=(255,0,0))
+        # self.draw_lines(img,lines_final)
+        # self.show_img(img)
+        return lines_final, (width, height),polygon
             
-        take_lines = self.filter_close_lines(lines,min_spacing = self.auto_detect_line_master.minimum_length_to_remove_line)
-        lines_final = self.extend_lines(take_lines, extend_length= self.auto_detect_line_master.length_extended_at_each_end)
-                
-        self.draw_points(img,center_points)
-        self.draw_polygons(img,polygon)
-        self.draw_mask(mask)
-        self.draw_polygon_points(img,polygon_points,radius=2,color=(255,0,0))
-        self.draw_lines(img,lines_final)
-        self.show_img(img)
-            
+
+
     def draw_lines(
         self,
         image,
@@ -165,6 +235,8 @@ class DeploymentUnetUnet:
             })
 
         return extended_lines
+    
+
     def line_segment_intersection(
         self,
         p1,
@@ -409,40 +481,48 @@ class DeploymentUnetUnet:
                     accumulated = 0
 
             return np.array(sampled)
-    
 
-    def get_main_skeleton_points(self,skeleton):
-        """
-        Sắp xếp các điểm skeleton theo thứ tự dọc theo đường xương sống.
-        Input:
-            skeleton : ảnh skeleton
-        Output:
-            mảng điểm skeleton đã được sắp xếp
-        """
+    def get_main_skeleton_points(self, skeleton):
+        #     Sắp xếp các điểm skeleton theo thứ tự dọc theo đường xương sống.
+        #     Input:
+        #         skeleton : ảnh skeleton
+        #     Output:
+        #         mảng điểm skeleton đã được sắp xếp
+        #     """
         ys, xs = np.where(skeleton > 0)
-        points = np.column_stack((xs, ys))
-        if len(points) < 2:
+        points = np.column_stack((xs, ys)).astype(np.float32)
+
+        n = len(points)
+
+        if n < 2:
             return points
-        # tìm 2 đầu xa nhất
+
+        # Tìm điểm bắt đầu
         D = cdist(points, points)
-        start_idx, end_idx = np.unravel_index(
-            np.argmax(D),
-            D.shape
-        )
-        start = points[start_idx]
-        ordered = [start]
-        remain = points.tolist()
-        remain.remove(start.tolist())
-        current = start
-        while remain:
-            dists = np.linalg.norm(
-                np.array(remain) - current,
-                axis=1
-            )
-            idx = np.argmin(dists)
-            current = np.array(remain.pop(idx))
-            ordered.append(current)
-        return np.array(ordered)
+        start_idx = np.unravel_index(np.argmax(D), D.shape)[0]
+
+        visited = np.zeros(n, dtype=bool)
+
+        ordered = np.empty((n, 2), dtype=np.float32)
+
+        current = start_idx
+
+        for i in range(n):
+
+            ordered[i] = points[current]
+
+            visited[current] = True
+
+            diff = points - points[current]
+
+            dist2 = diff[:, 0] * diff[:, 0] + diff[:, 1] * diff[:, 1]
+
+            dist2[visited] = np.inf
+
+            if i != n - 1:
+                current = np.argmin(dist2)
+
+        return ordered
 
     def get_skeleton(self,mask):
             """
@@ -579,68 +659,85 @@ class DeploymentUnetUnet:
         return image
     
 
+
     def filter_close_lines(self, lines, min_spacing=20):
-        """
-        Loại bỏ các line gần nhau hoặc cắt nhau.
-
-        Rule:
-        - Nếu 2 line cắt nhau (distance ~ 0) -> loại line thứ 2
-        - Nếu khoảng cách giữa 2 line < min_spacing -> loại line thứ 2
-        - So sánh full pairwise
-        """
-
-        if len(lines) == 0:
-            return []
-
+        if len(lines) <= 1:
+            return lines
+        cell_size = float(min_spacing)
+        grid = defaultdict(list)
         kept = []
-
         def point_segment_distance(p, a, b):
-            """Khoảng cách từ điểm p tới segment ab"""
-            ap = p - a
             ab = b - a
             ab_len2 = np.dot(ab, ab)
-
             if ab_len2 < 1e-8:
-                return np.linalg.norm(ap)
-
-            t = np.dot(ap, ab) / ab_len2
+                return np.linalg.norm(p - a)
+            t = np.dot(p - a, ab) / ab_len2
             t = np.clip(t, 0.0, 1.0)
-
             proj = a + t * ab
             return np.linalg.norm(p - proj)
+        def segments_intersect(a1, a2, b1, b2):
+            def cross(u, v):
+                return u[0] * v[1] - u[1] * v[0]
+            r = a2 - a1
+            s = b2 - b1
+            denom = cross(r, s)
+            if abs(denom) < 1e-8:
+                return False
+            qp = b1 - a1
+            t = cross(qp, s) / denom
+            u = cross(qp, r) / denom
+            return (0 <= t <= 1) and (0 <= u <= 1)
 
         def line_distance(l1, l2):
-            """approx distance between 2 segments"""
-            a1 = np.array(l1["p1"], dtype=np.float32)
-            a2 = np.array(l1["p2"], dtype=np.float32)
-            b1 = np.array(l2["p1"], dtype=np.float32)
-            b2 = np.array(l2["p2"], dtype=np.float32)
+            a1 = np.asarray(l1["p1"], np.float32)
+            a2 = np.asarray(l1["p2"], np.float32)
 
-            # sample 2 endpoints mỗi line (đủ cho case line detection của bạn)
-            dists = [
+            b1 = np.asarray(l2["p1"], np.float32)
+            b2 = np.asarray(l2["p2"], np.float32)
+
+            # nếu cắt nhau
+            if segments_intersect(a1, a2, b1, b2):
+                return 0.0
+            return min(
                 point_segment_distance(a1, b1, b2),
                 point_segment_distance(a2, b1, b2),
                 point_segment_distance(b1, a1, a2),
                 point_segment_distance(b2, a1, a2),
-            ]
-            return min(dists)
-
-        for i, line in enumerate(lines):
+            )
+        for line in lines:
+            p1 = np.asarray(line["p1"], np.float32)
+            p2 = np.asarray(line["p2"], np.float32)
+            xmin = min(p1[0], p2[0])
+            xmax = max(p1[0], p2[0])
+            ymin = min(p1[1], p2[1])
+            ymax = max(p1[1], p2[1])
+            gx0 = int(xmin // cell_size)
+            gx1 = int(xmax // cell_size)
+            gy0 = int(ymin // cell_size)
+            gy1 = int(ymax // cell_size)
             keep = True
-
-            for j, other in enumerate(kept):
-                dist = line_distance(line, other)
-
-                # cắt nhau hoặc gần quá
-                if dist < min_spacing:
-                    keep = False
+            checked = set()
+            for gx in range(gx0, gx1 + 1):
+                for gy in range(gy0, gy1 + 1):
+                    for other in grid[(gx, gy)]:
+                        oid = id(other)
+                        if oid in checked:
+                            continue
+                        checked.add(oid)
+                        if line_distance(line, other) < min_spacing:
+                            keep = False
+                            break
+                    if not keep:
+                        break
+                if not keep:
                     break
-
             if keep:
                 kept.append(line)
-
+                for gx in range(gx0, gx1 + 1):
+                    for gy in range(gy0, gy1 + 1):
+                        grid[(gx, gy)].append(line)
         return kept
-    
+
     
     def get_line_intersection_width(self, img, start_x, start_y, end_x, end_y):
             """

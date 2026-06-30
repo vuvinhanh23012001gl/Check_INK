@@ -23,6 +23,7 @@ close_add_product.addEventListener("click", function() {
     console.log("Close add new product");
 });
 
+
 add_product.addEventListener("click",function() {
     console.log("Add new product clicked");
     UpDateTable();
@@ -35,6 +36,7 @@ async function UpDateTable(){
     table_product_list.innerHTML = "";
     createDataShowTable(get_data_product);
 }
+
 function show_box_warning_accept(id,name) {
     overlay_new_product.style.display = "flex";
     overlay_accpet_delete_product.style.display = "flex";

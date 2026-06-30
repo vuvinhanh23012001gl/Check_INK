@@ -34,7 +34,7 @@ header_adjust_master.addEventListener("click",async ()=>{
     console.log("--------Bạn đã nhấn vào thay đổi master--------");
     console.log("Bạn vừa click vào hiệu chuẩn kích thước");
     panner_adjust_master.classList.add("active");
-    let head_data_master = await  fetchGet("/master");
+    let head_data_master = await  fetchGet("/law_regulation");
     console.log("head_data_master",head_data_master);
     let data_point =  head_data_master?.data?.data_point;
     selected.product_id = head_data_master?.data?.product?._id;

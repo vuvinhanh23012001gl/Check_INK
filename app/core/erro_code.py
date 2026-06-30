@@ -57,10 +57,11 @@ class ErrorCode(Enum):
     POINT_X_INVALID = 6004
     POINT_Y_INVALID = 6005
     POINT_Z_INVALID = 6006
+    IMAGE_NOT_FOUND = 7000
 
-    
+ 
 ERROR_MESSAGE = {
-
+    ErrorCode.IMAGE_NOT_FOUND:"[Thất bại] Không thể tìm thấy ảnh trong bộ nhớ.",
     # =====================================
     # CAMERA
     # =====================================

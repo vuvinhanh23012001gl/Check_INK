@@ -5,16 +5,16 @@ from app.repository import PointRepository
 from app.core import Result, ErrorCode
 from app.utils import Folder
 from app.utils import Tool_OpenCv2
-
 import numpy as np
-
+from app.config import (BASE_DIR,PATH_FOLDER_IMG_COORDINATE_PRODUCT,PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
+    
 class PointService:
-    def __init__(self, repository: PointRepository, path_base_patch_core: Path, path_base_img_coordinates, path_base_img_coordinates_retrain, path_base_storage):
+    def __init__(self, repository: PointRepository):
         self.repository = repository
-        self.path_base_patch_core = path_base_patch_core
-        self.path_base_img_coordinates = path_base_img_coordinates
-        self.path_base_img_coordinates_retrain = path_base_img_coordinates_retrain
-        self.path_base_storage = path_base_storage
+        self.path_base_patch_core = PATH_FOLDER_MODEL_DETECT_PATCH_CORE
+        self.path_base_img_coordinates = PATH_FOLDER_IMG_COORDINATE_PRODUCT
+        self.path_base_img_coordinates_retrain = PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN
+        self.path_base_storage = BASE_DIR
         self.points = self._load_points()
 
     def _load_points(self) -> dict:
@@ -109,7 +109,25 @@ class PointService:
         Output: Result.Ok(dict) -> Dictionary chứa các Point object của sản phẩm
         """
         return Result.Ok(self.points.get(product_id, {}))
+    
+    def get_path_img_point(self, product_id: int, frame_id: int, point_id: int) -> Result:
+        """
+        Chức năng: Lấy đường dẫn tuyệt đối của ảnh gốc của một Point.
+        Input: product_id (int), frame_id (int), point_id (int)
+        Output: Result.Ok(Path) nếu tìm thấy, ngược lại Result.Fail(...)
+        """
+        result = self.get_point_by_id(product_id, frame_id, point_id)
+        if not result.ok:
+            return Result.Fail(ErrorCode.POINT_NOT_FOUND)
 
+        point: Point = result.data
+        if point.path_img_point is None:
+            return Result.Fail(ErrorCode.IMAGE_NOT_FOUND)
+        full_path = Path(self.path_base_storage) / point.path_img_point
+        if not full_path.exists():
+            return Result.Fail(ErrorCode.IMAGE_NOT_FOUND)
+        return Result.Ok(full_path)
+    
     def get_points_by_product_id(self, product_id: int) -> Result:
         """
         Chức năng: Lấy danh sách thông tin cấu trúc điểm của sản phẩm dưới dạng dictionary thuần (đã to_dict).

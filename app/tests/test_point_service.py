@@ -42,20 +42,11 @@ def test_point_service():
     # =========================================
 
     repository = PointRepository(
-        PATH_CONFIG_POINTS
+        
     )
 
     service = PointService(
-
         repository,
-
-        PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
-
-        PATH_FOLDER_IMG_COORDINATE_PRODUCT,
-
-        PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
-
-        BASE_DIR
     )
 
     # =========================================
@@ -451,7 +442,8 @@ def test_point_service():
     # print(tree)
     # result = service.get_point_tree_by_product_id("1")
     # print("result",result.data)
-
+    result = service.get_path_img_point(1,0,0)
+    print(result.to_dict())
 
 # =========================================
 # MAIN

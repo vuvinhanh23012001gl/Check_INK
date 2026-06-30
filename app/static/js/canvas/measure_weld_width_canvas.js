@@ -52,7 +52,7 @@ export class MeasureWeldWidthCanvas {
             this.have_return = false;
             return;
         }
-        // TRƯỜNG HỢP 1: Đã có một line hoàn chỉnh -> Kiểm tra xem click có trúng line không
+
         if (this.is_available_one_line) {
             let status_check_point_in_line = draw.isPointOnLineSegment(
                 this.line_current.xStart, this.line_current.yStart,
@@ -114,8 +114,7 @@ export class MeasureWeldWidthCanvas {
             this.line_current.xStart, this.line_current.yStart,
             this.line_current.xEnd, this.line_current.yEnd,
             pos.x, pos.y, DISTANCE_DEFINE_IS_POINT_IN_LINE_SEGMENT
-        );
-            
+        );  
         // Bắn sự kiện ra ngoài kèm trạng thái check và tọa độ chuột phải
         this.emit(MeasureWeldWidthCanvas.NAME_EVENT_WHEN_CLICK_RIGHT_LINE, {
             status_check_point_in_line_current,

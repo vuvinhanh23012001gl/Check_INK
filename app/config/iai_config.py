@@ -1,39 +1,32 @@
 import json
 import os
 from .base_config import BaseConfig
-
+from app.config import PATH_FILE_DATA_CONFIG_IAI
 
 class IAIConfig(BaseConfig):
-
-    def __init__(self, path_config_iai: str):
-
-        self.path_config_iai = path_config_iai
-
+    def __init__(self):
+        self.path_config_iai = PATH_FILE_DATA_CONFIG_IAI
         # =========================
         # LIMIT X
         # =========================
         self.limit_x_min = 0
         self.limit_x_max = 1000
-
         # =========================
         # LIMIT Y
         # =========================
         self.limit_y_min = 0
         self.limit_y_max = 1000
-
         # =========================
         # LIMIT Z
         # =========================
         self.limit_z_min = 0
         self.limit_z_max = 1000
-
         # =========================
         # HOME POSITION
         # =========================
         self.home_x = 0
         self.home_y = 0
         self.home_z = 0
-
         self.load()
 
     # ==========================================================

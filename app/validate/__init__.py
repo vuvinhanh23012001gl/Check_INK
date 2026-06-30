@@ -1,2 +1,3 @@
 from .validate_capture_product import ValidateCaptureProduct
 from .validate_dimesional_calibration import ValidateDimesionalCalibration
+from .validate_tool_law_regulation import ValidateToolLawRegulation

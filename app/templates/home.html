@@ -441,16 +441,15 @@
                             <button class="btn btn-clear">Xóa</button>
                         </div> -->
                     </div>
-                    <div id = "table-show-data-tool-content-measure-weld-width" class ="table-show-data-tool-content"></div> 
                     </div>
                     <div class="controler-tool">
+                        <button id ="judment-img-item" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                            Phán định
+                        </button>
                         <button id="btnAutoRule" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/auto.png" alt="auto rule">
                             Tự động quy ước
-                        </button>
-                        <button id="btnSaveFrameMeasureWeldWidth" class="tool-btn btn-controler-mesure-weld-width">
-                            <img src="../static/img/save_1.png" alt="save frame">
-                            Lưu frame
                         </button>
                         <button id="btnClearFrameMeasureWeldWidth" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/eraser (5).png" alt="clear frame">
@@ -824,6 +823,37 @@
                 <button id="close-settings">
                     ✖ Thoát
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div id="loading-card">
+            <div id="loading-loader">
+                <span id="loader-dot-1"></span>
+                <span id="loader-dot-2"></span>
+                <span id="loader-dot-3"></span>
+                <div id="loader-glow"></div>
+            </div>
+
+            <h2 id="loading-title">Đang xử lý</h2>
+
+            <p id="loading-status">
+                Khởi tạo...
+            </p>
+
+            <div id="loading-progress">
+                <div id="loading-bar"></div>
+            </div>
+
+            <div id="loading-percent">
+                0%
+            </div>
+
+            <div id="loading-dots">
+                <span id="loading-dot-1"></span>
+                <span id="loading-dot-2"></span>
+                <span id="loading-dot-3"></span>
             </div>
         </div>
     </div>

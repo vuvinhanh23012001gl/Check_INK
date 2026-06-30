@@ -3,3 +3,4 @@ from .choose_product_repository import ChooseProductRepository
 from .point_repository import PointRepository
 from .com_repository import ComRepository
 from .calibration_reponsitory import CalibrationReponsitory
+from .judment_law_product_reponsitory import JudmentLawProductRepository

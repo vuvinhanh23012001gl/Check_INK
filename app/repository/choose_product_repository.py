@@ -10,7 +10,6 @@ class ChooseProductRepository:
         self.path_file_config = (
             PATH_PRODUCT_CHOOSE_PRODUCT
         )
-
         self.key_name = "product"
     # =========================
     # READ
@@ -23,7 +22,6 @@ class ChooseProductRepository:
                 self.path_file_config
             )
         )
-
         if not data:
 
             return {}

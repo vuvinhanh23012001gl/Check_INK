@@ -5,14 +5,14 @@ from contextlib import asynccontextmanager
 import asyncio
 from app.container import create_container
 from app.pipeline import Pipeline
-from enum import Enum
+
 from app.routers import (
     camera_router,
     software_router,
     product_router,
     home_router,
     captureproduct_router,
-    sio,draw_regulations_router,calibration_router,dimesional_calibration_router,master_router,
+    sio,draw_regulations_router,calibration_router,dimesional_calibration_router,tool_law_regulations_router,
     log_sender,com_router
 )
 
@@ -46,8 +46,8 @@ def create_app():
     fastapi_app.include_router(calibration_router)
     fastapi_app.include_router(com_router)
     fastapi_app.include_router(dimesional_calibration_router)
-    fastapi_app.include_router(master_router)
-    # 🔥 QUAN TRỌNG NHẤT – wrap FastAPI bằng Socket.IO
+    fastapi_app.include_router(tool_law_regulations_router)
+   
     return socketio.ASGIApp(sio, fastapi_app)
 
 

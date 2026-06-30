@@ -1,21 +1,11 @@
 import queue
 import threading
 import webbrowser
-from enum import Enum, auto
+from enum import Enum,auto
 
 from app.config import (
-    BASE_DIR,
     IAIConfig,
-    PATH_CONFIG_CALIBRATION,
-    PATH_CONFIG_POINTS,
-    PATH_FILE_DATA_CONFIG_COM,
-    PATH_FILE_DATA_CONFIG_IAI,
-    PATH_FOLDER_IMG_COORDINATE_PRODUCT,
-    PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
-    PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
-    PATH_PRODUCT_MODEL,
     QueueConfig,
-    TypeSend,
     UnetCofigAutoDetectLineMaster,
     UnetConfig,
 )
@@ -27,6 +17,7 @@ from app.repository import (
     ChooseProductRepository,
     ProductRepository,
     PointRepository,
+    JudmentLawProductRepository
 )
 from app.services import (
     CalibrationService,
@@ -35,9 +26,10 @@ from app.services import (
     IAIService,
     PointService,
     ProductService,
+    JudmentLawProductSevice
 )
 from app.services.camera import Camera
-from app.services.log import Config_SoftWare, Infor_Software, Manager_Log
+from app.services.log import Config_SoftWare, Infor_Software
 from app.validate import ValidateCaptureProduct
 
 # from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
@@ -55,11 +47,8 @@ class EnumMode(Enum):
 
 class ServiceContainer:
     def __init__(self):
-        # ---------------------------------------------------------
-        # 1. LOAD CONFIG & THIẾT LẬP HÀNG ĐỢI (QUEUES)
-        # ---------------------------------------------------------
         print("---------------Load config-----------")
-        self.obj_iai_config = IAIConfig(PATH_FILE_DATA_CONFIG_IAI)
+        self.obj_iai_config = IAIConfig()
         self.obj_iai_service = IAIService(self.obj_iai_config)        
         
         print("---------------Tạo hàng đợi-----------")
@@ -91,7 +80,6 @@ class ServiceContainer:
         self.queue_img_send_client = Worker(q_img_send_client)
         self.queue_process_capture = Worker(q_process_capture)
         self.queue_manage_log = Worker(q_manage)
-
         self.queue_send_MCU = queue.Queue(maxsize=QueueConfig.SIZE_QUEUE_DATA_SEND_MCU)
         self.queue_listen_MCU = queue.Queue(maxsize=QueueConfig.SIZE_QUEUE_DATA_LISTEN_MCU)
 
@@ -100,7 +88,7 @@ class ServiceContainer:
         # ---------------------------------------------------------
         self._mode = EnumMode.MODE_DEAFAULT
         self._lock_mode = threading.Lock()
-        
+    
         print("...----------------------------------.Init Service...-----------------------------.")
         self.obj_validate_capture_product = ValidateCaptureProduct()
         
@@ -111,9 +99,9 @@ class ServiceContainer:
         from app.manager.serial import ManagerSerial
         from app.manager.serial import SerialConnect
         from app.repository import ComRepository
-        from app.config import PATH_FILE_DATA_CONFIG_COM
         
-        self.obj_com_reponsitory = ComRepository(PATH_FILE_DATA_CONFIG_COM)
+        
+        self.obj_com_reponsitory = ComRepository()
         self.obj_serial_connect = SerialConnect(self.obj_com_reponsitory)
         self.obj_manager_serial = ManagerSerial(self.obj_serial_connect, self.queue_listen_MCU, self.queue_send_MCU)
         self.obj_com_service = ComService(self.obj_manager_serial)
@@ -125,20 +113,17 @@ class ServiceContainer:
         # 4. KHỞI TẠO TẦNG REPOSITORIES & SERVICES
         # ---------------------------------------------------------
         # Quản lý Point
-        self.obj_point_repository = PointRepository(PATH_CONFIG_POINTS)
-        self.obj_point_service = PointService(
-            self.obj_point_repository,
-            PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
-            PATH_FOLDER_IMG_COORDINATE_PRODUCT,
-            PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,
-            BASE_DIR
-        )
+        self.obj_point_repository = PointRepository()
+        self.obj_point_service = PointService(self.obj_point_repository)
+            
+        # Quản lý dữ liệu law regulations
+        self.obj_law_regulation_reponsitory = JudmentLawProductRepository()
+        self.obj_law_regulation_service = JudmentLawProductSevice(self.obj_law_regulation_reponsitory)
 
-        # HandlerCalibration (Commented gốc)
-        # self.obj_calibration = HandlerCalibration(self.obj_camera,
-        #                                           self.queue_log_send_client,self.queue_data_send_client,
-        #                                           self.queue_img_send_client,TypeSend.log_calibration,TypeSend.datatype_Calibration)
-        print("✔ HandlerCalibration init")
+        
+
+        
+       
 
         # Quản lý Product & ChooseProduct
         self.obj_product_repository = ProductRepository()
@@ -155,7 +140,7 @@ class ServiceContainer:
         #     self.obj_products_service,
         #     self.obj_calibration, self.queue_data_send_client,self.queue_process_capture,TypeSend.datatype_Home,PATH_PRODUCT_MODEL
         # )
-        print("✔ HandlerWorkDetect init")
+        # print("✔ HandlerWorkDetect init")
 
         # Cấu hình phần mềm & Log
         self.obj_infor_software = Infor_Software()
@@ -167,7 +152,7 @@ class ServiceContainer:
         #     self.obj_config_software,
         #     self.obj_choose_product,
         # )
-        print("✔ Manager_Log init")
+        # print("✔ Manager_Log init")
         
         # self.obj_img_queue_capture_test = ImageQueueTester(self.obj_detect)
         # self.obj_img_queue_capture_test.start()
@@ -175,13 +160,16 @@ class ServiceContainer:
         print("-------------------------------------------------------------------------------------")
         
         # Quản lý Calibration
-        self.obj_calibration_repository = CalibrationReponsitory(PATH_CONFIG_CALIBRATION)                                            
+        self.obj_calibration_repository = CalibrationReponsitory()                                            
         print("✔ Calibration Reponsitory init")
+
         self.obj_service_calibration = CalibrationService(
             self.obj_point_service,
             self.obj_calibration_repository
         )
         print("✔ Calibration Service init")
+
+
 
         # ---------------------------------------------------------
         # 5. KHỞI TẠO CÁC AI ENGINES & COORDINATOR
@@ -193,6 +181,7 @@ class ServiceContainer:
             self.obj_unet_config_line_master,
             self.obj_infer_unet
         )
+        
         self.obj_unet_calib_search_coordinator = CalibSearchCoordinator(
             calibrationService=self.obj_service_calibration,
             camera=self.obj_camera,
@@ -226,4 +215,3 @@ class ServiceContainer:
 def create_container():
     return ServiceContainer()
 
-# H1 =  ServiceContainer()

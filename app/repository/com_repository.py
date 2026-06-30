@@ -1,16 +1,11 @@
 import json
 from pathlib import Path
+from app.config import PATH_FILE_DATA_CONFIG_COM
 class ComRepository:
-    def __init__(
-        self,
-        path_file
-    ):
+    def __init__(self):
         self.path_file = Path(
-            path_file
+            PATH_FILE_DATA_CONFIG_COM
         )
-        # =====================
-        # CREATE FOLDER
-        # =====================
         self.path_file.parent.mkdir(
             parents=True,
             exist_ok=True

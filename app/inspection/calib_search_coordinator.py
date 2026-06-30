@@ -114,6 +114,7 @@ class CalibSearchCoordinator:
         )
         self._calib_thread.start()
 
+
     def _run_calibration_loop(self) -> None:
         """Vòng lặp chính xử lý thuật toán Calibration: Kiểm tra kết nối, điều khiển ARM di chuyển,
 

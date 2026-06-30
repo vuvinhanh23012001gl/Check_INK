@@ -8,7 +8,7 @@ from .api_draw_regulations import router as draw_regulations_router
 from .api_calibration import router as calibration_router
 from .api_dimesional_calibration import router as dimesional_calibration_router
 from .api_com import router as com_router
-from .api_master import router as master_router
+from .api_tool_law_regulations import router as tool_law_regulations_router
 __all__ = [
     "home_router",
     "camera_router",
@@ -20,6 +20,6 @@ __all__ = [
     "calibration_router",
     "com_router",
     "dimesional_calibration_router"
-    "master_router",
+    "tool_law_regulations_router",
 ]
 

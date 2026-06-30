@@ -1,0 +1,48 @@
+{
+    "product_1": {
+        "frame_1": {
+            "item_1": {
+                "check_measure": {
+                    "line_1": {
+                        "name_line": "abc",
+                        "level1": 1,
+                        "level2": 2,
+                        "level3": 3,
+                        "level4": 4,
+                        "level5": 5
+                    }
+                }
+            },
+            "item_2": {
+                "check_measure": {
+                    "line_2": {
+                        "name_line": "xyz",
+                        "level1": 10
+                    }
+                }
+            }
+        },
+        "frame_2": {
+            "item_3": {
+                "check_measure": {
+                    "line_3": {
+                        "name_line": "new_frame",
+                        "level1": 999
+                    }
+                }
+            }
+        }
+    },
+    "product_2": {
+        "frame_1": {
+            "item_1": {
+                "check_measure": {
+                    "line_1": {
+                        "name_line": "product_2_data",
+                        "level1": 123
+                    }
+                }
+            }
+        }
+    }
+}

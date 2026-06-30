@@ -3,7 +3,8 @@ import * as draw from "../utills/draw.js";
 
 export class MeasurementItemsInspector {
     constructor() {
-        this.arr_measure = []; 
+        this.arr_measure = [];
+        this.polygons = []; //danh sach cac diem polygon
     }
     static fromDict(data) {
         const manager = new MeasurementItemsInspector();
@@ -13,6 +14,14 @@ export class MeasurementItemsInspector {
         }
         return manager;
     }
+    
+    getPolygons() {
+        return this.polygons;
+    }
+    setPolygons(polygons) {
+        this.polygons = Array.isArray(polygons) ? polygons : [];
+    }
+
     getMeasurementByLineId(lineId) {
         return this.arr_measure.find(
             measure => measure.lineId === lineId
@@ -53,6 +62,12 @@ export class MeasurementItemsInspector {
         return allIds.length ? Math.max(...allIds) + 1 : 0;
     }
     
+    getAllLineIds() {
+        // lấy danh sách các id
+        return this.arr_measure
+            .filter(m => m && m.lineId !== undefined)
+            .map(m => Number(m.lineId));
+    }
 
     findLineByCoordinate(xStart, yStart, xEnd, yEnd) {
         for (const measurement of this.arr_measure) {
@@ -144,7 +159,7 @@ export class MeasurementItemsInspector {
             return null;
     }
 
-    draw_multiple_lines(canvasManager, color = "#FFE680") {
+    draw_multiple_lines(canvasManager, color = "#FFE680",font_size = 5) {
             const linesArray = this.getAllDictLine();
             if (linesArray.length === 0) {
                 canvasManager.clearShapeCanvas(); // Không có line nào thì xóa sạch canvas
@@ -167,7 +182,7 @@ export class MeasurementItemsInspector {
                     xEnd: Number(lineData.xEnd),
                     yEnd: Number(lineData.yEnd)
                 };
-                this.#render_single_line_workflow(canvasManager,lineData.name_line || "",color);
+                this.#render_single_line_workflow(canvasManager,lineData.name_line || "",color,font_size);
             });
         }  
         #render_single_line_workflow(canvasManager, text, color, font_size =14) {
@@ -241,7 +256,35 @@ export class MeasurementItemsInspector {
                 data: measurement
             };
         }
-        
+        extendMeasurements(measurements) {
+            if (!Array.isArray(measurements)) {
+                throw new Error("measurements phải là một mảng.");
+            }
+            if (!measurements.every(m => m instanceof Measurement)) {
+                throw new Error("Tất cả phần tử phải là instance của Measurement.");
+            }
+            const results = [];
+            const existingIds = new Set(this.getAllLineIds());
+            for (const measurement of measurements) {
+                const id = Number(measurement.lineId);
+                if (existingIds.has(id)) {
+                    results.push({
+                        status: false,
+                        message: `LineId ${id} đã tồn tại.`,
+                        data: measurement
+                    });
+                    continue;
+                }
+                existingIds.add(id);
+                results.push(this.addMeasurementAdvance(measurement));
+            }
+            return {
+                status: true,
+                message: `Đã xử lý ${measurements.length} Measurement.`,
+                data: results
+            };
+        }
+
         deleteLineByCoordinateAdvance(xStart, yStart, xEnd, yEnd) {
             const checkExist = this.findLineByCoordinate(xStart, yStart, xEnd, yEnd);
             if (!checkExist.status) {
@@ -263,6 +306,33 @@ export class MeasurementItemsInspector {
             return { status: false, message: "Lỗi không xác định khi xóa." };
         }
 
+        drawPolygons(canvasManager, polygons, imageWidth, displayWidth, color = "#00FF00", lineWidth = 2) {
+            if (!Array.isArray(polygons)) return;
+
+            const ctx = canvasManager.ctxShape;
+            const scale = displayWidth / imageWidth;
+
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+
+            polygons.forEach(polygon => {
+                if (polygon.length < 2) return;
+
+                ctx.beginPath();
+
+                polygon.forEach(([x, y], index) => {
+                    x *= scale;
+                    y *= scale;
+                    index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                });
+
+                ctx.closePath();
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
 
 
 

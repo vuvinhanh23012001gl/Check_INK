@@ -16,6 +16,8 @@ let divCreateList_Home = [];
 
 
 
+
+
 SocketData.on("data_output_judment", data =>{
   console.log("data judment :",data);
   handle_judment_realtime(data?.msg?.data_output_judment);

@@ -32,40 +32,4 @@ my_pipeline_project/
 ├── pipeline.py                  # Giờ chỉ còn vài dòng, chỉ dùng để nối các stage
 
 # Có 3 luồng hiện tại luôn bật luồng Conect camera,Luồng check conect COM . nếu con nect thành công sẽ có thêm 2 luồng TX RX của Com nữa
-
-
-
-// let dict_lines_of_frames = {
-//     "1": {
-//         "0": {
-//             "calculation_parameters": {
-//                 "lineName": "1",
-//                 "realityMM": "11",
-//                 "captureCount": "111",
-//                 "xStart": 441,
-//                 "yStart": 139,
-//                 "xEnd": 420,
-//                 "yEnd": 318,
-//                 "coordinateX": 144,
-//                 "coordinateY": 31,
-//                 "coordinateZ": 30,
-//                 "id_item": 6
-//             }
-//         },
-//         "1": {
-//             "calculation_parameters": {
-//                 "lineName": "1",
-//                 "realityMM": "1",
-//                 "captureCount": "111",
-//                 "xStart": 593,
-//                 "yStart": 175,
-//                 "xEnd": 569,
-//                 "yEnd": 344,
-//                 "coordinateX": 67,
-//                 "coordinateY": 34,
-//                 "coordinateZ": 30,
-//                 "id_item": 6
-//             }
-//         }
-//     }
-// }
+# Quản lý luật phán định không phải dùng Object

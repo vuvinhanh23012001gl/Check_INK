@@ -4,3 +4,4 @@ from .point_service import PointService
 from .iai_service import IAIService
 from .com_service import ComService
 from .calibration_service import CalibrationService
+from .judment_law_product_service import JudmentLawProductSevice
