@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import cv2
+import time
 
 class Logic():
     @staticmethod
@@ -166,3 +167,60 @@ class Logic():
             return all(isinstance(int(item), int) for item in lst)
         except:
             return False
+        
+    @staticmethod 
+    def data_format(arr_check):
+            """Kiểm tra dữ liệu có đúng định dạng không và chuyển đổi về định dạng chuẩn.
+            Ví dụ: 'cmd:1,2,3' -> 'cmd:001,002,003,ok'"""
+            
+            if not arr_check:
+                print("❌ Dữ liệu bị lỗi hoặc trống, không có dữ liệu để so sánh.")
+                return False
+            if arr_check.startswith("cmd:"):
+                raw_data = arr_check[4:].split(",")
+                raw_data = [x.strip() for x in raw_data if x.strip() != ""]
+
+                if not raw_data:
+                    print("❌ Không có dữ liệu tọa độ sau 'cmd:'")
+                    return False
+
+                arr_covert_text = ["cmd:"]
+                for i in raw_data:
+                    try:
+                        padded = f"{int(i):03}"
+                    except ValueError:
+                        print(f"⚠️ Không thể chuyển '{i}' thành số nguyên.")
+                        return False
+                    arr_covert_text.append(padded)
+
+                arr_covert_text.append("ok")
+                s = ",".join(arr_covert_text[1:])
+                s = "cmd:"+s
+                return s
+            else:
+                print("❌ Không phải dữ liệu tọa độ (không bắt đầu bằng 'cmd:')")
+                return False
+            
+    @staticmethod
+    def wait_for_specific_data(obj_manager_serial, expected_message, timeout= 4):
+        """Hàm này chờ tín hiệu cụ thể từ obj_manager_serial.Chờ thời gian timeout giây.Sau thời gian chờ k được gửi về False.Nếu nhận đúng tín hiệu trả về True"""
+        print(f"⏳ Đang chờ tín hiệu:{expected_message} trong {timeout} giây...")
+        obj_manager_serial.clear_rx_queue()
+        obj_manager_serial.clear_tx_queue()
+        start_time = time.time()
+        expected = Logic.data_format(expected_message)
+        while time.time() - start_time < timeout:
+            data = obj_manager_serial.get_data_from_queue()
+            if data:
+                print(f"📥 PC Nhận được: {data}")
+                print("📥 Sau chuyển đổi :", expected)
+                if data.strip() == expected:
+                    now_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                    print(now_str,"✅ Nhận đúng tín hiệu mong đợi.")
+                    return True
+                else:
+                    print("⚠️ Tín hiệu nhận sai nội dung.")
+            time.sleep(0.001)  # 🔑 tránh CPU 100% + làm chương trình mượt hơn
+        print(f"❌ Timeout: Không nhận được tín hiệu trong {timeout} giây.")
+        return False
+    

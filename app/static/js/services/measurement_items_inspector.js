@@ -2,11 +2,13 @@ import { Measurement } from "../model/model_measurement.js";
 import * as draw from "../utills/draw.js";
 
 export class MeasurementItemsInspector {
+    static NAME = "measurement" 
     constructor() {
         this.arr_measure = [];
         this.polygons = []; //danh sach cac diem polygon
     }
     static fromDict(data) {
+        // console.log("adddata",data);
         const manager = new MeasurementItemsInspector();
         for (const [lineId, value] of Object.entries(data)) {
             const measurement = Measurement.fromDict(lineId, value);
@@ -18,6 +20,7 @@ export class MeasurementItemsInspector {
     getPolygons() {
         return this.polygons;
     }
+    
     setPolygons(polygons) {
         this.polygons = Array.isArray(polygons) ? polygons : [];
     }

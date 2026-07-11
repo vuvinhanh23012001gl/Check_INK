@@ -1,4 +1,9 @@
 __pycache__/
 venv-project-width-line/
 .vscode/
-
+model_air_bubble/
+model_patch_core/
+train17/
+train38/
+train42/
+unet_test_model_vien/

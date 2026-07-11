@@ -6,7 +6,7 @@ from app.config import CalibrationConfig
 from app.services import CalibrationService, ComService
 from app.services.camera import Camera
 from app.model import Calibration
-from app.engines.unet_plus import DeploymentUnetUnet
+from app.engines.AI_model_process import WeldMeamunetUnetService
 from app.model import Worker
 from app.config import (TypeSend,TypeDataSendClient)
   
@@ -25,22 +25,21 @@ class CalibSearchCoordinator:
         calibrationService: CalibrationService, 
         camera: Camera, 
         com: ComService, 
-        deloymentUnet: DeploymentUnetUnet, 
+        deloymentUnet: WeldMeamunetUnetService, 
         queue_send_log_client: Worker,queue_send_data_client:Worker
     ) -> None:
         """Khởi tạo tọa độ viên và cấu hình các dịch vụ liên quan.
-
         Args:
             calibrationService (CalibrationService): Dịch vụ quản lý dữ liệu calibration.
             camera (Camera): Dịch vụ điều khiển và chụp ảnh từ Camera.
             com (ComService): Dịch vụ truyền thông điều khiển cánh tay ARM.
-            deloymentUnet (DeploymentUnetUnet): Engine AI xử lý phân đoạn hình ảnh.
+            deloymentUnet (WeldMeamunetUnetService): Engine AI xử lý phân đoạn hình ảnh.
             queue_send_client (Worker): Tiến trình/hàng đợi gửi dữ liệu cho client.
         """
         self.calibrationService: CalibrationService = calibrationService
         self.camera: Camera = camera
         self.com: ComService = com
-        self.deloymentUnet: DeploymentUnetUnet = deloymentUnet
+        self.deloymentUnet: WeldMeamunetUnetService = deloymentUnet
         self.queue_send_log_client: Worker = queue_send_log_client
         self.queue_send_data_client: Worker = queue_send_data_client
 

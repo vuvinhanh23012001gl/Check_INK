@@ -21,7 +21,7 @@ from app.routers import (
 async def lifespan(fastapi_app: FastAPI):
     print("🚀 Đang khởi tạo tài nguyên...")
     fastapi_app.state.services = create_container()
-    pipeline =  Pipeline(fastapi_app.state.services)
+    _ =  Pipeline(fastapi_app.state.services)
     asyncio.create_task(log_sender(fastapi_app))
     yield 
     print("🛑 Đang dọn dẹp tài nguyên...")

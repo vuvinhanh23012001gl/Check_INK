@@ -134,21 +134,21 @@ export class Measurement {
                 };
             }
     
-    static fromDict(data) {
-            const lineId = Object.keys(data)[0];
-            const value = data[lineId];
-            return new Measurement(
-                lineId,
-                value.name_line ?? "",
-                value.level1 ?? 0,
-                value.level2 ?? 0,
-                value.level3 ?? 0,
-                value.level4 ?? 0,
-                value.level5 ?? 0,
-                value.xStart ?? 0,
-                value.yStart ?? 0,
-                value.xEnd ?? 0,
-                value.yEnd ?? 0
-            );
-    }
+            static fromDict(lineId, value) { // <-- Sửa nhận 2 tham số rõ ràng
+                // console.log("lineId",lineId);
+                // console.log("value",value);
+                return new Measurement(
+                    lineId,
+                    value.name_line ?? "",
+                    value.level1 ?? 0,
+                    value.level2 ?? 0,
+                    value.level3 ?? 0,
+                    value.level4 ?? 0,
+                    value.level5 ?? 0,
+                    value.xStart ?? 0,
+                    value.yStart ?? 0,
+                    value.xEnd ?? 0,
+                    value.yEnd ?? 0
+                );
+            }
 }

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from .path_config import PATH_FILE_UNET_DETECT
+from enum import StrEnum
+import torch
 
-
+# Unet
 @dataclass
 class UnetConfig:
     path:str = PATH_FILE_UNET_DETECT
@@ -18,6 +20,7 @@ class UnetConfig:
     epsilon_ratio: float = 0.0017   # Tỷ lệ dọc đứng nhiều điểm trên polygon 
 
 
+
 @dataclass
 class UnetCofigAutoDetectLineMaster:
     distance_between_points_center_point:int = 80 
@@ -27,4 +30,44 @@ class UnetCofigAutoDetectLineMaster:
     maximum_width_allowed:int = 300
     minimum_length_to_remove_line:int = 20
     length_extended_at_each_end:int = 20
-    
+
+
+
+@dataclass(slots=True)
+class YoloSegmentConfig:
+    """Cấu hình cho mô hình YOLO Segment."""
+    path_model: str 
+    device: str = "cpu"
+    image_size: int = 640
+    confidence: float = 0.25
+    iou: float = 0.45
+
+
+@dataclass(slots=True)
+class YoloDetectObjectConfig:
+    """Cấu hình cho mô hình YOLO Segment."""
+    path_model: str 
+    device: str = "cpu"
+    image_size: int = 640
+    confidence: float = 0.25
+    iou: float = 0.45
+
+
+@dataclass()
+class ClassNameObjectTargerDetectConfig(StrEnum):
+    HOLE = "hole"
+    COVER_ARM = "cover_arm"
+    SENSOR_ARM = "sensor_arm"
+    PIPE_SCRATCHES = "pipe_scratches"
+
+@dataclass()
+class ClassNameModelSurfaceConfig(StrEnum):
+    AIR_BUBBLE = "air_bubble"
+   
+@dataclass(slots=True)
+class PatchCoreAnomalyConfig:
+    index_path: str = "model/patchcore_ivf.index"
+    nprobe: int = 10
+    img_size: int = 256
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    overlay_alpha: float = 0.6  # Tỷ lệ ảnh gốc khi blend heatmap

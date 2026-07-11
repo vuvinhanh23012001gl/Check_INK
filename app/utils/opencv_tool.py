@@ -71,8 +71,8 @@ class Tool_OpenCv2:
             return np.zeros((height, width, 3), dtype=np.uint8)
         else:
             raise ValueError("channels chỉ hỗ trợ 1 hoặc 3")
-        
-    def show_img(self,img, win_name="Image", wait=0):
+    @staticmethod   
+    def show_img(img, win_name="Image", wait=0):
         cv2.imshow(win_name, img)
         cv2.waitKey(wait)
         cv2.destroyAllWindows()
@@ -112,3 +112,31 @@ class Tool_OpenCv2:
                 f"bytes_to_ndarray error: {e}"
             )
             return None
+        
+    def crop_image(image: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> tuple[np.ndarray, int, int]:
+        """Cắt ảnh theo hai điểm chéo.
+        Args:
+            image: Ảnh đầu vào.
+            x1: Góc trái trên X.
+            y1: Góc trái trên Y.
+            x2: Góc phải dưới X.
+            y2: Góc phải dưới Y.
+        Returns:
+            tuple[np.ndarray, int, int]: Ảnh crop, tọa độ left, top.
+        """
+        image_height, image_width = image.shape[:2]
+
+        left = max(0, min(x1, x2))
+        top = max(0, min(y1, y2))
+        right = min(image_width, max(x1, x2))
+        bottom = min(image_height, max(y1, y2))
+        if left >= right or top >= bottom:
+            raise ValueError(
+                "Vùng crop không hợp lệ."
+            )
+
+        return (
+            image[top:bottom, left:right],
+            left,
+            top
+        )

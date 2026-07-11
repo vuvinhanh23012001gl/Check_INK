@@ -95,7 +95,7 @@ class ManagerSerial:
                         self.serial_com.close_port()
                         self.close_thread_receive_and_send()
                     print("Cố gắng kết nối với COM ...")
-                    time.sleep(1)
+                    time.sleep(5)
                     continue
                 if (
                         not self.serial_com.ser

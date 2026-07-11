@@ -59,6 +59,9 @@ class ErrorCode(Enum):
     POINT_Z_INVALID = 6006
     IMAGE_NOT_FOUND = 7000
 
+    #law regulation
+    DATA_IS_NOT_CORRECT_FROMAT = 3001
+    DATA_NOT_FOUND = 3002
  
 ERROR_MESSAGE = {
     ErrorCode.IMAGE_NOT_FOUND:"[Thất bại] Không thể tìm thấy ảnh trong bộ nhớ.",
@@ -145,6 +148,10 @@ ERROR_MESSAGE = {
 
     ErrorCode.FRAME_NOT_FOUND:
     "[Lỗi] Frame này đang không tồn tại",
+
+    #law regulation
+    ErrorCode.DATA_IS_NOT_CORRECT_FROMAT : "Dữ liệu không đúng khung",
+    ErrorCode.DATA_NOT_FOUND : "Không tìm thấy ID yêu cầu",
 }
 
 # print(" ErrorCode.POINT_ALREADY_EXISTS", ErrorCode.POINT_ALREADY_EXISTS.name)

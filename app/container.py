@@ -9,7 +9,10 @@ from app.config import (
     UnetCofigAutoDetectLineMaster,
     UnetConfig,
 )
-from app.engines.unet_plus import DeploymentUnetUnet, InferenceUnet
+from app.engines.AI_model_process import WeldMeamunetUnetService
+from app.engines.model_AI import ModelUnet
+
+
 from app.inspection.calib_search_coordinator import CalibSearchCoordinator
 from app.model import QueueManager, Worker
 from app.repository import (
@@ -39,10 +42,9 @@ from app.validate import ValidateCaptureProduct
 
 
 class EnumMode(Enum):
-    MODE_DEAFAULT = auto()
-    MODE_JUDGEMENT = auto()
-    MODE_RUN_SERVICE = auto()
-    MODE_RUN_ONE_FRAME = auto()
+    MODE_PREPOCESS = auto()
+    MODE_TRANSFORM = auto()
+    MODE_EXPORT = auto()
 
 
 class ServiceContainer:
@@ -86,7 +88,7 @@ class ServiceContainer:
         # ---------------------------------------------------------
         # 2. CHẾ ĐỘ HOẠT ĐỘNG (MODES) & VALIDATE
         # ---------------------------------------------------------
-        self._mode = EnumMode.MODE_DEAFAULT
+        self._mode = EnumMode.MODE_PREPOCESS
         self._lock_mode = threading.Lock()
     
         print("...----------------------------------.Init Service...-----------------------------.")
@@ -176,8 +178,8 @@ class ServiceContainer:
         # ---------------------------------------------------------
         self.obj_unet_config_line_master = UnetCofigAutoDetectLineMaster()
         self.obj_unet_config = UnetConfig()
-        self.obj_infer_unet = InferenceUnet(self.obj_unet_config)
-        self.obj_deployment_Unet = DeploymentUnetUnet(
+        self.obj_infer_unet = ModelUnet(self.obj_unet_config)
+        self.obj_deployment_Unet = WeldMeamunetUnetService(
             self.obj_unet_config_line_master,
             self.obj_infer_unet
         )

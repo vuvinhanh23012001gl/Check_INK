@@ -1,12 +1,12 @@
 console.log("Vào file measure_weld_width");
 import {panner_measure_weld_width,obj_measure_weld_width_canvas,additional_events,
-    get_obj_product
+    get_obj_product,selected,
 } from "./common_value_tool.js"   
 
 
 
 
-import {MeasureWeldWidthCanvas} from "../canvas/measure_weld_width_canvas.js"
+import {LineDrawer} from "../canvas/line_drawer_canvas.js"
 import {Line} from "../model/model_line.js"
 import {scroll_container,canvasManager,WIDTH_IMG_SHAPE}from "../common_value.js"
 import {Measurement} from "../model/model_measurement.js"
@@ -18,11 +18,7 @@ let DEFAULT_VALUE_OF_LINE_SEGMENT_DISTANCE  = 20;   //Biến khoảng cách các
 let DEFAULT_VALUE_OF_ADDITIONAL_LENGTH =  20;       //Biến mặc định chiều dai đường line sẽ là 20px
 let imageWidth = 0;//Cai nay se thay doi khi nhan vao che do tu dong quy uoc    
 let obj_measurement_items_inspector = null;           // đối tượng Item vẽ hiện tại
-let selected = {      
-    product_id :-1,
-    frame_id:-1,
-    items_id:-1,
-}
+
 let line = new Line();   // đối tượng line vẽ hiện tại.
 
 const btnExitMeasureWeldWidth = document.getElementById("btnExitMeasureWeldWidth");
@@ -38,50 +34,38 @@ const bntJudment = document.getElementById("judment-img-item");
 
 
 additional_events.set("weld_width_tool", event_transition_items);
-obj_measure_weld_width_canvas.on(MeasureWeldWidthCanvas.NAME_EVENT_WHEN_CLICK_RIGHT_LINE,func_callback_click_mouse_right);
-obj_measure_weld_width_canvas.on(MeasureWeldWidthCanvas.NAME_EVENT_WHEN_CLICK_ON_LINE,func_callback_click_on_line_drawn);
-obj_measure_weld_width_canvas.on(MeasureWeldWidthCanvas.NAME_EVENT_WHEN_CLICK_ON_LINE_HAVE_AREALY,func_callback_click_on_line_have_aready);
-
-/**
- * Chuyển sang item được chọn và cập nhật hiển thị trên canvas.
- *
- * Chức năng:
- * - Cập nhật thông tin item đang được chọn.
- * - Lấy hoặc khởi tạo MeasurementItemsInspector của item.
- * - Vẽ lại các đường measurement.
- * - Nếu có polygon thì vẽ polygon lên canvas.Nếu không có thì không cần vẽ
- * - biến data được event truyền vào
- * @param {Object} data - Thông tin item được chọn.
- * @param {string|number} data.product_id - ID của sản phẩm.
- * @param {string|number} data.frame_id - ID của frame.
- * @param {string|number} data.items_id - ID của item. 
- *
- * @returns {void}
- */
+obj_measure_weld_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_RIGHT_LINE,func_callback_click_mouse_right);
+obj_measure_weld_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE,func_callback_click_on_line_drawn);
+obj_measure_weld_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE_HAVE_AREALY,func_callback_click_on_line_have_aready);
 
 
-function event_transition_items(data){
-    console.log("Event_measure_callback",data);
+
+
+function event_transition_items(){
     canvasManager.clearShapeCanvas();
-    console.log("data?.frame_id,",data?.frame_id,"data?.items_id",data?.items_id);
-    selected.product_id = data?.product_id;
-    selected.frame_id = data?.frame_id;
-    selected.items_id = data?.items_id;
-    obj_measurement_items_inspector = get_obj_product().find_item_object_corresponding(String(data?.frame_id),String(data?.items_id),ItemsInspector.TYPE_MEASUREMENT);
+    write_log_clear();
+    boxContentMeasureWeldWidth.innerHTML = "";
+   
+    obj_measurement_items_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_MEASUREMENT);
+    console.log("obj_measurement_items_inspector",obj_measurement_items_inspector);
+  
     if (!obj_measurement_items_inspector){
-        let obj_items_inspector = get_obj_product().get_item_object(String(data?.frame_id),String(data?.items_id));
+        let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
         obj_measurement_items_inspector =  new MeasurementItemsInspector();
         obj_items_inspector.setMeasurementItems(obj_measurement_items_inspector);
     }
+    obj_measure_weld_width_canvas.reset();
     obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
     let polygons = obj_measurement_items_inspector.getPolygons();
     if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}                   
 }
 
+
 /**
  * Đóng panel đo Weld Width.
  */
 btnExitMeasureWeldWidth.addEventListener("click",()=>{
+    canvasManager.setTool(null);//đặt canvas bằng null
     panner_measure_weld_width.classList.remove("active");
 });  
 
@@ -96,7 +80,7 @@ bntJudment.addEventListener("click",async ()=>{
     let status_selected =  checkSelected(selected);
     if (status_selected){
         write_log_clear("");
-        let result_judment = await postData("/law_regulation/judment_item",selected);
+        let result_judment = await postData("/law_regulation/measurement/judment_item",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;
@@ -224,7 +208,7 @@ function func_callback_click_mouse_right(data){
             obj_measurement_items_inspector.deleteLineByCoordinateAdvance(result_find_line?.xStart, result_find_line?.yStart, result_find_line?.xEnd, result_find_line?.yEnd);
             canvasManager.clearShapeCanvas();
             obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
-            console.log("Danh sách sau khi xóa:",obj_measurement_items_inspector.toDict());  
+            // console.log("Danh sách sau khi xóa:",obj_measurement_items_inspector.toDict());  
              
             let polygons = obj_measurement_items_inspector.getPolygons();
            if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
@@ -251,27 +235,28 @@ btnClearFrameMeasureWeldWidth.addEventListener("click",()=>{
 function func_callback_click_on_line_drawn(line_current){
     boxContentMeasureWeldWidth.innerHTML = ""; // reset html con
     // console.log("dict sau khi chuyen thanh de ve",obj_measurement_items_inspector.getAllDictLine());
-    console.log("line_current",line_current);
+    // console.log("line_current",line_current);
     line.xEnd =  Number(line_current?.xEnd);
     line.yEnd =  Number(line_current?.yEnd);
     line.xStart =  Number(line_current?.xStart);
     line.yStart =  Number(line_current?.yStart);   // setup cho line hiện tại
     let result_create_line_id_new = obj_measurement_items_inspector.findLineByCoordinate(line.xStart, line.yStart, line.xEnd,line.yEnd);
+    // console.log("result_create_line_id_new",result_create_line_id_new);
    // let result_create_line_id_new = obj_measurement_items_inspector.findLineByCoordinate(5001, 520, 30, 40); //ham test
     // console.log(result_create_line_id_new.status ? `Line đã tồn tại: ${JSON.stringify(result_create_line_id_new, null, 2)}` : `Line mới, ID mới là ${result_create_line_id_new.data}`);
     if (!result_create_line_id_new.status){
         boxContentMeasureWeldWidth.appendChild(createMeasureWeldWidthTable(result_create_line_id_new.data)); //result_create_line_id_new.data la id khi tao moi
-
+        // console.log("Line không tồn tại");
     }
     else{
         //result_create_line_id_new.data? cai nay la doi tuong
-        const measurementClone = { ...result_create_line_id_new.data };// TẠO BẢN SAO Ở ĐÂY
+        const measurementClone = {...result_create_line_id_new.data};// TẠO BẢN SAO Ở ĐÂY
+        // console.log("measurementClone",measurementClone);
         boxContentMeasureWeldWidth.appendChild(createMeasureWeldWidthTable(measurementClone.lineId,measurementClone));//result_create_line_id_new.data la id khi da co
+        //  console.log("Line tồn tại");
     }
         
 }
-
-
 
 
 function createMeasureWeldWidthTableNoName() {
@@ -317,6 +302,7 @@ function createMeasureWeldWidthTableNoName() {
     btnAccept.addEventListener("click", async () => {
             console.log("Bạn vừa nhấn tự động vẽ line phán định");
             write_log_clear();
+            boxContentMeasureWeldWidth.innerHTML = "";
             const elements_input  = inputRefs.map(inp => Number(inp.value || 0));
             console.log("Input hiện tại",elements_input[0],elements_input[1],elements_input[2],elements_input[3], elements_input[4],elements_input[5],elements_input[6]);
             console.log("Selected",selected);
@@ -350,11 +336,20 @@ function createMeasureWeldWidthTableNoName() {
                 loadingSetProgress(10,"Đang thực hiện ...");
                 let p = 0;
                 const timer = setInterval(()=>{if(p < 98){p += 5;loadingSetProgress(p);}},50);
-                let result_send_cmd_auto_regulation = await postData("/law_regulation/auto_create_line",data_send);
+                let result_send_cmd_auto_regulation = await postData("/law_regulation/measurement/auto_create_line",data_send);
+
+
+                //vẽ lại hoặc tẩy
+                obj_measurement_items_inspector =  new MeasurementItemsInspector();
+                let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
+                obj_items_inspector.setMeasurementItems(obj_measurement_items_inspector);
+                canvasManager.clearShapeCanvas();
+                obj_measurement_items_inspector.draw_multiple_lines(canvasManager);     
+
+
                 console.log("result_send_cmd_auto_regulation",result_send_cmd_auto_regulation);
                 let polygon = result_send_cmd_auto_regulation?.data?.polygon;
                 console.log("polygon",polygon);
-
                 clearInterval(timer);
                 loadingSetProgress(100,"Hoàn thành");
                 loadingHide();

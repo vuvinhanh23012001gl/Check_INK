@@ -1,34 +1,100 @@
-import {fetchGet} from "../utills/api.js"
+import {fetchGet, postData} from "../utills/api.js"
 import {scroll_container,canvasManager}from "../common_value.js"
 import {getValue} from "../utills/logic.js"
-import {panner_measure_weld_width,obj_measure_weld_width_canvas,
-    additional_events,set_obj_product} from "./common_value_tool.js"
+import {panner_measure_weld_width,panner_measure_slit_width,
+    obj_measure_weld_width_canvas,obj_measure_slit_width_canvas,obj_region_arm_sensor_canvas,panner_region_arm_sensor,
+    additional_events,set_obj_product,get_obj_product} from "./common_value_tool.js"
 import {Product} from "../model/model_product.js"
 import { ItemsInspector } from "../services/items_inspector.js"
+import {handleMeasurementSlit} from "./slit_tool.js"
 const panner_adjust_master = document.getElementById("panner-adjust-master");
 const header_adjust_master = document.getElementById("header-ul-li-adjustment-master");
 const btn_measure_weld_width = document.getElementById("btn-measure-weld-width");
+const btn_save_law_regulation = document.getElementById("btn-save-law-regulation");
+const btn_measurement_slit = document.getElementById("btn-measurement-slit");
+const btn_check_arm_sensor  = document.getElementById("btn-check-arm-sensor");
+
+
+
 
 let current_frame_box = null;
+// let has_clicked_tool = false; 
 let selected =  {
         product_id: -1,
         frame_id: -1,
         items_id: -1
 }
 
+let name_event_activate = null; //event khi nhấn vào các Items set thành loại tương
+
+btn_check_arm_sensor.addEventListener("click",()=>{
+    console.log("Bạn vừa nhấn vào nút check cảm biến sensor");
+    refreshPanels();
+    changeToolEvent(btn_check_arm_sensor, btn_check_arm_sensor.dataset.tool);
+    canvasManager.setTool(obj_region_arm_sensor_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_arm_sensor.classList.add("active");
+    // handleMeasurementSlit();
+});
+
+
+btn_measurement_slit.addEventListener("click",()=>{
+    // has_clicked_tool = true;  // đã click tool
+    refreshPanels();
+    changeToolEvent(btn_measurement_slit, btn_measurement_slit.dataset.tool);
+    console.log("Bạn vừa nhấn vào đo khoảng cách khe hàn");
+    canvasManager.setTool(obj_measure_slit_width_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_measure_slit_width.classList.add("active");
+    handleMeasurementSlit();
+});
 
 
 
 btn_measure_weld_width.addEventListener("click",()=>{
+    // has_clicked_tool = true; // đã click tool
+    changeToolEvent(btn_measure_weld_width, btn_measure_weld_width.dataset.tool);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
     console.log("--------Vào Tool nhận diện khoảng cách đường line-------");
+    refreshPanels();
     panner_measure_weld_width.classList.add("active");
-    btn_measure_weld_width.classList.add("active");
     canvasManager.setTool(obj_measure_weld_width_canvas);
-
-
-   
-
+    
 });
+
+function changeToolEvent(button, tool) {
+    refesh_btn();
+    name_event_activate = tool;
+    button.classList.add("active");
+}
+
+function refesh_btn(){
+    const buttons = document.querySelectorAll("#choose-tool button");
+    buttons.forEach((btn,index)=>{
+        // console.log("btn",btn);
+        btn.classList.remove("active");
+    });
+}
+
+btn_save_law_regulation.addEventListener("click",async ()=>{
+    console.log("Bạn vừa click vào lưu dữ liệu luật phán định");
+    let obj_product = get_obj_product();
+    let data_all = obj_product.toDict();
+    let status_send =  await postData("/law_regulation/save",data_all);  // gui truc tiep khong can kiem tra
+    console.log("data all :",data_all);
+ 
+});
+
+
+function refreshPanels() {
+    panner_adjust_master.querySelectorAll(".tool-content").forEach((panel) => {
+        panel.classList.remove("active");
+    });
+}
+
 
 header_adjust_master.addEventListener("click",async ()=>{
     console.log("--------Bạn đã nhấn vào thay đổi master--------");
@@ -45,20 +111,17 @@ header_adjust_master.addEventListener("click",async ()=>{
     let actual_hei_img = head_data_master?.data?.hei_img;
     create_img_items_dimesion_calibration(data_point);
     create_object_need(head_data_master?.data?.tree?.data);
-
 });
 
 function create_object_need(tree){
     // try {
+        console.log("tree",tree);
         const product = Product.fromDict(tree);
-        const product_json = JSON.stringify(tree);
+        console.log("tree ObJect",product);
+        // const product_json = JSON.stringify(tree);
         // console.log("product_json",product_json);
-        // console.log("product",product);
+        
         set_obj_product(product);
-    // }
-    // catch (err) {
-    //     console.error(err.message);
-    // }
 }
 
 
@@ -103,6 +166,7 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
     if(!frame_box){console.log("Lỗi hoặc không có sản phẩm");return;}
     frame_box.appendChild(img_item);
         img_item.addEventListener("click",()=>{
+            // if (!has_clicked_tool){return;}
             canvasManager.clearShapeCanvas();
             canvasManager.show_img_items(img_img);
             scroll_container.querySelectorAll(".box-frame").forEach(frame => {
@@ -127,7 +191,7 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
             selected.items_id = Number(img_item.dataset.id);  
             selected.frame_id = Number(frame_id);
             if (typeof additional_events.onFrameChange === "function") {
-                    additional_events.onFrameChange(selected.product_id ,selected.frame_id, selected.items_id,"weld_width_tool");
+                    additional_events.onFrameChange(selected.product_id ,selected.frame_id, selected.items_id,name_event_activate);
             }
             console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.items_id}`);
             return;

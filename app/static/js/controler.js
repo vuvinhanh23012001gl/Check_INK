@@ -7,6 +7,10 @@ import "./home.js";
 import "./dimetional_calibration.js";
 import "./tool/summary_tool.js";
 import "./tool/measure_weld_width_tool.js";
+import "./tool/slit_tool.js";
+import "./tool/arm_sensor_tool.js";
+
+
 
 
 

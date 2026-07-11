@@ -157,7 +157,6 @@ export class Product {
 }
 
 // ItemsInspector.TYPE_MEASUREMENT
-
 // import {ItemsInspector} from "../services/items_inspector.js";
 // import { Measurement } from "../model/model_measurement.js";
 // import {MeasurementItemsInspector} from "../services/measurement_items_inspector.js"

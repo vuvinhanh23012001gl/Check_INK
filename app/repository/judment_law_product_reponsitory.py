@@ -2,42 +2,81 @@ import json
 from pathlib import Path
 from app.config import PATH_FILE_DATA_CONFIG_JUDMENT_LAW
 
+
 class JudmentLawProductRepository:
+    """Repository quản lý dữ liệu Product -> Frame -> Item."""
+
     def __init__(self):
+        """Khởi tạo repository, tạo file nếu chưa có và nạp dữ liệu."""
         self.path = Path(PATH_FILE_DATA_CONFIG_JUDMENT_LAW)
         self._ensure_file_exists()
         self.data = self._load()
 
     def _ensure_file_exists(self) -> None:
+        """Tạo file JSON rỗng nếu chưa tồn tại."""
         if self.path.exists():
             return
-
         self.path.parent.mkdir(parents=True, exist_ok=True)
-
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump({}, f)
 
     def _load(self) -> dict:
+        """Đọc dữ liệu từ file JSON.
+        Returns:
+            dict: Dữ liệu.
+        """
         with open(self.path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def save(self) -> None:
+        """Lưu dữ liệu xuống file JSON."""
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump(self.data, f, ensure_ascii=False, indent=4)
 
     def exists(self, product_id: str, frame_id: str, item_id: str) -> bool:
+        """Kiểm tra Item có tồn tại.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+            item_id: ID Item.
+        Returns:
+            bool: True nếu tồn tại.
+        """
         return item_id in self.data.get(product_id, {}).get(frame_id, {})
 
     def get(self, product_id: str, frame_id: str, item_id: str) -> dict | None:
+        """Lấy dữ liệu Item.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+            item_id: ID Item.
+        Returns:
+            dict | None: Dữ liệu Item.
+        """
         return self.data.get(product_id, {}).get(frame_id, {}).get(item_id)
 
     def upsert(self, product_id: str, frame_id: str, item_id: str, item_data: dict) -> None:
+        """Thêm hoặc cập nhật Item.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+            item_id: ID Item.
+            item_data: Dữ liệu Item.
+        """
         self.data.setdefault(product_id, {})
         self.data[product_id].setdefault(frame_id, {})
         self.data[product_id][frame_id][item_id] = item_data
         self.save()
 
     def delete(self, product_id: str, frame_id: str, item_id: str) -> bool:
+        """Xóa Item.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+            item_id: ID Item.
+        Returns:
+            bool: True nếu xóa thành công.
+        """
         try:
             del self.data[product_id][frame_id][item_id]
             self.save()
@@ -46,44 +85,91 @@ class JudmentLawProductRepository:
             return False
 
     def get_product(self, product_id: str) -> dict:
+        """Lấy dữ liệu Product.
+        Args:
+            product_id: ID sản phẩm.
+        Returns:
+            dict: Dữ liệu Product.
+        """
         return self.data.get(product_id, {})
 
     def get_frame(self, product_id: str, frame_id: str) -> dict:
+        """Lấy dữ liệu Frame.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+        Returns:
+            dict: Dữ liệu Frame.
+        """
         return self.data.get(product_id, {}).get(frame_id, {})
 
     def get_product_ids(self) -> list[str]:
+        """Lấy danh sách Product ID.
+        Returns:
+            list[str]: Danh sách Product ID.
+        """
         return list(self.data.keys())
 
     def get_frame_ids(self, product_id: str) -> list[str]:
+        """Lấy danh sách Frame ID.
+        Args:
+            product_id: ID sản phẩm.
+        Returns:
+            list[str]: Danh sách Frame ID.
+        """
         return list(self.data.get(product_id, {}).keys())
 
     def get_item_ids(self, product_id: str, frame_id: str) -> list[str]:
+        """Lấy danh sách Item ID.
+        Args:
+            product_id: ID sản phẩm.
+            frame_id: ID Frame.
+        Returns:
+            list[str]: Danh sách Item ID.
+        """
         return list(self.data.get(product_id, {}).get(frame_id, {}).keys())
 
     def clear(self) -> None:
+        """Xóa toàn bộ dữ liệu."""
         self.data.clear()
         self.save()
 
-    # =========================
-    # NEW: import full dict
-    # =========================
     def load_from_dict(self, raw: dict, merge: bool = False) -> None:
-        """
-        Input: dict cây JSON
-        merge=False -> ghi đè toàn bộ
-        merge=True  -> merge vào dữ liệu cũ
+        """Nạp dữ liệu từ dict.
+
+        Args:
+            raw: Dữ liệu nguồn.
+            merge: True để gộp, False để ghi đè.
         """
         if not merge:
             self.data = raw
         else:
             self._deep_update(self.data, raw)
-
         self.save()
 
     def _deep_update(self, target: dict, source: dict) -> dict:
+        """Gộp đệ quy hai dict.
+        Args:
+            target: Dữ liệu đích.
+            source: Dữ liệu nguồn.
+        Returns:
+            dict: Dữ liệu sau khi cập nhật.
+        """
         for k, v in source.items():
             if isinstance(v, dict) and isinstance(target.get(k), dict):
                 self._deep_update(target[k], v)
             else:
                 target[k] = v
         return target
+    
+    def update_data(self, data: dict, merge: bool = False) -> None:
+        """Cập nhật dữ liệu repository.
+        Args:
+            data: Dữ liệu mới.
+            merge: True để gộp, False để ghi đè.
+        """
+        if merge:
+            self._deep_update(self.data, data)
+        else:
+            self.data = data
+        self.save()

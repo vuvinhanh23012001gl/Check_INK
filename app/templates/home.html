@@ -384,62 +384,7 @@
                 <div id ="panner-measure-weld-width" class = "tool-content">
                     <div id="log-measure-weld-width" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
-                    <div id="table-cof-tool-content-measure-weld-width"  class="table-cof-tool-content active">
-                        <!-- <table class="measure-weld-width-config-table">
-                            <tr class="config-row">
-                                <th class="config-label">Tên Line</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text">
-                                </td>
-                            </tr>
-                            <tr class="config-row">
-                                <th class="config-label">Level 1</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text"> 
-                                </td>
-                            </tr>
-
-                            <tr class="config-row">
-                                <th class="config-label">Level 2</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text">
-                                </td>
-                            </tr>
-
-                            <tr class="config-row">
-                                <th class="config-label">Level 3</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text">
-                                </td>
-                            </tr>
-                            <tr class="config-row">
-                                <th class="config-label">Level 4</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text">
-                                </td>
-                            </tr>
-                            <tr class="config-row">
-                                <th class="config-label">Level 5</th>
-                                <td class="config-value">
-                                    <input class="config-input" type="text">
-                                </td>
-                            </tr>
-                            <tr class="config-row">
-                                <th class="config-label">Kiểm tra bọt khí đường hàn</th>
-                                <td class="config-value">
-                                    <label class="switch" id="check-for-air-bubbles">
-                                        <input type="checkbox">
-                                        <span class="slider"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                        </table>
-
-                        BUTTONS nằm ngoài bảng -->
-                        <!-- <div class="config-actions">
-                            <button class="btn btn-accept">Chấp nhận</button>
-                            <button class="btn btn-clear">Xóa</button>
-                        </div> -->
+                    <div id="table-cof-tool-content-measure-weld-width"  class="table-cof-tool-content">
                     </div>
                     </div>
                     <div class="controler-tool">
@@ -461,15 +406,31 @@
                         </button>
                     </div>
                 </div>
-                <div class = "tool-content">
-                    <div class = "log-tool-content"></div>
+
+
+                <div id = "panner-measure-slit-width" class = "tool-content">
+                    <div id="log-slit-measure" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
-                        <div class ="table-cof-tool-content"> </div> 
-                        <div class ="table-show-data-tool-content"></div> 
+                        <div id="table-cof-tool-content-measure-slit-width" class ="table-cof-tool-content"> </div> 
                     </div>
                     <div class="controler-tool">
+                        <button id ="btn-judment-slit"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                            Phán định
+                        </button>
+                        <button  class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/eraser (5).png" alt="clear frame">
+                            Tẩy frame
+                        </button>
+                        <button class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
                     </div>
                 </div>
+
+
+
                 <div class = "tool-content">
                     <div class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
@@ -483,29 +444,40 @@
                     <div class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
                         <div class ="table-cof-tool-content"> </div> 
-                        <div class ="table-show-data-tool-content"></div> 
+                       
                     </div>
                     <div class="controler-tool">
                     </div>
                 </div>
-                <div class = "tool-content">
-                    <div class = "log-tool-content"></div>
+                <div id = "panner-region-arm-sensor" class = "tool-content">
+                    <div id = "log-arm-sensor" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
                         <div class ="table-cof-tool-content"> </div> 
-                        <div class ="table-show-data-tool-content"></div> 
                     </div>
                     <div class="controler-tool">
+                            <button id ="btn-judment-arm-sensor"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                            </button>
+                            <button  class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/eraser (5).png" alt="clear frame">
+                                Tẩy hình
+                            </button>
+                            <button class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
                     </div>
                 </div>
                 
                 <div class="fix-element">
                     <div id = "choose-tool">
-                        <button id ="btn-measure-weld-width"class="tool-btn">
+                        <button id ="btn-measure-weld-width"class="tool-btn" data-tool="weld_width_tool" >
                             <img src="../static/img/scale (1).png">
                             <span>Đo độ rộng <br>đường hàn</span>
                         </button>
 
-                        <button class="tool-btn">
+                        <button class="tool-btn" id = "btn-measurement-slit" data-tool="slit_width_tool">
                             <img src="../static/img/graphic-design.png">
                             <span>Đo khoảng <br> cách khe hàn</span>
                         </button>
@@ -518,7 +490,7 @@
                             <span>Kiểm tra <br>ARM cover</span>
                         </button>
 
-                        <button class="tool-btn">
+                        <button id ="btn-check-arm-sensor" class="tool-btn" data-tool="arm_sensor_tool" >
                             <img src="../static/img/investigation.png">
                             <span>Kiểm tra <br>ARM sensor</span>
                         </button>
@@ -552,7 +524,7 @@
 
                     </div>
                     <div id = "containner-control-master">
-                        <button>
+                        <button id = "btn-save-law-regulation">
                             <img src="../static/img/save_icon.png" alt="Lưu">
                             Lưu
                         </button>
