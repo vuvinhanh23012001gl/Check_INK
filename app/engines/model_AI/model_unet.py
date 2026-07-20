@@ -81,7 +81,7 @@ class ModelUnet(BaseAI):
         mask_raw = self.predict(img)   # Lấy mask
         mask_clean = self.clean_mask_opening(mask_raw,self.config.kernel) # Loc nhieu xung quanh, lam sach mask
         return mask_clean
-    
+ 
     def get_polygon(self,img, Approx_value, min_area:None|int):
         """Trích xuất tọa độ đa giác xấp xỉ của vùng đối tượng lớn nhất từ ảnh đầu vào.
         Args:
@@ -95,6 +95,7 @@ class ModelUnet(BaseAI):
         mask = self.get_mask(img)
         polygons = self.find_largest_external_polygon(mask, Approx_value ,min_area)
         return polygons
+    
     
     def draw_polygon(self, image, polygon, color=(0, 255, 0), thickness=2):
         """Vẽ đa giác xấp xỉ lên ảnh gốc.

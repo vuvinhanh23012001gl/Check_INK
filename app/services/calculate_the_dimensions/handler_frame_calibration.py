@@ -5,7 +5,7 @@
 # from pathlib import Path
 # from handler_model import ModelHandler
 # import config_detect
-# from app.storage.config import PATH_PRODUCT_MODEL
+# from app.storage.config import PATH_FILE_UNET_DETECT_WELD_LINE
 
 
 
@@ -312,7 +312,7 @@ class FrameHandlersCalibration:
 # img = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_2.jpg")
 # shape = (960,1280)
 
-# Model =  ModelHandler(PATH_PRODUCT_MODEL,config_detect.encoder,img_size= config_detect.img_size,threshold= config_detect.threshold)
+# Model =  ModelHandler(PATH_FILE_UNET_DETECT_WELD_LINE,config_detect.encoder,img_size= config_detect.img_size,threshold= config_detect.threshold)
 # mask  = Model.predict(img) # Loc nhieu ảnh
 # mask_clean = Model.clean_mask_opening(mask,config_detect.Kernel) # Loc nhieu xung quanh
 # polygon  = Model.find_largest_external_polygon(mask_clean,config_detect.epsilon_ratio,config_detect.min_area)

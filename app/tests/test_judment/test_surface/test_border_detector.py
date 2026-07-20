@@ -14,6 +14,7 @@ border = BorderDetector(obj_unet)
 # 1. Đọc ảnh đầu vào cần xử lý (Thay đường dẫn bằng ảnh thực tế của bạn)
 # Nếu chưa có ảnh thật, bạn có thể tạo ảnh dummy bằng lệnh: np.zeros((512, 512, 3), dtype=np.uint8)
 image_path = r"C:\Users\anhuv\Desktop\train\Unet_vien\6_7_2026_40_img\img\0_copy (13) - Copy.jpg"
+
 image = cv2.imread(image_path)
 
 if image is None:

@@ -6,7 +6,7 @@ from app.config import CalibrationConfig
 from app.services import CalibrationService, ComService
 from app.services.camera import Camera
 from app.model import Calibration
-from app.engines.AI_model_process import WeldMeamunetUnetService
+from app.engines.service import WeldMeamunetUnetService
 from app.model import Worker
 from app.config import (TypeSend,TypeDataSendClient)
   

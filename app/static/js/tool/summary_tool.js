@@ -2,23 +2,32 @@ import {fetchGet, postData} from "../utills/api.js"
 import {scroll_container,canvasManager}from "../common_value.js"
 import {getValue} from "../utills/logic.js"
 import {panner_measure_weld_width,panner_measure_slit_width,
-    obj_measure_weld_width_canvas,obj_measure_slit_width_canvas,obj_region_arm_sensor_canvas,panner_region_arm_sensor,
-    additional_events,set_obj_product,get_obj_product} from "./common_value_tool.js"
+    obj_measure_weld_width_canvas,obj_measure_slit_width_canvas,
+    obj_region_arm_sensor_canvas,panner_region_arm_sensor,obj_region_arm_cover_canvas,
+    panner_region_cover_sensor,additional_events,obj_measure_film_border_canvas,
+    panner_measure_border_film,panner_permeable_membrane,obj_region_permeable_membrane_canvas
+   ,set_obj_product,get_obj_product} from "./common_value_tool.js"
 import {Product} from "../model/model_product.js"
 import { ItemsInspector } from "../services/items_inspector.js"
 import {handleMeasurementSlit} from "./slit_tool.js"
+
+
+
+
 const panner_adjust_master = document.getElementById("panner-adjust-master");
 const header_adjust_master = document.getElementById("header-ul-li-adjustment-master");
 const btn_measure_weld_width = document.getElementById("btn-measure-weld-width");
 const btn_save_law_regulation = document.getElementById("btn-save-law-regulation");
 const btn_measurement_slit = document.getElementById("btn-measurement-slit");
 const btn_check_arm_sensor  = document.getElementById("btn-check-arm-sensor");
-
+const btn_check_arm_cover  = document.getElementById("btn-check-arm-cover");
+const btn_border_film      =  document.getElementById("btn-border-film");
+const btn_check_permeable_membrane = document.getElementById("btn-check-permeable-membrane");
 
 
 
 let current_frame_box = null;
-// let has_clicked_tool = false; 
+let has_clicked_tool = false; 
 let selected =  {
         product_id: -1,
         frame_id: -1,
@@ -28,6 +37,7 @@ let selected =  {
 let name_event_activate = null; //event khi nhấn vào các Items set thành loại tương
 
 btn_check_arm_sensor.addEventListener("click",()=>{
+    has_clicked_tool = true; // đã click tool
     console.log("Bạn vừa nhấn vào nút check cảm biến sensor");
     refreshPanels();
     changeToolEvent(btn_check_arm_sensor, btn_check_arm_sensor.dataset.tool);
@@ -35,12 +45,39 @@ btn_check_arm_sensor.addEventListener("click",()=>{
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_region_arm_sensor.classList.add("active");
-    // handleMeasurementSlit();
+
+});
+
+btn_check_permeable_membrane.addEventListener("click",()=>{
+    console.log("bạn vừa nhấn vào nút kiểm tra màng bán thấm");
+    has_clicked_tool = true; // đã click tool
+    refreshPanels();
+    changeToolEvent(btn_check_permeable_membrane, btn_check_permeable_membrane.dataset.tool);
+    canvasManager.setTool(obj_region_permeable_membrane_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_permeable_membrane.classList.add("active");
 });
 
 
+
+
+btn_check_arm_cover.addEventListener("click",()=>{
+    has_clicked_tool = true; 
+    console.log("Bạn vừa nhấn vào nút check cảm biến sensor");
+    refreshPanels();
+    changeToolEvent(btn_check_arm_cover, btn_check_arm_cover.dataset.tool);
+    canvasManager.setTool(obj_region_arm_cover_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_cover_sensor.classList.add("active");
+    
+});
+
+
+
 btn_measurement_slit.addEventListener("click",()=>{
-    // has_clicked_tool = true;  // đã click tool
+    has_clicked_tool = true;  // đã click tool
     refreshPanels();
     changeToolEvent(btn_measurement_slit, btn_measurement_slit.dataset.tool);
     console.log("Bạn vừa nhấn vào đo khoảng cách khe hàn");
@@ -51,10 +88,24 @@ btn_measurement_slit.addEventListener("click",()=>{
     handleMeasurementSlit();
 });
 
+btn_border_film.addEventListener("click",function(){
+    console.log("Bạn vừa nhấn vào đo khoảng cách mép film");
+    has_clicked_tool = true;  // đã click tool
+    refreshPanels();
+    changeToolEvent(btn_border_film, btn_border_film.dataset.tool);
+    console.log("Bạn vừa nhấn vào đo khoảng cách khe hàn");
+    canvasManager.setTool(obj_measure_film_border_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_measure_border_film.classList.add("active");
+     //handleMeasurementSlit();
+});
+
+
 
 
 btn_measure_weld_width.addEventListener("click",()=>{
-    // has_clicked_tool = true; // đã click tool
+    has_clicked_tool = true; // đã click tool
     changeToolEvent(btn_measure_weld_width, btn_measure_weld_width.dataset.tool);
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
@@ -166,7 +217,7 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
     if(!frame_box){console.log("Lỗi hoặc không có sản phẩm");return;}
     frame_box.appendChild(img_item);
         img_item.addEventListener("click",()=>{
-            // if (!has_clicked_tool){return;}
+            if (!has_clicked_tool){return;}
             canvasManager.clearShapeCanvas();
             canvasManager.show_img_items(img_img);
             scroll_container.querySelectorAll(".box-frame").forEach(frame => {

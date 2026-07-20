@@ -38,6 +38,8 @@ class ErrorCode(Enum):
 
     DATA_INVALID = 5050
     INVALID_INPUT = 5051
+
+    
     # =====================================
     # FRAME
     # =====================================
@@ -62,7 +64,18 @@ class ErrorCode(Enum):
     #law regulation
     DATA_IS_NOT_CORRECT_FROMAT = 3001
     DATA_NOT_FOUND = 3002
- 
+    
+    LABEL_NOT_FOUND = 8000
+    BOX_DATA_INVALID = 8100      # Thiếu trường trong box hoặc box sai định dạng
+    BOX_COORDINATE_INVALID = 8101 # Tọa độ x, y, width, height không hợp lệ
+    INVALID_TYPE = 8001
+    INVALID_FORMAT = 8002        # <-- THÊM MỚI: Định dạng JSON/Dict chung không đúng
+    MISSING_FIELD = 8003         # <-- THÊM MỚI: Thiếu trường bắt buộc trong dữ liệu
+    INVALID_VALUE = 8004
+
+
+
+
 ERROR_MESSAGE = {
     ErrorCode.IMAGE_NOT_FOUND:"[Thất bại] Không thể tìm thấy ảnh trong bộ nhớ.",
     # =====================================
@@ -152,6 +165,14 @@ ERROR_MESSAGE = {
     #law regulation
     ErrorCode.DATA_IS_NOT_CORRECT_FROMAT : "Dữ liệu không đúng khung",
     ErrorCode.DATA_NOT_FOUND : "Không tìm thấy ID yêu cầu",
+    ErrorCode.LABEL_NOT_FOUND:  "[Lỗi] Không tìm thấy label yêu cầu trong kết quả nhận diện.",
+
+    ErrorCode.BOX_DATA_INVALID: "[Lỗi] Thông tin vùng nhận diện (box) không hợp lệ hoặc thiếu trường bắt buộc",
+    ErrorCode.BOX_COORDINATE_INVALID: "[Lỗi] Tọa độ hoặc kích thước của vùng nhận diện (box) phải là số nguyên dương",
+    ErrorCode.INVALID_TYPE: "[Lỗi] Kiểu dữ liệu truyền vào không đúng định dạng số",
+    ErrorCode.INVALID_FORMAT: "[Lỗi] Cấu trúc hoặc định dạng dữ liệu gửi lên không đúng yêu cầu", # <-- THÊM MỚI
+    ErrorCode.MISSING_FIELD: "[Lỗi] Thiếu trường thông tin bắt buộc trong dữ liệu yêu cầu",         # <-- THÊM MỚI
+    ErrorCode.INVALID_VALUE: "[Lỗi] Giá trị dữ liệu không hợp lệ hoặc chưa được thiết lập (-1)",  # <-- THÊM MỚI
 }
 
 # print(" ErrorCode.POINT_ALREADY_EXISTS", ErrorCode.POINT_ALREADY_EXISTS.name)

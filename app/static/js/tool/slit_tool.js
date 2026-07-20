@@ -1,5 +1,5 @@
 import {scroll_container,canvasManager,WIDTH_IMG_SHAPE}from "../common_value.js"
-import {additional_events,obj_measure_slit_width_canvas,boxContentMeasureSlitWidth,get_obj_product,selected
+import {additional_events,obj_measure_slit_width_canvas,boxContentMeasureSlitWidth,get_obj_product,selected,checkSelected
 } from "./common_value_tool.js"   
 import {LineDrawer} from "../canvas/line_drawer_canvas.js"
 import {ModelSlit} from "../model/model_slit.js"
@@ -278,26 +278,3 @@ function write_log_append(text){
 }
 
 
-function checkSelected(selected) {
-    const checks = [
-        {
-            value: selected.product_id,
-            message: "❌Bạn chưa chọn sản phẩm\n"
-        },
-        {
-            value: selected.frame_id,
-            message: "❌Bạn chưa chọn Frame tương ứng\n"
-        },
-        {
-            value: selected.items_id,
-            message: "❌Bạn chưa chọn điểm tương ứng\n"
-        }
-    ];
-    for (const check of checks) {
-        if (check.value === -1) {
-            write_log_clear(check.message);
-            return false;
-        }
-    }
-    return true;
-}

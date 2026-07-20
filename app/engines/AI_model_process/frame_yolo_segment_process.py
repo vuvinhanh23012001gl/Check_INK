@@ -26,7 +26,7 @@ class FrameModelYoloSegment:
             x2,
             y2
         )
-        self.model.show(image_crop)
+        # self.model.show(image_crop)
         segments = self.model.get_result(
             image_crop
         )

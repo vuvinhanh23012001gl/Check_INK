@@ -140,3 +140,40 @@ class Tool_OpenCv2:
             left,
             top
         )
+    
+    @staticmethod
+    def convert_canvas_to_image(
+        x_start: int,
+        y_start: int,
+        x_end: int,
+        y_end: int,
+        canvas_width: int,
+        img,
+    ):
+        """
+        Chuyển tọa độ từ Canvas sang ảnh gốc.
+
+        Args:
+            x_start, y_start, x_end, y_end: tọa độ trên Canvas
+            canvas_width: chiều rộng Canvas hiển thị
+            img: ảnh gốc (cv2.imread)
+
+        Returns:
+            (x_start, y_start, x_end, y_end) trên ảnh gốc
+        """
+
+        img_height, img_width = img.shape[:2]
+
+        scale = img_width / canvas_width
+
+        x_start = int(round(x_start * scale))
+        y_start = int(round(y_start * scale))
+        x_end = int(round(x_end * scale))
+        y_end = int(round(y_end * scale))
+
+        x_start = max(0, min(x_start, img_width - 1))
+        x_end = max(0, min(x_end, img_width - 1))
+        y_start = max(0, min(y_start, img_height - 1))
+        y_end = max(0, min(y_end, img_height - 1))
+
+        return x_start, y_start, x_end, y_end

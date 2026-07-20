@@ -9,6 +9,10 @@ import "./tool/summary_tool.js";
 import "./tool/measure_weld_width_tool.js";
 import "./tool/slit_tool.js";
 import "./tool/arm_sensor_tool.js";
+import "./tool/arm_cover_tool.js";
+import "./tool/border_film_tool.js";
+import "./tool/permeable_membrane_tool.js";
+import "./tool/hole_tool.js";
 
 
 

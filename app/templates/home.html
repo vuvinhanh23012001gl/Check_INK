@@ -431,37 +431,88 @@
 
 
 
-                <div class = "tool-content">
-                    <div class = "log-tool-content"></div>
+                <div id = "panner-measure-border-film"   class = "tool-content">
+                    <div id = "log-border-film" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
-                        <div class ="table-cof-tool-content"> </div> 
-                        <div class ="table-show-data-tool-contenSSSt"></div> 
+                        <div id="table-cof-border-film" class ="table-cof-tool-content"> </div> 
                     </div>
                     <div class="controler-tool">
+                        <button id ="btn-judment-border-film"class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                        </button>
+                        <button  class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/eraser (5).png" alt="clear frame">
+                                Tẩy frame
+                        </button>
+                        <button class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                        </button>
                     </div>
                 </div>
-                <div class = "tool-content">
-                    <div class = "log-tool-content"></div>
+
+
+
+                <div id = "panner-region-cover-sensor" class = "tool-content">
+                    <div id = "log-arm-cover" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
-                        <div class ="table-cof-tool-content"> </div> 
+                        <div id="table-cof-arm-cover" class ="table-cof-tool-content"> </div> 
                        
                     </div>
                     <div class="controler-tool">
+                            <button id ="btn-judment-arm-cover"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                            </button>
+                            <button class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
                     </div>
                 </div>
                 <div id = "panner-region-arm-sensor" class = "tool-content">
                     <div id = "log-arm-sensor" class = "log-tool-content"></div>
                     <div class = "cof-and-inf-tool-content">
-                        <div class ="table-cof-tool-content"> </div> 
+                        <div id="table-cof-arm-sensor" class ="table-cof-tool-content"> </div> 
                     </div>
                     <div class="controler-tool">
                             <button id ="btn-judment-arm-sensor"class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="judment">
                                 Phán định
                             </button>
-                            <button  class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/eraser (5).png" alt="clear frame">
-                                Tẩy hình
+                            <button class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
+                    </div>
+                </div>
+
+                <div id = "panner-region-hole" class = "tool-content">  
+                    <div id = "log-hole" class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div id="table-cof-hole" class ="table-cof-tool-content"> </div> 
+                    </div>
+                    <div class="controler-tool">
+                            <button id ="btn-judment-hole"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                            </button>
+                            <button class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
+                    </div>
+                </div>
+                <div id = "panner-permeable-membrane" class = "tool-content">
+                    <div id = "log-permeable-membrane" class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div id="table-cof-permeable-membrane" class ="table-cof-tool-content"> </div> 
+                    </div>
+                    <div class="controler-tool">
+                            <button id ="btn-judment-permeable-membrane"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
                             </button>
                             <button class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
@@ -470,8 +521,8 @@
                     </div>
                 </div>
                 
-                <div class="fix-element">
-                    <div id = "choose-tool">
+                <div class="fix-element">  
+                    <div id = "choose-tool"> 
                         <button id ="btn-measure-weld-width"class="tool-btn" data-tool="weld_width_tool" >
                             <img src="../static/img/scale (1).png">
                             <span>Đo độ rộng <br>đường hàn</span>
@@ -481,11 +532,11 @@
                             <img src="../static/img/graphic-design.png">
                             <span>Đo khoảng <br> cách khe hàn</span>
                         </button>
-                        <button class="tool-btn">
+                        <button class="tool-btn" id = "btn-border-film" data-tool="border_film_tool">
                             <img src="../static/img/ruler_blue.png">
                             <span>Đo khoảng <br> cách mép film</span>
                         </button>
-                        <button class="tool-btn">
+                        <button id ="btn-check-arm-cover"  class="tool-btn"  data-tool="arm_cover_tool"  >
                             <img src="../static/img/loupe.png">
                             <span>Kiểm tra <br>ARM cover</span>
                         </button>
@@ -494,12 +545,12 @@
                             <img src="../static/img/investigation.png">
                             <span>Kiểm tra <br>ARM sensor</span>
                         </button>
-                        <button class="tool-btn">
+                        <button id = "btn-check-hole" class="tool-btn">
                             <img src="../static/img/hematology.png">
                             <span>Kiểm tra <br>lỗ thủng</span>
                         </button>
 
-                        <button class="tool-btn">
+                        <button id = "btn-check-permeable-membrane" class="tool-btn" data-tool="permeable-membrane_tool">
                             <img src="../static/img/digital (1).png">
                             <span>Kiểm tra màng <br> bán thấm</span>
                         </button>

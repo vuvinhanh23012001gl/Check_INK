@@ -15,7 +15,7 @@ PATH_PRODUCT_ROI_PRODUCT_IMG = str(BASE_PATH_STORAGE / "manager_product_roi_imag
 # 2. Các File (Đường dẫn tuyệt đối)
 PATH_PRODUCT_DATA = str(BASE_PATH_STORAGE / "products_data.json")
 PATH_PRODUCT_CHOOSE_PRODUCT = str(BASE_PATH_STORAGE / "choose_product_select.json")
-PATH_PRODUCT_MODEL = str(BASE_PATH_STORAGE / "unetpp.pth")
+# PATH_PRODUCT_MODEL = str(BASE_PATH_STORAGE / "unetpp.pth")
 PATH_FEATUERES_CFG_CAM = str(BASE_PATH_STORAGE / "features.cfg")
 PATH_INFORMATION_SOFTWARE = str(BASE_PATH_STORAGE / "information_software.json")
 PATH_CONFIG_SOFTWARE = str(BASE_PATH_STORAGE / "config_software.json")
@@ -32,9 +32,13 @@ PATH_FILE_DATA_CONFIG_IAI = str(BASE_PATH_STORAGE/"config"/"iai.json")
 PATH_FILE_DATA_CONFIG_COM = str(BASE_PATH_STORAGE/"config"/"COM.json")
 
 PATH_FILE_DATA_CONFIG_JUDMENT_LAW = str(BASE_PATH_STORAGE/"config_judgment_law.json")
-#Path File Unet
-PATH_FILE_UNET_DETECT = str(BASE_PATH_STORAGE/"unetpp.pth")
- 
 
+#Path File Unet
+PATH_FILE_UNET_DETECT_WELD_LINE = str(BASE_PATH_STORAGE/"model"/"unet"/"detect_weld_line.pth")
+PATH_FILE_UNET_DETECT_FILM_BORDER_LINE = str(BASE_PATH_STORAGE/"model"/"unet"/"detect_film_border_line.pth")
+
+PATH_FILE_MODEL_YOLO_STRUCTURE = str(BASE_PATH_STORAGE/"model"/"yolo"/"object_structure_detect.pt")
+PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER =  str(BASE_PATH_STORAGE/"model"/"yolo"/"segment_inner_permeable_membrane.pt")
+PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER =  str(BASE_PATH_STORAGE/"model"/"yolo"/"segment_border_permeable_membrane.pt")
 
 

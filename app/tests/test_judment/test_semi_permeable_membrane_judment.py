@@ -32,6 +32,21 @@ def test_semi_permeable_membrane_judment() -> None:
     print("=" * 60)
     print("Khởi tạo Model")
     print("=" * 60)
+    config_inner = YoloSegmentConfig(
+        path_model=r"C:\Disk D\Project\Python_Detect_Width_Line\code\app\app\storage\model\yolo\inner_permeable_membrane.pt",
+        device="cpu",
+        image_size=640,
+        confidence=0.5,
+        iou=0.5,
+    )
+
+    config_border = YoloSegmentConfig(
+        path_model=r"C:\Disk D\Project\Python_Detect_Width_Line\code\app\app\storage\model\yolo\border_permeable_membrane.pt",
+        device="cpu",
+        image_size=640,
+        confidence=0.5,
+        iou=0.5,
+    )
     model_inner = ModelYoloSegment(config_inner)  # tien hanh load model luon
     model_border = ModelYoloSegment(config_border)  # tien hanh load model luon
     print("Model loaded.\n")

@@ -9,7 +9,8 @@ class ModelYoloObject(BaseAI):
     def __init__(self,config:YoloDetectObjectConfig):
         self.config =  config
         self.model :YOLO|None =  None
-
+        self.load_model()
+        self.warmup()
     def load_model(self) -> None:
             """Load YOLO model."""
             if self.model is None:

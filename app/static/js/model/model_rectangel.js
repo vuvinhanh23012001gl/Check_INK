@@ -1,6 +1,6 @@
 export class ModelRectangle {
-    constructor(id = -1, name = "", xStart = -1, yStart = -1, xEnd = -1, yEnd = -1,type = "") {
-        this.type = type;    //cai nay rat quan trong the hien type cua tung cai goi 
+    constructor(id = -1, name = "", xStart = -1, yStart = -1, xEnd = -1, yEnd = -1) {
+    
 
         this.id = id;
         this.name = name;
@@ -44,4 +44,20 @@ export class ModelRectangle {
             data.yEnd
         );
     }
+    validate() {
+    const errors = [];
+
+    if (!this.name || this.name.trim() === "") {
+        errors.push({
+            field: "name",
+            rowName: "Tên hình",
+            currentVal: this.name,
+            expected: "Không được để trống"
+        });
+    }
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
 }

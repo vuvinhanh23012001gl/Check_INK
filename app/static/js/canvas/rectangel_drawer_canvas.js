@@ -82,7 +82,6 @@ export class RectangleDrawer {
      */
     onClick(pos, canvasManager) {
         this.emit(RectangleDrawer.NAME_EVENT_WHEN_CLICK_ON_RECT_HAVE_ALREADY, { x: pos.x, y: pos.y });
-
         if (this.have_return) {
             this.have_return = false;
             return;

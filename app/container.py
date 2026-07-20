@@ -9,7 +9,7 @@ from app.config import (
     UnetCofigAutoDetectLineMaster,
     UnetConfig,
 )
-from app.engines.AI_model_process import WeldMeamunetUnetService
+from app.engines.service import WeldMeamunetUnetService
 from app.engines.model_AI import ModelUnet
 
 
@@ -35,10 +35,25 @@ from app.services.camera import Camera
 from app.services.log import Config_SoftWare, Infor_Software
 from app.validate import ValidateCaptureProduct
 
+from app.config import (PATH_FILE_UNET_DETECT_WELD_LINE,
+                        PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,
+                        PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER,PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER)
+
+from app.config import YoloSegmentConfig
+from app.engines.model_AI import ModelYoloObject,ModelYoloSegment
+from app.engines.AI_model_process import FrameModelYoloObject
+from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig
+from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService
+from app.engines.AI_model_process import FrameModelYoloSegment
+
+
 # from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
 # from app.services.calculate_the_dimensions.handler_work_detect import HandlerWorkDetect
 # from app.services.calculate_the_dimensions.handler_work_detect import ImageQueueTester 
 # from app.services.product import ChooseProduct,ProductManager
+
+
+
 
 
 class EnumMode(Enum):
@@ -176,12 +191,43 @@ class ServiceContainer:
         # ---------------------------------------------------------
         # 5. KHỞI TẠO CÁC AI ENGINES & COORDINATOR
         # ---------------------------------------------------------
+        self.CLASS_STRUCTURE_NAME =  ClassNameObjectStructureDetectConfig # cai nay tham chieu den bien khong thay doi
+        self.obj_yolo_structure_config  = YoloDetectObjectConfig(path_model = PATH_FILE_MODEL_YOLO_STRUCTURE)
+        self.obj_model_yolo_structure = ModelYoloObject(self.obj_yolo_structure_config)
+        self.obj_frame_model_yolo_structure =  FrameModelYoloObject(self.obj_model_yolo_structure )
+        self.obj_structure_model_service =    StructureFrameYoloService(self.obj_frame_model_yolo_structure)
+   
+
+
+
+
+
+
+
+        # Cai nay tam thoi chua dung den
+        self.obj_unet_border_line_cofig= UnetConfig(path = PATH_FILE_UNET_DETECT_FILM_BORDER_LINE)
+        self.obj_unet_border_line_model = ModelUnet(self.obj_unet_border_line_cofig)
+        self.obj_unet_border_film_service =  BorderFilmUnetService(self.obj_unet_border_line_model)
+
+        
+        self.config_permeable_membrane_inner = YoloSegmentConfig(path_model= PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER)
+        self.config_permeable_membrane_border =  YoloSegmentConfig(path_model= PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER)
+       
+        self.model_permeable_membrane_inner  = ModelYoloSegment(self.config_permeable_membrane_inner)  # tien hanh load model luon
+        self.model_permeable_membrane_border = ModelYoloSegment(self.config_permeable_membrane_border )  # tien hanh load model luon
+        self.obj_frame_segment_inner_permeable_membrane = FrameModelYoloSegment(self.model_permeable_membrane_inner)
+        self.obj_frame_segment_border_permeable_membrane = FrameModelYoloSegment(self.model_permeable_membrane_border)
+        self.obj_judment_permeable_membrane_service = PermeableMembraneService(self.obj_frame_segment_border_permeable_membrane ,self.obj_frame_segment_inner_permeable_membrane)
+      
+
+
+
         self.obj_unet_config_line_master = UnetCofigAutoDetectLineMaster()
-        self.obj_unet_config = UnetConfig()
-        self.obj_infer_unet = ModelUnet(self.obj_unet_config)
+        self.obj_unet_weld_line_config = UnetConfig(path = PATH_FILE_UNET_DETECT_WELD_LINE)
+        self.obj_unet_weld_line_model = ModelUnet(self.obj_unet_weld_line_config)
         self.obj_deployment_Unet = WeldMeamunetUnetService(
             self.obj_unet_config_line_master,
-            self.obj_infer_unet
+            self.obj_unet_weld_line_model
         )
         
         self.obj_unet_calib_search_coordinator = CalibSearchCoordinator(
@@ -193,6 +239,10 @@ class ServiceContainer:
             queue_send_data_client=self.queue_data_send_client,
         )
 
+
+        # Phần AI detect
+        
+        
         # ---------------------------------------------------------
         # 6. TỰ ĐỘNG MỞ TRÌNH DUYỆT (UI)
         # ---------------------------------------------------------

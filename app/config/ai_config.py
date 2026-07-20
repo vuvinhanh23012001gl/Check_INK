@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from .path_config import PATH_FILE_UNET_DETECT
 from enum import StrEnum
 import torch
+
+
+
 
 # Unet
 @dataclass
 class UnetConfig:
-    path:str = PATH_FILE_UNET_DETECT
+    path:str = None
     threshold: float = 0.5
     encoder: str = "resnet34"
     encoder_weights :str ="imagenet"
@@ -52,13 +54,12 @@ class YoloDetectObjectConfig:
     confidence: float = 0.25
     iou: float = 0.45
 
-
-@dataclass()
-class ClassNameObjectTargerDetectConfig(StrEnum):
+# Không cho phép sửa lớp
+class ClassNameObjectStructureDetectConfig(StrEnum):
     HOLE = "hole"
     COVER_ARM = "cover_arm"
     SENSOR_ARM = "sensor_arm"
-    PIPE_SCRATCHES = "pipe_scratches"
+  
 
 @dataclass()
 class ClassNameModelSurfaceConfig(StrEnum):

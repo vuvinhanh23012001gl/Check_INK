@@ -3,7 +3,7 @@ import cv2
 import time
 import threading
 import statistics
-from app.config import PATH_PRODUCT_MODEL,PATH_CONFIG_CALIBRATION
+from app.config import PATH_FILE_UNET_DETECT_WELD_LINE,PATH_CONFIG_CALIBRATION
 from app.utils import Folder
 from app.core import Result,ErrorCode
 from app.services.calculate_the_dimensions.handler_model import ModelHandler
@@ -49,7 +49,7 @@ class HandlerCalibration:
         self.set_deafault = False # ben nay set deafault
         self.Init()
 
-        self.obj_ModelHandler = ModelHandler(PATH_PRODUCT_MODEL)
+        self.obj_ModelHandler = ModelHandler(PATH_FILE_UNET_DETECT_WELD_LINE)
         self.open_thread_calibration = True
         self._lock = threading.Lock()
         self._complete_work = 0

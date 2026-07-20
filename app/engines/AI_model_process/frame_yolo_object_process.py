@@ -130,54 +130,44 @@ class FrameModelYoloObject:
         image_draw = image.copy()
         cv2.rectangle(image_draw, (x1, y1), (x2, y2), color, thickness)
         return image_draw
-    def search(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, target_class_value: str) -> Tuple[bool, list[str]]:
-            """Cắt vùng ảnh, nhận diện, vẽ trực quan và đánh giá các điều kiện lỗi của một class chỉ định.
+    
+    
+    def search(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, target_class_value: str) -> Tuple[bool, list[str], np.ndarray, list[dict]]:
+        """Nhận diện và kiểm tra đối tượng của một class trong vùng ảnh chỉ định.
+        Args:
+            img (np.ndarray): Ảnh đầu vào.
+            x1 (int): Tọa độ X góc trên trái.
+            y1 (int): Tọa độ Y góc trên trái.
+            x2 (int): Tọa độ X góc dưới phải.
+            y2 (int): Tọa độ Y góc dưới phải.
+            target_class_value (str): Tên class cần kiểm tra.
 
-            Hàm này thực hiện nhận diện đối tượng (inference) trên vùng ảnh được cắt (crop). 
-            Kết quả trả về sẽ lọc riêng class cần kiểm tra, tiến hành vẽ bounding box lên ảnh 
-            và đánh giá theo 3 kịch bản lỗi hệ thống: thiếu linh kiện, dư linh kiện, hoặc linh 
-            kiện bị khuyết/chạm biên.
-            Args:
-                img (np.ndarray): Ảnh gốc đầu vào cần kiểm tra (mảng NumPy định dạng BGR/RGB).
-                x1 (int): Tọa độ X góc trái trên của vùng kiểm tra (vùng crop).
-                y1 (int): Tọa độ Y góc trái trên của vùng kiểm tra (vùng crop).
-                x2 (int): Tọa độ X góc phải dưới của vùng kiểm tra (vùng crop).
-                y2 (int): Tọa độ Y góc phải dưới của vùng kiểm tra (vùng crop).
-                target_class_value (str): Tên class mục tiêu cần lọc và đánh giá (Ví dụ: "hole").
-            Returns:
-                Tuple[bool, list[str], np.ndarray]:
-                    - bool: Trạng thái đánh giá tổng (True nếu ĐẠT CHUẨN/KHÔNG LỖI, False nếu CÓ LỖI).
-                    - list[str]: Danh sách các chuỗi tin nhắn thông báo lỗi phát hiện được, 
-                                hoặc thông báo thành công nếu kết quả kiểm tra đạt chuẩn.
-                    - np.ndarray: Ảnh kết quả sau xử lý. Trả về ảnh gốc chưa vẽ nếu gặp lỗi thiếu linh kiện, 
-                                hoặc ảnh đã vẽ bounding box của class mục tiêu cho các trường hợp còn lại.
-            """    
-            messages = []
-            # 1. Lấy tất cả các đối tượng trong vùng crop
-            all_objects = self.get_objects(img, x1, y1, x2, y2)
-            # 2. Lọc ra danh sách CHỈ chứa class_name mục tiêu
-            filtered_objects, _ = self.filter_objects_by_class_name(all_objects, target_class_value)
-            # 3. Tiến hành vẽ riêng các đối tượng đã lọc lên ảnh
-            img_visualized = self.draw_rectangle(img ,x1, y1, x2, y2)
-            img_visualized = self.draw(img_visualized, filtered_objects)
-            # 4. Chỉ hiển thị kết quả ảnh đã vẽ ra màn hình
-            # self.show(img_visualized)
-            # --- Các bước logic kiểm tra lỗi ---
-            # LỖI 1: Không tìm thấy đối tượng nào (Thiếu linh kiện)
-            if not filtered_objects:
-                messages.append(f"LỖI: Không tìm thấy đối tượng '{target_class_value}' nào trong vùng kiểm tra.")
-                return False, messages,img
-            # LỖI 2: Vượt quá giới hạn số lượng (Dư linh kiện)
-            if isinstance(self.limit_number_object, int) and len(filtered_objects) > self.limit_number_object:
-                messages.append(f"LỖI: Số lượng đối tượng '{target_class_value}' vượt giới hạn cho phép (Phát hiện: {len(filtered_objects)}/{self.limit_number_object}).")   
-            # LỖI 3: Kiểm tra xem có đối tượng nào bị chạm biên ảnh hay không (Lỗi khuyết hình)
-            for idx, obj in enumerate(filtered_objects):
-                if obj.get("touch_x", False) or obj.get("touch_y", False):
-                    messages.append(f"LỖI: Đối tượng '{target_class_value}' thứ {idx + 1} bị chạm biên ảnh (Có thể bị che khuất hoặc cắt một nửa).")
-            if len(messages) > 0:
-                return False, messages,img_visualized 
-            success_msg = f"OK: Thiết bị đạt chuẩn. Phát hiện thành công {len(filtered_objects)} đối tượng '{target_class_value}' hợp lệ."
-            return True, [success_msg],img_visualized
+        Returns:
+            Tuple[bool, list[str], np.ndarray, list[dict]]:
+                - bool: True nếu đạt yêu cầu, False nếu phát hiện lỗi.
+                - list[str]: Danh sách thông báo.
+                - np.ndarray: Ảnh kết quả.
+                - list[dict]: Danh sách đối tượng sau khi lọc.
+        """
+        messages = []
+        objects = self.get_objects(img, x1, y1, x2, y2)
+        filtered_objects, _ = self.filter_objects_by_class_name(objects, target_class_value)
+        img_result = self.draw_rectangle(img, x1, y1, x2, y2)
+        img_result = self.draw(img_result, filtered_objects)
+        if not filtered_objects:
+            messages.append(f"LỖI: Không tìm thấy đối tượng '{target_class_value}'.")
+            return False, messages, img, []
+        if isinstance(self.limit_number_object, int) and len(filtered_objects) > self.limit_number_object:
+            messages.append(f"LỖI: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}', vượt giới hạn {self.limit_number_object}.")
+        for index, obj in enumerate(filtered_objects, start=1):
+            if obj.get("touch_x") or obj.get("touch_y"):
+                messages.append(f"LỖI: Đối tượng '{target_class_value}' thứ {index} bị chạm biên ảnh.")
+        if messages:
+            return False, messages, img_result, filtered_objects
+        messages.append(f"OK: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}' hợp lệ.")
+        return True, messages, img_result, filtered_objects
+    
+
     
     def search_negative(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, target_class_value: str) -> Tuple[bool, list[str], np.ndarray]: # ham nay nguoc voi ham search
         """Kiểm tra xem vùng chỉ định có SẠCH/TRỐNG (không chứa vật thể mục tiêu) hay không.
