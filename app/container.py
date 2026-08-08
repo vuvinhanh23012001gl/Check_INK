@@ -36,14 +36,14 @@ from app.services.log import Config_SoftWare, Infor_Software
 from app.validate import ValidateCaptureProduct
 
 from app.config import (PATH_FILE_UNET_DETECT_WELD_LINE,
-                        PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,
+                        PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,PATH_FILE_MODEL_YOLO_SURFACE,
                         PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER,PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER)
 
 from app.config import YoloSegmentConfig
 from app.engines.model_AI import ModelYoloObject,ModelYoloSegment
 from app.engines.AI_model_process import FrameModelYoloObject
-from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig
-from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService
+from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig,ClassNameModelSurfaceConfig
+from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService,SurfaceFrameYoloService
 from app.engines.AI_model_process import FrameModelYoloSegment
 
 
@@ -196,11 +196,14 @@ class ServiceContainer:
         self.obj_model_yolo_structure = ModelYoloObject(self.obj_yolo_structure_config)
         self.obj_frame_model_yolo_structure =  FrameModelYoloObject(self.obj_model_yolo_structure )
         self.obj_structure_model_service =    StructureFrameYoloService(self.obj_frame_model_yolo_structure)
+
    
-
-
-
-
+        self.CLASS_SURFACE_NAME =  ClassNameModelSurfaceConfig # cai nay tham chieu den bien khong thay doi
+        self.obj_yolo_surface_config  = YoloDetectObjectConfig(path_model = PATH_FILE_MODEL_YOLO_SURFACE)
+        self.obj_model_yolo_surface = ModelYoloObject(self.obj_yolo_surface_config)   
+        self.obj_frame_model_yolo_surface = FrameModelYoloObject(self.obj_model_yolo_surface)
+        self.obj_surface_model_service = SurfaceFrameYoloService(self.obj_frame_model_yolo_surface)
+ 
 
 
 

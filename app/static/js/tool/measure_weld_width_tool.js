@@ -1,9 +1,7 @@
 console.log("Vào file measure_weld_width");
 import {panner_measure_weld_width,obj_measure_weld_width_canvas,additional_events,
-    get_obj_product,selected,
+    get_obj_product,selected,create_obj_cross_item,write_log_clear,write_log_append,refesh_btn,setNameEventActivate
 } from "./common_value_tool.js"   
-
-
 
 
 import {LineDrawer} from "../canvas/line_drawer_canvas.js"
@@ -14,11 +12,10 @@ import {ItemsInspector} from "../services/items_inspector.js"
 import {MeasurementItemsInspector} from "../services/measurement_items_inspector.js"
 import {postData} from "../utills/api.js";
  
+
 let DEFAULT_VALUE_OF_LINE_SEGMENT_DISTANCE  = 20;   //Biến khoảng cách các đường line khi nhấn auto
 let DEFAULT_VALUE_OF_ADDITIONAL_LENGTH =  20;       //Biến mặc định chiều dai đường line sẽ là 20px
-let imageWidth = 0;//Cai nay se thay doi khi nhan vao che do tu dong quy uoc    
-let obj_measurement_items_inspector = null;           // đối tượng Item vẽ hiện tại
-
+let imageWidth = 0; //Cai nay se thay doi khi nhan vao che do tu dong quy uoc    
 let line = new Line();   // đối tượng line vẽ hiện tại.
 
 const btnExitMeasureWeldWidth = document.getElementById("btnExitMeasureWeldWidth");
@@ -39,25 +36,18 @@ obj_measure_weld_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE,func_c
 obj_measure_weld_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE_HAVE_AREALY,func_callback_click_on_line_have_aready);
 
 
-
-
-function event_transition_items(){
+export function event_transition_items(){
     canvasManager.clearShapeCanvas();
-    write_log_clear();
+    get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_MEASUREMENT,"arr_measure");  
+    write_log_clear(txtBoxLog,"");
     boxContentMeasureWeldWidth.innerHTML = "";
-   
-    obj_measurement_items_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_MEASUREMENT);
-    console.log("obj_measurement_items_inspector",obj_measurement_items_inspector);
-  
-    if (!obj_measurement_items_inspector){
-        let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
-        obj_measurement_items_inspector =  new MeasurementItemsInspector();
-        obj_items_inspector.setMeasurementItems(obj_measurement_items_inspector);
-    }
+    if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){write_log_clear(txtBoxLog,"Hãy chọn những tấm ảnh cần vẽ");return;};
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     obj_measure_weld_width_canvas.reset();
     obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
     let polygons = obj_measurement_items_inspector.getPolygons();
-    if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}                   
+    if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}    
+    
 }
 
 
@@ -65,8 +55,14 @@ function event_transition_items(){
  * Đóng panel đo Weld Width.
  */
 btnExitMeasureWeldWidth.addEventListener("click",()=>{
+    canvasManager.clearShapeCanvas();
+    canvasManager.clearPreviewCanvas();
     canvasManager.setTool(null);//đặt canvas bằng null
+    boxContentMeasureWeldWidth.innerHTML = "";
     panner_measure_weld_width.classList.remove("active");
+    refesh_btn();
+    get_obj_product().clearHighlight(scroll_container);
+    setNameEventActivate(null);
 });  
 
 
@@ -78,26 +74,27 @@ btnExitMeasureWeldWidth.addEventListener("click",()=>{
 
 bntJudment.addEventListener("click",async ()=>{
     let status_selected =  checkSelected(selected);
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     if (status_selected){
-        write_log_clear("");
+        write_log_clear(txtBoxLog,"");
         let result_judment = await postData("/law_regulation/measurement/judment_item",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;
         if (!status_judment){
-            write_log_clear(message_judment);return;
+            write_log_clear(txtBoxLog,message_judment);return;
         }
         let width_judment =  result_judment?.data?.width;
         let polygon_judment =  result_judment?.data?.polygon;
         if (width_judment!= undefined &&  polygon_judment!=undefined){
+            console.log("polygonne",polygon_judment);
             obj_measurement_items_inspector.setPolygons(polygon_judment);
-            imageWidth = width_judment;// 2 biến chỗ này bằng giá trị của nhau 
-            console.log("imageWidth",imageWidth);
+       
+            imageWidth = width_judment;
             obj_measurement_items_inspector.drawPolygons(canvasManager,polygon_judment,width_judment,WIDTH_IMG_SHAPE);
         }
     }
 })
-
 
 
 
@@ -175,6 +172,7 @@ function parseApiToMeasurements(
  */
 
 function func_callback_click_on_line_have_aready(coordinate_now){
+  let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
   let coordinate_now_x = coordinate_now?.x;
   let coordinate_now_y = coordinate_now?.y;
   let result_find_line  = obj_measurement_items_inspector.findClickedLine(coordinate_now_x,coordinate_now_y);
@@ -201,6 +199,7 @@ function func_callback_click_on_line_have_aready(coordinate_now){
  */
 
 function func_callback_click_mouse_right(data){
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     let result_find_line  = obj_measurement_items_inspector.findClickedLine(data.x,data.y);
     if (result_find_line||data.status_check_point_in_line_current){
             obj_measure_weld_width_canvas.is_available_one_line = false;  // moi them
@@ -209,7 +208,7 @@ function func_callback_click_mouse_right(data){
             canvasManager.clearShapeCanvas();
             obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
             // console.log("Danh sách sau khi xóa:",obj_measurement_items_inspector.toDict());  
-             
+            get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_MEASUREMENT,"arr_measure");  
             let polygons = obj_measurement_items_inspector.getPolygons();
            if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
 
@@ -224,15 +223,20 @@ btnAutoRule.addEventListener("click", async () => {
 
 
 btnClearFrameMeasureWeldWidth.addEventListener("click",()=>{
-    obj_measurement_items_inspector =  new MeasurementItemsInspector();
-    let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
-    obj_items_inspector.setMeasurementItems(obj_measurement_items_inspector);
+    console.log("Nhấn vào tẩy Frame");
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
+    obj_measurement_items_inspector.clearAll();
     canvasManager.clearShapeCanvas();
+    boxContentMeasureWeldWidth.innerHTML = ""; // reset html con
     obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
+    let polygons = obj_measurement_items_inspector.getPolygons();
+    get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_MEASUREMENT,"arr_measure");  
+    if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
 });
 
 
 function func_callback_click_on_line_drawn(line_current){
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     boxContentMeasureWeldWidth.innerHTML = ""; // reset html con
     // console.log("dict sau khi chuyen thanh de ve",obj_measurement_items_inspector.getAllDictLine());
     // console.log("line_current",line_current);
@@ -260,6 +264,7 @@ function func_callback_click_on_line_drawn(line_current){
 
 
 function createMeasureWeldWidthTableNoName() {
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     const wrapper = document.createElement("div");
     const table = document.createElement("table");
     table.className = "measure-weld-width-config-table";
@@ -301,7 +306,7 @@ function createMeasureWeldWidthTableNoName() {
     btnAccept.textContent = "Chấp nhận";
     btnAccept.addEventListener("click", async () => {
             console.log("Bạn vừa nhấn tự động vẽ line phán định");
-            write_log_clear();
+            write_log_clear(txtBoxLog,"");
             boxContentMeasureWeldWidth.innerHTML = "";
             const elements_input  = inputRefs.map(inp => Number(inp.value || 0));
             console.log("Input hiện tại",elements_input[0],elements_input[1],elements_input[2],elements_input[3], elements_input[4],elements_input[5],elements_input[6]);
@@ -363,18 +368,21 @@ function createMeasureWeldWidthTableNoName() {
                 let message_extend =  result_extend?.message;
                 console.log("Trạng thái extend",status_extend,"message:",message_extend);
                 canvasManager.clearShapeCanvas();
+                 
+     
                 obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
-                if (polygon){
+                if (polygon && obj_measurement_items_inspector.getPolygonCount()!=0){
                     imageWidth =  result_send_cmd_auto_regulation?.data?.width;
                     obj_measurement_items_inspector.setPolygons(polygon);
                     obj_measurement_items_inspector.drawPolygons(canvasManager,polygon,imageWidth,WIDTH_IMG_SHAPE);}
+                    get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_MEASUREMENT,"arr_measure");  
             } else {
                 let alertMessage = "❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n\n";
-                write_log_clear(alertMessage);
+                write_log_clear(txtBoxLog,alertMessage);
                 result_validate.errors.forEach(err => {
-                    write_log_append(`📍 Dòng lỗi: [${err.level}]`);
-                    write_log_append(` - Giá trị hiện tại: ${err.currentVal}`);
-                    write_log_append(` - Yêu cầu: ${err.message}`);
+                    write_log_append(txtBoxLog,`📍 Dòng lỗi: [${err.level}]`);
+                    write_log_append(txtBoxLog,` - Giá trị hiện tại: ${err.currentVal}`);
+                    write_log_append(txtBoxLog,` - Yêu cầu: ${err.message}`);
                 });
             }
     });
@@ -411,7 +419,7 @@ function checkSelected(selected) {
     ];
     for (const check of checks) {
         if (check.value === -1) {
-            write_log_clear(check.message);
+            write_log_clear(txtBoxLog,check.message);
             return false;
         }
     }
@@ -420,6 +428,7 @@ function checkSelected(selected) {
 
 
 function createMeasureWeldWidthTable(id_line,data_line) {
+    let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     const existed = document.getElementById(
         `measure-weld-width-wrapper-${id_line}`
     );
@@ -517,22 +526,23 @@ function createMeasureWeldWidthTable(id_line,data_line) {
         if (result_validate_probationarier.isValid){
             obj_measurement_items_inspector.addMeasurementAdvance(obj_probationary);
             console.log("[MeasurementItemsInspector Measurement] Kết quả sau khi thêm Line mới:",obj_measurement_items_inspector.toDict());
-            write_log_clear("✅Dữ liệu hợp lệ.");
+            write_log_clear(txtBoxLog,"✅Dữ liệu hợp lệ.");
             wrapper.innerHTML = "";
             obj_measure_weld_width_canvas.is_available_one_line  = false;
             obj_measure_weld_width_canvas.reset();
             canvasManager.clearShapeCanvas();
             obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
+            get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_MEASUREMENT,"arr_measure");  
             let polygons = obj_measurement_items_inspector.getPolygons();
             if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
         }
         else{
             let alertMessage = "❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n\n";
-            write_log_clear(alertMessage);
+            write_log_clear(txtBoxLog,alertMessage);
             result_validate_probationarier.errors.forEach(err => {
-                write_log_append (`📍 Dòng lỗi: [${err.rowName}]`);
-                write_log_append (` - Giá trị hiện tại: ${err.currentVal}`);
-                write_log_append (` - Yêu cầu nên là: ${err.expected}`);  
+                write_log_append(txtBoxLog,`📍 Dòng lỗi: [${err.rowName}]`);
+                write_log_append(txtBoxLog,` - Giá trị hiện tại: ${err.currentVal}`);
+                write_log_append(txtBoxLog,` - Yêu cầu nên là: ${err.expected}`);  
             });
              
         }
@@ -597,14 +607,8 @@ function validateWeldLevelsIncreasing(id_line) {
 
 
 
-function write_log_clear(text){
-    txtBoxLog.textContent = text;
-}
 
-function write_log_append(text){
-    txtBoxLog.style.whiteSpace = "pre-line"; 
-    txtBoxLog.textContent += text + "\n";
-}
+
 
 function validateAutoCreateLine(data,intKeys,levelKeys) {
     

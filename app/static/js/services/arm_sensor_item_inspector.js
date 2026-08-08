@@ -1,13 +1,14 @@
-import { ModelRectangle } from '../model/model_rectangel.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
+
+import { ModelRectangle } from '../model/model_rectangle.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
 import * as draw from "../utills/draw.js";
 
 export class ArmSensorItemInspector {
-    static NAME = "ArmSensor";
-
-    constructor() {
+    static NAME = "ArmSensorInspector";
+    
+    constructor(rectangle = null, boxs = []) {
         // Thay đổi từ mảng thành một đối tượng duy nhất (mặc định là null)
-        this.rectangle = null;
-        this.boxs = []; // Danh sách các điểm polygon bổ trợ
+        this.rectangle = rectangle;
+        this.boxs = boxs; // Danh sách các điểm polygon bổ trợ
     }
 
     /**
@@ -30,7 +31,7 @@ export class ArmSensorItemInspector {
                 this.boxs.push(boxes);
             }
         }
-    /**
+    /**Ư
      * Thiết lập/Cập nhật đối tượng ModelRectangle duy nhất
      * @param {ModelRectangle} modelRect 
      * @returns {boolean}
@@ -60,6 +61,7 @@ export class ArmSensorItemInspector {
         if (this.rectangle) {
             this.rectangle = null;
             return true;
+            this.removeBoxs();
         }
         return false;
     }
@@ -122,27 +124,21 @@ export class ArmSensorItemInspector {
      * Xuất đối tượng hiện tại thành cấu trúc Object Dict tổng hợp
      */
     toDict() {
-        if (!this.rectangle) return {};
+        if (!this.rectangle) return null;;
         return this.rectangle.toDict();
     }
 
     /**
      * Nạp dữ liệu từ một Object Dict tổng hợp vào đối tượng duy nhất
      */
-    fromDict(fullDict) {
-        if (!fullDict || typeof fullDict !== 'object') return;
-        this.rectangle = null;
-
-        const keys = Object.keys(fullDict);
-        if (keys.length > 0) {
-            const firstId = keys[0];
-            const singleRectDict = { [firstId]: fullDict[firstId] };
-            const rectInstance = ModelRectangle.fromDict(singleRectDict);
-            
-            if (rectInstance) {
-                this.rectangle = rectInstance;
-            }
+    static fromDict(fullDict) {
+        if (!fullDict){
+            console.log("Tạo mới");
+            return new ArmSensorItemInspector();
         }
+        let model_rectangle = ModelRectangle.fromDict(fullDict);
+        console.log("Tạo lớp ARM cover");
+        return new ArmSensorItemInspector(model_rectangle);
     }
 
     /**
@@ -218,72 +214,67 @@ export class ArmSensorItemInspector {
         ctx.restore();
     }
     /**
-         * Vẽ đối tượng đã nhận diện được lên Canvas dựa trên đối tượng detectData đã gom nhóm
+         * Vẽ toàn bộ danh sách các đối tượng đã nhận diện trong `this.boxs` lên Canvas
          * @param {CanvasManager} canvasManager - Đối tượng quản lý Canvas vẽ
-         * @param {Object} detectData - Object chứa đầy đủ thông tin đối tượng nhận diện
-         * @param {number} detectData.x1 - Tọa độ x1 gốc từ ảnh thực tế
-         * @param {number} detectData.y1 - Tọa độ y1 gốc từ ảnh thực tế
-         * @param {number} detectData.x2 - Tọa độ x2 gốc từ ảnh thực tế
-         * @param {number} detectData.y2 - Tọa độ y2 gốc từ ảnh thực tế
-         * @param {string} detectData.className - Tên nhãn lớp của đối tượng (obj.class_name)
-         * @param {number} detectData.confidence - Độ tự tin từ 0 -> 1 (obj.confidence)
-         * @param {number} detectData.imgWidthReal - Chiều rộng thực của bức ảnh gốc
-         * @param {number} detectData.canvasWidth - Chiều rộng hiện tại của Canvas (WIDTH_IMG_SHAPE)
-         * @param {number|string} [detectData.classId=99] - ID class của đối tượng (obj.class_id)
          * @param {string} [color="#FF3B30"] - Màu sắc của nét vẽ khung (mặc định đỏ)
          * @param {number} [fontSize=12] - Cỡ chữ của nhãn (mặc định 12)
          */
-        drawDetectedObject(canvasManager, detectData, color = "#FF3B30", fontSize = 12) {
-            if (!detectData) {
-                console.warn("Không có dữ liệu detectData để vẽ.");
+        drawDetectedObjects(canvasManager, color = "#FF3B30", fontSize = 12) {
+            if (!this.boxs || this.boxs.length === 0) {
+                console.warn("Không có dữ liệu trong this.boxs để vẽ.");
                 return;
             }
 
-            // Khai báo các biến trực tiếp từ detectData khớp hoàn toàn với object bạn gửi lên
-            const x1 = detectData.x1;
-            const y1 = detectData.y1;
-            const x2 = detectData.x2;
-            const y2 = detectData.y2;
-            const className = detectData.className;
-            const confidence = detectData.confidence;
-            const imgWidthReal = detectData.imgWidthReal || 2048;
-            const canvasWidth = detectData.canvasWidth;
-            const classId = detectData.classId !== undefined ? detectData.classId : 99;
+            // Lặp qua từng đối tượng detectData lưu trong this.boxs
+            this.boxs.forEach((detectData) => {
+                if (!detectData) return;
 
-            // Tự tính tỷ lệ scale ngay bên trong hàm
-            const scale = canvasWidth / imgWidthReal;
-            const x1_canvas = x1 * scale;
-            const y1_canvas = y1 * scale;
-            const x2_canvas = x2 * scale;
-            const y2_canvas = y2 * scale;
+                // Khai báo các biến trực tiếp từ từng phần tử trong this.boxs
+                const x1 = detectData.x1;
+                const y1 = detectData.y1;
+                const x2 = detectData.x2;
+                const y2 = detectData.y2;
+                const className = detectData.className;
+                const confidence = detectData.confidence;
+                const imgWidthReal = detectData.imgWidthReal || 2048;
+                const canvasWidth = detectData.canvasWidth;
+                const classId = detectData.classId !== undefined ? detectData.classId : 99;
 
-            // Tạo nhãn text hiển thị (Ví dụ: "Person (98.5%)")
-            const label = `${className} (${(confidence * 100).toFixed(1)}%)`;
+                // Tự tính tỷ lệ scale ngay bên trong hàm
+                const scale = canvasWidth / imgWidthReal;
+                const x1_canvas = x1 * scale;
+                const y1_canvas = y1 * scale;
+                const x2_canvas = x2 * scale;
+                const y2_canvas = y2 * scale;
 
-            // Khởi tạo ModelRectangle từ tọa độ đã scale
-            const detectedRect = new ModelRectangle(
-                classId,
-                label,
-                x1_canvas,
-                y1_canvas,
-                x2_canvas,
-                y2_canvas
-            );
+                // Tạo nhãn text hiển thị (Ví dụ: "Person (98.5%)")
+                const label = `${className || ''} (${((confidence || 0) * 100).toFixed(1)}%)`;
 
-            // Tính toán tọa độ gốc (top-left) và kích thước (width, height) tuyệt đối để vẽ
-            const x = Math.min(detectedRect.xStart, detectedRect.xEnd);
-            const y = Math.min(detectedRect.yStart, detectedRect.yEnd);
-            const width = Math.abs(detectedRect.xEnd - detectedRect.xStart);
-            const height = Math.abs(detectedRect.yEnd - detectedRect.yStart);
+                // Khởi tạo ModelRectangle từ tọa độ đã scale
+                const detectedRect = new ModelRectangle(
+                    classId,
+                    label,
+                    x1_canvas,
+                    y1_canvas,
+                    x2_canvas,
+                    y2_canvas
+                );
 
-            // Gọi workflow vẽ chi tiết lên Canvas
-            this.#renderSingleRectWorkflow(
-                canvasManager,
-                { x, y, width, height },
-                detectedRect.name,
-                color,
-                fontSize
-            );
+                // Tính toán tọa độ gốc (top-left) và kích thước (width, height) tuyệt đối để vẽ
+                const x = Math.min(detectedRect.xStart, detectedRect.xEnd);
+                const y = Math.min(detectedRect.yStart, detectedRect.yEnd);
+                const width = Math.abs(detectedRect.xEnd - detectedRect.xStart);
+                const height = Math.abs(detectedRect.yEnd - detectedRect.yStart);
+
+                // Gọi workflow vẽ chi tiết lên Canvas
+                this.#renderSingleRectWorkflow(
+                    canvasManager,
+                    { x, y, width, height },
+                    detectedRect.name,
+                    color,
+                    fontSize
+                );
+            });
         }
            
 }

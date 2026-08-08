@@ -1,14 +1,19 @@
 import { ModelSlit } from '../model/model_slit.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
 import * as draw from "../utills/draw.js";
 export class SlitItemInspector {
-    static NAME = "Slit"
+    static NAME = "SlitWeldInspector"
     constructor() {
         // Sử dụng Mảng (List) để quản lý danh sách các ModelSlit
         this.slits = [];
         this.polygons = []; //danh sach cac diem polygon
     }
           
-        
+    clearAll() {
+            this.slits = [];
+            this.polygons = [];
+            return { status: true, message: "Đã xóa toàn bộ dữ liệu thành công." };
+    }
+
     getPolygons() {
         return this.polygons;
     }

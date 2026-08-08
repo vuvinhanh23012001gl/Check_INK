@@ -1,41 +1,21 @@
-import { ModelRectangle } from '../model/model_rectangel.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
+
+import { ModelRectangle } from '../model/model_rectangle.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
 import * as draw from "../utills/draw.js";
 
-export class PermeableMembraneInspector{
-    static NAME = "membrane";
+export class PermeableMembraneInspector {
+    static NAME = "MembraneInspector";
 
-    constructor() {
-        // Thay đổi từ mảng thành một đối tượng duy nhất (mặc định là null)
-        this.rectangle = null;
-        this.boxs = []; // Danh sách các điểm polygon bổ trợ
+    constructor(rectangle =  null,polygons = null) {
+        /** @type {ModelRectangle|null} Đối tượng ROI duy nhất */
+        this.rectangle = rectangle;
+
+        /** @type {Array} Danh sách lưu các tập hợp polygon nhận được từ AI */
+        this.polygons = polygons ;
     }
 
-    /**
-     * Lấy danh sách các đa giác (polygons)
-     * @returns {Array}
-     */
-    getBoxs() {
-        return this.boxs;
-    }
-    
-    /**
-     * Cập nhật danh sách các đa giác (polygons)
-     * @param {Array} boxes 
-     */
-    appendBoxes(boxes) {
-        if (!boxes) return;
-        if (Array.isArray(boxes)) {
-            this.boxs.push(...boxes);
-        } else if (typeof boxes === 'object') {
-            this.boxs.push(boxes);
-        }
-    }
-
-    /**
-     * Thiết lập/Cập nhật đối tượng ModelRectangle duy nhất
-     * @param {ModelRectangle} modelRect 
-     * @returns {boolean}
-     */
+    // ==========================================
+    // 1. QUẢN LÝ ROI CỦA MÀNG THẤM (RECTANGLE)
+    // ==========================================
     setMembrane(modelRect) {
         if (!(modelRect instanceof ModelRectangle)) {
             console.error("Đối tượng thêm vào không phải là Instance của ModelRectangle");
@@ -45,48 +25,75 @@ export class PermeableMembraneInspector{
         return true;
     }
 
-    /**
-     * Lấy ra đối tượng ModelRectangle hiện tại
-     * @returns {ModelRectangle|null}
-     */
     getMembrane() {
         return this.rectangle;
     }
 
-    /**
-     * Xóa đối tượng ModelRectangle hiện tại bằng cách đặt về null
-     * @returns {boolean}
-     */
     removeMembrane() {
         if (this.rectangle) {
             this.rectangle = null;
+            this.removePolygons(); // Xóa sạch dữ liệu polygon khi xóa ROI
+            return true;
+        }
+        return false;
+    }
+
+    // ==========================================
+    // 2. QUẢN LÝ DANH SÁCH POLYGONS (TƯƠNG TỰ BOXS)
+    // ==========================================
+    getPolygons() {
+        return this.polygons;
+    }
+
+    appendPolygons(polygonData) {
+        if (!polygonData) return;
+        if (Array.isArray(polygonData)) {
+            this.polygons.push(...polygonData);
+        } else if (typeof polygonData === 'object') {
+            this.polygons.push(polygonData);
+        }
+    }
+
+    removePolygons() {
+        if (this.polygons && this.polygons.length > 0) {
+            this.polygons = [];
             return true;
         }
         return false;
     }
 
     /**
-     * Xóa danh sách các điểm polygon bổ trợ
-     * @returns {boolean}
+     * Helper tiện ích để nạp kết quả trả về từ API Backend vào danh sách `polygons`
      */
-    removeBoxs() {
-        if (this.boxs) {
-            this.boxs = [];
-            return true;
+    setDetectResult(polygonBorder = [], polygonInner = [], imgWidthReal = 2048, canvasWidth = 800) {
+        if (polygonBorder && polygonBorder.length > 0) {
+            this.appendPolygons({
+                type: 'border',
+                label: 'Border Membrane',
+                points: polygonBorder,
+                imgWidthReal: imgWidthReal,
+                canvasWidth: canvasWidth,
+                color: "#00FF7F" // Xanh lá
+            });
         }
-        return false;
+
+        if (polygonInner && polygonInner.length > 0) {
+            this.appendPolygons({
+                type: 'inner',
+                label: 'Inner Membrane',
+                points: polygonInner,
+                imgWidthReal: imgWidthReal,
+                canvasWidth: canvasWidth,
+                color: "#FF3B30" // Đỏ
+            });
+        }
     }
 
-    /**
-     * Tìm xem tọa độ click (px, py) có nằm bên trong màng hay không
-     * @param {number} px 
-     * @param {number} py 
-     * @returns {ModelRectangle|null}
-     */
+    // ==========================================
+    // 3. TÍNH TOÁN & TƯƠNG TÁC (INTERACTION)
+    // ==========================================
     findClickedMembrane(px, py) {
-        if (!this.rectangle) {
-            return null;
-        }
+        if (!this.rectangle) return null;
 
         const clickX = Number(px);
         const clickY = Number(py);
@@ -100,7 +107,6 @@ export class PermeableMembraneInspector{
             return null;
         }
 
-        // Kiểm tra va chạm hộp (AABB) cho một đối tượng duy nhất
         if (clickX >= rx && clickX <= rx + rw && clickY >= ry && clickY <= ry + rh) {
             return this.rectangle;
         }
@@ -108,9 +114,24 @@ export class PermeableMembraneInspector{
         return null;
     }
 
-    /**
-     * Kiểm tra xem đối tượng duy nhất có hợp lệ không
-     */
+    isPointOnMembraneBorder(px, py, offset = 5) {
+        if (!this.rectangle) return false;
+
+        const rect = this.rectangle;
+
+        const x = Math.min(rect.xStart, rect.xEnd);
+        const y = Math.min(rect.yStart, rect.yEnd);
+        const width = Math.abs(rect.xEnd - rect.xStart);
+        const height = Math.abs(rect.yEnd - rect.yStart);
+
+        return (
+            (Math.abs(py - y) <= offset && px >= x - offset && px <= x + width + offset) ||
+            (Math.abs(py - (y + height)) <= offset && px >= x - offset && px <= x + width + offset) ||
+            (Math.abs(px - x) <= offset && py >= y - offset && py <= y + height + offset) ||
+            (Math.abs(px - (x + width)) <= offset && py >= y - offset && py <= y + height + offset)
+        );
+    }
+
     validateAll() {
         const report = { isValid: true, allErrors: {} };
 
@@ -125,45 +146,12 @@ export class PermeableMembraneInspector{
         return report;
     }
 
-    /**
-     * Xuất đối tượng hiện tại thành cấu trúc Object Dict tổng hợp
-     */
-    toDict() {
-        if (!this.rectangle) return {};
-        return this.rectangle.toDict();
-    }
-
-    /**
-     * Nạp dữ liệu từ một Object Dict tổng hợp vào đối tượng duy nhất
-     */
-    fromDict(fullDict) {
-        if (!fullDict || typeof fullDict !== 'object') return;
-        this.rectangle = null;
-
-        const keys = Object.keys(fullDict);
-        if (keys.length > 0) {
-            const firstId = keys[0];
-            const singleRectDict = { [firstId]: fullDict[firstId] };
-            const rectInstance = ModelRectangle.fromDict(singleRectDict);
-            
-            if (rectInstance) {
-                this.rectangle = rectInstance;
-            }
-        }
-    }
-
-    /**
-     * Vẽ màng cảm biến duy nhất lên canvas
-     */
-    drawAllMembranes(canvasManager, colorRect = "#00E6FF", fontSize = 12) {
-
-        canvasManager.clearShapeCanvas();
-
-        // Vẽ ROI người dùng chọn
+    // ==========================================
+    // 4. VẼ VÀ HIỂN THỊ (CANVAS RENDERING)
+    // ==========================================
+    drawRectangle(canvasManager, colorRect = "#00E6FF", fontSize = 12) {
         if (this.rectangle) {
-
             const rect = this.rectangle;
-
             const x = Math.min(rect.xStart, rect.xEnd);
             const y = Math.min(rect.yStart, rect.yEnd);
             const width = Math.abs(rect.xEnd - rect.xStart);
@@ -177,139 +165,60 @@ export class PermeableMembraneInspector{
                 fontSize
             );
         }
-
-        // Vẽ toàn bộ polygon đã detect
-        this.boxs.forEach(box => {
-
-            this.drawPolygon(
-                canvasManager,
-                box.polygon,
-                box.imgWidthReal,
-                box.canvasWidth,
-                box.color,
-                box.name
-            );
-
-        });
-
     }
-        drawPolygon(
-        canvasManager,
-        polygon,
-        imgWidthReal,
-        canvasWidth,
-        color = "#FF3B30",
-        text = ""
-    ) {
 
-        if (!polygon || polygon.length < 2) {
-            return;
-        }
+    /**
+     * Vẽ tất cả các polygon đã phát hiện từ `this.polygons` lên Canvas
+     */
+    drawPolygons(canvasManager, fontSize = 12) {
+        if (!this.polygons || this.polygons.length === 0) return;
 
         const ctx = canvasManager.ctxShape;
 
-        const scale = canvasWidth / imgWidthReal;
+        this.polygons.forEach((polyItem) => {
+            if (!polyItem || !polyItem.points || polyItem.points.length === 0) return;
 
-        ctx.save();
+            const { points, imgWidthReal, canvasWidth, color, label } = polyItem;
+            const scale = canvasWidth / (imgWidthReal || 2048);
 
-        ctx.beginPath();
+            ctx.save();
+            ctx.strokeStyle = color || "#FF3B30";
+            ctx.fillStyle = color ? `${color}33` : "rgba(255, 59, 48, 0.2)"; // Bật alpha nền
+            ctx.lineWidth = 2;
 
-        polygon.forEach((pt, index) => {
+            ctx.beginPath();
+            points.forEach((pt, idx) => {
+                // pt có dạng [x, y] hoặc {x, y}
+                const px = (Array.isArray(pt) ? pt[0] : pt.x) * scale;
+                const py = (Array.isArray(pt) ? pt[1] : pt.y) * scale;
 
-            const x = pt[0] * scale;
-            const y = pt[1] * scale;
+                if (idx === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            });
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
 
-            if (index === 0)
-                ctx.moveTo(x, y);
-            else
-                ctx.lineTo(x, y);
+            // Vẽ Nhãn (Label) ở điểm tọa độ đầu tiên của Polygon
+            if (label && points.length > 0) {
+                const firstPt = points[0];
+                const lx = (Array.isArray(firstPt) ? firstPt[0] : firstPt.x) * scale;
+                const ly = (Array.isArray(firstPt) ? firstPt[1] : firstPt.y) * scale;
 
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.fillStyle = color || "#FF3B30";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(label, lx + 4, ly - 4);
+            }
+
+            ctx.restore();
         });
-
-        ctx.closePath();
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = color + "33";
-        ctx.fill();
-
-        if (text !== "") {
-
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = color;
-
-            ctx.fillText(
-                text,
-                polygon[0][0] * scale,
-                polygon[0][1] * scale - 6
-            );
-        }
-
-        ctx.restore();
-
-    }
-    setDetectResult(borderPolygon, innerPolygon, imgWidthReal, canvasWidth) {
-
-    this.boxs = [];
-
-    if (borderPolygon && borderPolygon.length > 0) {
-
-        this.boxs.push({
-            name: "Border",
-            color: "#FF3B30",
-            polygon: borderPolygon,
-            imgWidthReal,
-            canvasWidth
-        });
-
     }
 
-    if (innerPolygon && innerPolygon.length > 0) {
-
-        this.boxs.push({
-            name: "Inner",
-            color: "#00FF66",
-            polygon: innerPolygon,
-            imgWidthReal,
-            canvasWidth
-        });
-
-    }
-
-}
-    /**
-     * Kiểm tra click có nằm trên đường viền màng hay không
-     */
-    isPointOnMembraneBorder(px, py, offset = 5) {
-        if (!this.rectangle) return false;
-
-        const rect = this.rectangle;
-
-        const x = Math.min(rect.xStart, rect.xEnd);
-        const y = Math.min(rect.yStart, rect.yEnd);
-        const width = Math.abs(rect.xEnd - rect.xStart);
-        const height = Math.abs(rect.yEnd - rect.yStart);
-
-        return (
-            // Cạnh trên
-            (Math.abs(py - y) <= offset && px >= x - offset && px <= x + width + offset) ||
-
-            // Cạnh dưới
-            (Math.abs(py - (y + height)) <= offset && px >= x - offset && px <= x + width + offset) ||
-
-            // Cạnh trái
-            (Math.abs(px - x) <= offset && py >= y - offset && py <= y + height + offset) ||
-
-            // Cạnh phải
-            (Math.abs(px - (x + width)) <= offset && py >= y - offset && py <= y + height + offset)
-        );
-    }
-
-    /**
-     * Quy trình vẽ chi tiết cho một hình chữ nhật kèm text
-     */
     #renderSingleMembraneWorkflow(canvasManager, coords, text, color, fontSize) {
         const ctx = canvasManager.ctxShape;
         const { x, y, width, height } = coords;
@@ -318,67 +227,57 @@ export class PermeableMembraneInspector{
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.strokeRect(x, y, width, height);
-        
+
         ctx.fillStyle = "rgba(0, 230, 255, 0.1)";
         ctx.fillRect(x, y, width, height);
         ctx.restore();
 
-        ctx.save();
-        ctx.font = `bold ${fontSize}px Arial`;
-        ctx.fillStyle = color;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.fillText(text, x + 4, y + 4);
-        ctx.restore();
+        if (text) {
+            ctx.save();
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.fillStyle = color;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(text, x + 4, y + 4);
+            ctx.restore();
+        }
     }
 
-    /**
-     * Vẽ đối tượng đã nhận diện được lên Canvas dựa trên đối tượng detectData đã gom nhóm
-     */
-    drawDetectedObject(canvasManager, detectData, color = "#FF3B30", fontSize = 12) {
-        if (!detectData) {
-            console.warn("Không có dữ liệu detectData để vẽ.");
-            return;
+    // ==========================================
+    // 5. SERIALIZATION
+    // ==========================================
+    toDict() {
+        if(!this.rectangle)return null; 
+        return this.rectangle.toDict();   
+    }
+
+    static fromDict(fullDict) {
+        if (!fullDict || typeof fullDict !== 'object') return;
+        if (fullDict.rectangle) {
+            this.rectangle = ModelRectangle.fromDict(fullDict.rectangle);
+        } else {
+            // Tương thích ngược với định dạng dict cũ
+            const keys = Object.keys(fullDict);
+            if (keys.length > 0 && keys[0] !== 'polygons') {
+                const firstId = keys[0];
+                const singleRectDict = { [firstId]: fullDict[firstId] };
+                this.rectangle = ModelRectangle.fromDict(singleRectDict);
+            }
         }
 
-        const x1 = detectData.x1;
-        const y1 = detectData.y1;
-        const x2 = detectData.x2;
-        const y2 = detectData.y2;
-        const className = detectData.className;
-        const confidence = detectData.confidence;
-        const imgWidthReal = detectData.imgWidthReal || 2048;
-        const canvasWidth = detectData.canvasWidth;
-        const classId = detectData.classId !== undefined ? detectData.classId : 99;
-
-        const scale = canvasWidth / imgWidthReal;
-        const x1_canvas = x1 * scale;
-        const y1_canvas = y1 * scale;
-        const x2_canvas = x2 * scale;
-        const y2_canvas = y2 * scale;
-
-        const label = `${className} (${(confidence * 100).toFixed(1)}%)`;
-
-        const detectedRect = new ModelRectangle(
-            classId,
-            label,
-            x1_canvas,
-            y1_canvas,
-            x2_canvas,
-            y2_canvas
-        );
-
-        const x = Math.min(detectedRect.xStart, detectedRect.xEnd);
-        const y = Math.min(detectedRect.yStart, detectedRect.yEnd);
-        const width = Math.abs(detectedRect.xEnd - detectedRect.xStart);
-        const height = Math.abs(detectedRect.yEnd - detectedRect.yStart);
-
-        this.#renderSingleMembraneWorkflow(
-            canvasManager,
-            { x, y, width, height },
-            detectedRect.name,
-            color,
-            fontSize
-        );
+        if (Array.isArray(fullDict.polygons)) {
+            this.polygons = fullDict.polygons;
+        }
     }
+    static fromDict(fullDict) {
+        if (!fullDict){
+            console.log("Tạo mới");
+            return new PermeableMembraneInspector();
+        }
+        let model_rectangle = ModelRectangle.fromDict(fullDict);
+        console.log("Tạo lớp PermeableMembraneInspector từ dữ liệu cũ");
+        return new PermeableMembraneInspector(model_rectangle);
+    }
+
+
 }

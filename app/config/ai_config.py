@@ -64,7 +64,8 @@ class ClassNameObjectStructureDetectConfig(StrEnum):
 @dataclass()
 class ClassNameModelSurfaceConfig(StrEnum):
     AIR_BUBBLE = "air_bubble"
-   
+    SCRATCH = "scratch"
+
 @dataclass(slots=True)
 class PatchCoreAnomalyConfig:
     index_path: str = "model/patchcore_ivf.index"

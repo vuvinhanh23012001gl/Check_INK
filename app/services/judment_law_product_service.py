@@ -7,7 +7,7 @@ class JudmentLawProductSevice:
     def save_data(self,data:dict,data_frame:dict):
         if self.compare_structure(data=data,data_frame=data_frame):
             print("So sánh thuộc cấu trúc cây tiến hành lưu")
-            self.repo.update_data(data)
+            self.repo.update_data(data,False)
             return Result.Ok()
         else:
             return Result.Fail(ErrorCode.DATA_IS_NOT_CORRECT_FROMAT)

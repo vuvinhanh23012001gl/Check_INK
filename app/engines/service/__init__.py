@@ -3,3 +3,4 @@ from .boder_film_unet_service import BorderFilmUnetService
 from .foreign_object_yolo_service import ForeignObjectYoloService
 from .structure_frame_yolo_service import StructureFrameYoloService
 from .permeable_membrane_yolo_service import PermeableMembraneService
+from .surface_fram_yolo_service import SurfaceFrameYoloService

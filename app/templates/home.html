@@ -418,11 +418,11 @@
                             <img src="../static/img/target.png" alt="judment">
                             Phán định
                         </button>
-                        <button  class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-clear-slit" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/eraser (5).png" alt="clear frame">
                             Tẩy frame
                         </button>
-                        <button class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-exit-slit" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/close.png" alt="close">
                             Đóng master
                         </button>
@@ -441,11 +441,11 @@
                                 <img src="../static/img/target.png" alt="judment">
                                 Phán định
                         </button>
-                        <button  class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-erase-border-film"  class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/eraser (5).png" alt="clear frame">
                                 Tẩy frame
                         </button>
-                        <button class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-exit-border-film"  class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
                                 Đóng master
                         </button>
@@ -465,7 +465,7 @@
                             <img src="../static/img/target.png" alt="judment">
                                 Phán định
                             </button>
-                            <button class="tool-btn btn-controler-mesure-weld-width">
+                            <button id="btn-exit-arm-cover" class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
                                 Đóng master
                             </button>
@@ -481,7 +481,7 @@
                             <img src="../static/img/target.png" alt="judment">
                                 Phán định
                             </button>
-                            <button class="tool-btn btn-controler-mesure-weld-width">
+                            <button id="btn-exit-arm-sensor" class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
                                 Đóng master
                             </button>
@@ -498,7 +498,7 @@
                             <img src="../static/img/target.png" alt="judment">
                                 Phán định
                             </button>
-                            <button class="tool-btn btn-controler-mesure-weld-width">
+                            <button id ="btn-exit-hole" class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
                                 Đóng master
                             </button>
@@ -514,12 +514,48 @@
                             <img src="../static/img/target.png" alt="judment">
                                 Phán định
                             </button>
-                            <button class="tool-btn btn-controler-mesure-weld-width">
+                            <button id ="btn-exit-permeable-membrane" class="tool-btn btn-controler-mesure-weld-width">
                                 <img src="../static/img/close.png" alt="close">
                                 Đóng master
                             </button>
                     </div>
                 </div>
+
+                <div id = "panner-region-scratched-pipe" class = "tool-content">
+                    <div id = "log-scratched-pipe" class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div id="table-cof-scratched-pipe" class ="table-cof-tool-content"> </div> 
+                    </div>
+                    <div class="controler-tool">
+                            <button id ="btn-judment-scratched-pipe"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                            </button>
+                            <button id ="btn-exit-scratch" class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
+                    </div>
+                </div>
+
+                <div id = "panner-region-end-chipping" class = "tool-content">
+                    <div id = "log-end-chipping" class = "log-tool-content"></div>
+                    <div class = "cof-and-inf-tool-content">
+                        <div id="table-cof-end-chipping" class ="table-cof-tool-content"> </div> 
+                    </div>
+                    <div class="controler-tool">
+                            <button id ="btn-judment-end-chipping"class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="judment">
+                                Phán định
+                            </button>
+                            <button id="btn-exit-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
+                                <img src="../static/img/close.png" alt="close">
+                                Đóng master
+                            </button>
+                    </div>
+                </div>
+                
+
                 
                 <div class="fix-element">  
                     <div id = "choose-tool"> 
@@ -545,7 +581,7 @@
                             <img src="../static/img/investigation.png">
                             <span>Kiểm tra <br>ARM sensor</span>
                         </button>
-                        <button id = "btn-check-hole" class="tool-btn">
+                        <button id = "btn-check-hole" class="tool-btn" data-tool="hole_tool">
                             <img src="../static/img/hematology.png">
                             <span>Kiểm tra <br>lỗ thủng</span>
                         </button>
@@ -554,24 +590,22 @@
                             <img src="../static/img/digital (1).png">
                             <span>Kiểm tra màng <br> bán thấm</span>
                         </button>
-
-                        <button class="tool-btn">
-                            <img src="../static/img/corona.png">
-                            <span>Kiểm tra <br>dị vật</span>
-                        </button>
-
-                        <button class="tool-btn">
+                        <button id ="btn-check-scratched-pipe" class="tool-btn" data-tool="scratched-pipe-tool">
                             <img src="../static/img/water-pipe.png">
                             <span>Kiểm tra <br>vết xước ống</span>
                         </button>
-                        <button class="tool-btn">
+                        <button id ="btn-check-end-chipping" class="tool-btn" data-tool ="end-chipping-tool">
                             <img src="../static/img/leak.png">
                             <span>Kiểm tra <br>mẻ đâu ống</span>
                         </button>
-                        <button class="tool-btn">
+                        <!-- <button class="tool-btn">
                             <img src="../static/img/cooking-oil.png">
                             <span>Kiểm tra <br>dầu mỡ bề mặt</span>
                         </button>
+                        <button class="tool-btn">
+                            <img src="../static/img/corona.png">
+                            <span>Kiểm tra <br>dị vật</span>
+                        </button> -->
 
                     </div>
                     <div id = "containner-control-master">
@@ -579,15 +613,11 @@
                             <img src="../static/img/save_icon.png" alt="Lưu">
                             Lưu
                         </button>
-                        <button>
-                            <img src="../static/img/paint-palette.png" alt="Hiển thị">
-                            Vẽ layout
-                        </button>
-                        <button id="cancel-calibration-button">
+                        <button id="btn-erase-all-draw">
                             <img src="../static/img/eraser (6).png" alt="Reset dữ liệu">
                             Tẩy
                         </button>
-                        <button>
+                        <button id="close-adjust-master">
                             <img src="../static/img/closed.png" alt="Thoát">
                             Thoát
                         </button>
@@ -877,6 +907,18 @@
                 <span id="loading-dot-1"></span>
                 <span id="loading-dot-2"></span>
                 <span id="loading-dot-3"></span>
+            </div>
+        </div>
+    </div>
+    <div id="confirm-exit-overlay" class="confirm-overlay">
+        <div class="confirm-box">
+            <h3>Xác nhận</h3>
+            <p id="confirm-message">
+                Bạn có chắc chắn muốn xóa dữ liệu?
+            </p>
+            <div class="confirm-actions">
+            <button id="btn-confirm-yes">Có</button>
+            <button id="btn-confirm-no">Không</button>
             </div>
         </div>
     </div>

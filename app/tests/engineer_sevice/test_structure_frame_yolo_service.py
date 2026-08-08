@@ -26,7 +26,7 @@ def main():
     model.warmup()
 
     image = cv2.imread(
-        r"C:\Users\anhuv\Desktop\train\yolo_co_lo_hay_khong_co_lo\date_3_7_40img\img\0.jpg"
+        r"C:\Users\anhuv\Desktop\train\yolo_co_lo_hay_khong_co_lo\date_3_7_40img\img\232.jpg"
     )
 
     if image is None:
@@ -41,7 +41,7 @@ def main():
         y1=300,
         x2=image.shape[1],
         y2=image.shape[0],
-        label=ClassNameObjectStructureDetectConfig.SENSOR_ARM.value,
+        label=ClassNameObjectStructureDetectConfig.HOLE.value,width_canvas=1024
     )
     print(result)
     if result.ok:
@@ -56,3 +56,5 @@ if __name__ == "__main__":
     main()
 
 # python -m app.tests.engineer_sevice.test_structure_frame_yolo_service
+
+#hole

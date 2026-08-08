@@ -1,35 +1,49 @@
-import { ModelRectangle } from '../model/model_rectangel.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
+
+import { ModelRectangle } from '../model/model_rectangle.js'; // Thay đổi đường dẫn cho đúng với dự án của bạn
 import * as draw from "../utills/draw.js";
+import { EndChippingInspector } from './end_chipping_item_inspector.js';
 
 export class ArmCoverItemInspector {
-    static NAME = "CoverSensor";
+    static NAME = "CoverSensorInspector";
 
-    constructor() {
-        // Thay đổi từ mảng thành một đối tượng duy nhất (mặc định là null)
-        this.rectangle = null;
-        this.boxs = []; // Danh sách các điểm polygon bổ trợ
+    constructor(rectangle = null, boxs = null) {
+        this.rectangle = rectangle;
+        this.boxs = (Array.isArray(boxs) && boxs.length > 0) ? boxs : null;
     }
 
     /**
-     * Lấy danh sách các đa giác (polygons)
+     * Lấy danh sách các đối tượng nhận diện (boxes)
      * @returns {Array}
      */
     getBoxs() {
-        return  this.boxs;
+        return this.boxs;
     }
-    
+
     /**
-     * Cập nhật danh sách các đa giác (polygons)
-     * @param {Array} polygons 
+     * Cập nhật/Thêm mới danh sách các đối tượng nhận diện (boxes)
+     * @param {Array|Object} boxes 
      */
     appendBoxes(boxes) {
-            if (!boxes) return;
-            if (Array.isArray(boxes)) {
-                this.boxs.push(...boxes);
-            } else if (typeof boxes === 'object') {
-                this.boxs.push(boxes);
-            }
+        if (!boxes) return;
+        if (Array.isArray(boxes)) {
+            this.boxs.push(...boxes);
+        } else if (typeof boxes === 'object') {
+            this.boxs.push(boxes);
         }
+    }
+
+    /**
+     * Xóa danh sách các boxes
+     * @returns {boolean}
+     */
+    removeBoxs() {
+        if (this.boxs) {
+            this.boxs = [];
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Thiết lập/Cập nhật đối tượng ModelRectangle duy nhất
      * @param {ModelRectangle} modelRect 
@@ -54,22 +68,18 @@ export class ArmCoverItemInspector {
 
     /**
      * Xóa đối tượng ModelRectangle hiện tại bằng cách đặt về null
+     * Đồng thời tự động xóa cả danh sách boxs
      * @returns {boolean}
      */
     removeRectangle() {
         if (this.rectangle) {
             this.rectangle = null;
+            this.removeBoxs();
             return true;
         }
         return false;
     }
-    removeBoxs(){
-        if (this.boxs) {
-            this.boxs = [];
-            return true;
-        }
-        return false;
-    }
+
     /**
      * Tìm xem tọa độ click (px, py) có nằm bên trong hình chữ nhật hay không
      * @param {number} px 
@@ -93,7 +103,7 @@ export class ArmCoverItemInspector {
             return null;
         }
 
-        // Kiểm tra va chạm hộp (AABB) cho một đối tượng duy nhất
+        // Kiểm tra va chạm hộp (AABB) cho đối tượng duy nhất
         if (clickX >= rx && clickX <= rx + rw && clickY >= ry && clickY <= ry + rh) {
             return this.rectangle;
         }
@@ -122,30 +132,25 @@ export class ArmCoverItemInspector {
      * Xuất đối tượng hiện tại thành cấu trúc Object Dict tổng hợp
      */
     toDict() {
-        if (!this.rectangle) return {};
+        if (!this.rectangle) return null;
         return this.rectangle.toDict();
     }
 
     /**
      * Nạp dữ liệu từ một Object Dict tổng hợp vào đối tượng duy nhất
      */
-    fromDict(fullDict) {
-        if (!fullDict || typeof fullDict !== 'object') return;
-        this.rectangle = null;
-
-        const keys = Object.keys(fullDict);
-        if (keys.length > 0) {
-            const firstId = keys[0];
-            const singleRectDict = { [firstId]: fullDict[firstId] };
-            const rectInstance = ModelRectangle.fromDict(singleRectDict);
-            
-            if (rectInstance) {
-                this.rectangle = rectInstance;
-            }
+    static fromDict(fullDict) {
+        if (!fullDict){
+            console.log("Tạo mới");
+            return new ArmCoverItemInspector();
         }
-    }
+        console.log("ARM CORVER FULLDICT",fullDict);
+        let model_rectangle = ModelRectangle.fromDict(fullDict);
+        console.log("Tạo lớp ARM cover");
+        return new ArmCoverItemInspector(model_rectangle);
 
-    /**
+    }
+        /**
      * Vẽ hình chữ nhật cảm biến duy nhất lên canvas
      */
     drawAllRectangles(canvasManager, color = "#00E6FF", fontSize = 12) {
@@ -168,6 +173,10 @@ export class ArmCoverItemInspector {
             fontSize
         );
     }
+
+    /**
+     * Kiểm tra tọa độ xem có nằm trên đường viền của hình chữ nhật không
+     */
     isPointOnRectangleBorder(px, py, offset = 5) {
         if (!this.rectangle) return false;
 
@@ -181,13 +190,10 @@ export class ArmCoverItemInspector {
         return (
             // Cạnh trên
             (Math.abs(py - y) <= offset && px >= x - offset && px <= x + width + offset) ||
-
             // Cạnh dưới
             (Math.abs(py - (y + height)) <= offset && px >= x - offset && px <= x + width + offset) ||
-
             // Cạnh trái
             (Math.abs(px - x) <= offset && py >= y - offset && py <= y + height + offset) ||
-
             // Cạnh phải
             (Math.abs(px - (x + width)) <= offset && py >= y - offset && py <= y + height + offset)
         );
@@ -217,29 +223,23 @@ export class ArmCoverItemInspector {
         ctx.fillText(text, x + 4, y + 4);
         ctx.restore();
     }
-    /**
-         * Vẽ đối tượng đã nhận diện được lên Canvas dựa trên đối tượng detectData đã gom nhóm
-         * @param {CanvasManager} canvasManager - Đối tượng quản lý Canvas vẽ
-         * @param {Object} detectData - Object chứa đầy đủ thông tin đối tượng nhận diện
-         * @param {number} detectData.x1 - Tọa độ x1 gốc từ ảnh thực tế
-         * @param {number} detectData.y1 - Tọa độ y1 gốc từ ảnh thực tế
-         * @param {number} detectData.x2 - Tọa độ x2 gốc từ ảnh thực tế
-         * @param {number} detectData.y2 - Tọa độ y2 gốc từ ảnh thực tế
-         * @param {string} detectData.className - Tên nhãn lớp của đối tượng (obj.class_name)
-         * @param {number} detectData.confidence - Độ tự tin từ 0 -> 1 (obj.confidence)
-         * @param {number} detectData.imgWidthReal - Chiều rộng thực của bức ảnh gốc
-         * @param {number} detectData.canvasWidth - Chiều rộng hiện tại của Canvas (WIDTH_IMG_SHAPE)
-         * @param {number|string} [detectData.classId=99] - ID class của đối tượng (obj.class_id)
-         * @param {string} [color="#FF3B30"] - Màu sắc của nét vẽ khung (mặc định đỏ)
-         * @param {number} [fontSize=12] - Cỡ chữ của nhãn (mặc định 12)
-         */
-        drawDetectedObject(canvasManager, detectData, color = "#FF3B30", fontSize = 12) {
-            if (!detectData) {
-                console.warn("Không có dữ liệu detectData để vẽ.");
-                return;
-            }
 
-            // Khai báo các biến trực tiếp từ detectData khớp hoàn toàn với object bạn gửi lên
+    /**
+     * Vẽ toàn bộ các đối tượng đã nhận diện trực tiếp từ `this.boxs` lên Canvas
+     * @param {CanvasManager} canvasManager - Đối tượng quản lý Canvas vẽ
+     * @param {string} [color="#FF3B30"] - Màu sắc đường viền vẽ (mặc định đỏ)
+     * @param {number} [fontSize=12] - Cỡ chữ của nhãn (mặc định 12)
+     */
+    drawDetectedObjects(canvasManager, color = "#FF3B30", fontSize = 12) {
+        if (!this.boxs || this.boxs.length === 0) {
+            console.warn("Không có dữ liệu trong this.boxs để vẽ.");
+            return;
+        }
+
+        // Lặp qua từng phần tử trong danh sách this.boxs để vẽ
+        this.boxs.forEach((detectData) => {
+            if (!detectData) return;
+
             const x1 = detectData.x1;
             const y1 = detectData.y1;
             const x2 = detectData.x2;
@@ -250,17 +250,14 @@ export class ArmCoverItemInspector {
             const canvasWidth = detectData.canvasWidth;
             const classId = detectData.classId !== undefined ? detectData.classId : 99;
 
-            // Tự tính tỷ lệ scale ngay bên trong hàm
             const scale = canvasWidth / imgWidthReal;
             const x1_canvas = x1 * scale;
             const y1_canvas = y1 * scale;
             const x2_canvas = x2 * scale;
             const y2_canvas = y2 * scale;
 
-            // Tạo nhãn text hiển thị (Ví dụ: "Person (98.5%)")
-            const label = `${className} (${(confidence * 100).toFixed(1)}%)`;
+            const label = `${className || ''} (${((confidence || 0) * 100).toFixed(1)}%)`;
 
-            // Khởi tạo ModelRectangle từ tọa độ đã scale
             const detectedRect = new ModelRectangle(
                 classId,
                 label,
@@ -270,13 +267,11 @@ export class ArmCoverItemInspector {
                 y2_canvas
             );
 
-            // Tính toán tọa độ gốc (top-left) và kích thước (width, height) tuyệt đối để vẽ
             const x = Math.min(detectedRect.xStart, detectedRect.xEnd);
             const y = Math.min(detectedRect.yStart, detectedRect.yEnd);
             const width = Math.abs(detectedRect.xEnd - detectedRect.xStart);
             const height = Math.abs(detectedRect.yEnd - detectedRect.yStart);
 
-            // Gọi workflow vẽ chi tiết lên Canvas
             this.#renderSingleRectWorkflow(
                 canvasManager,
                 { x, y, width, height },
@@ -284,6 +279,6 @@ export class ArmCoverItemInspector {
                 color,
                 fontSize
             );
-        }
-           
+        });
+    }
 }

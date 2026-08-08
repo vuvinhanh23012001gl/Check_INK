@@ -11,6 +11,7 @@ class ModelYoloObject(BaseAI):
         self.model :YOLO|None =  None
         self.load_model()
         self.warmup()
+
     def load_model(self) -> None:
             """Load YOLO model."""
             if self.model is None:
@@ -64,6 +65,7 @@ class ModelYoloObject(BaseAI):
             dtype=np.uint8,
         )
         self.predict(dummy)
+        # print("out_yoyoy",out_yoyoy)
         
     def get_result(self, image: np.ndarray, kx: int = 0, ky: int = 0) -> list[dict]:
             """Lấy danh sách kết quả detect và kiểm tra chạm biên trục X, Y.

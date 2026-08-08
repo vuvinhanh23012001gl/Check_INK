@@ -44,7 +44,7 @@ class StructureFrameYoloService:
             real_y1 = max(0, min(real_y1, h_img - 1))
             real_x2 = max(0, min(real_x2, w_img - 1))
             real_y2 = max(0, min(real_y2, h_img - 1))
-            
+    
             # 5. Truyền tọa độ đã quy đổi chuẩn xác vào hàm search của mô hình AI
             status, _, img, objects = self.frame_model.search(
                 image, 
@@ -52,9 +52,10 @@ class StructureFrameYoloService:
                 real_y1, 
                 real_x2, 
                 real_y2, 
-                label
+                label,
             )
             # Tool_OpenCv2.show_img(img)
+            print("status",status)
             if not status:
                 return Result.Fail(ErrorCode.LABEL_NOT_FOUND)
             return Result.Ok(objects)

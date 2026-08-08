@@ -1,56 +1,4 @@
 import { Frame } from "./model_frame.js";
-// const dictdata = {
-//   "1": {
-//     "0": {
-//       "0": {
-//         "measurement": {
-//           "1": {
-//             "name_line": "Weld A",
-//             "level1": 10,
-//             "level2": 20,
-//             "level3": 30,
-//             "level4": 40,
-//             "level5": 50,
-//             "xStart": 100,
-//             "yStart": 200,
-//             "xEnd": 300,
-//             "yEnd": 400
-//           },
-//           "2": {
-//             "name_line": "Weld B",
-//             "level1": 15,
-//             "level2": 25,
-//             "level3": 35,
-//             "level4": 45,
-//             "level5": 55,
-//             "xStart": 150,
-//             "yStart": 250,
-//             "xEnd": 350,
-//             "yEnd": 450
-//           }
-//         }
-//       }
-//     },
-//     "1": {
-//       "0": {
-//         "measurement": {
-//           "3": {
-//             "name_line": "Weld C",
-//             "level1": 5,
-//             "level2": 10,
-//             "level3": 15,
-//             "level4": 20,
-//             "level5": 25,
-//             "xStart": 50,
-//             "yStart": 60,
-//             "xEnd": 70,
-//             "yEnd": 80
-//           }
-//         }
-//       }
-//     }
-//   }
-// };
 
 export class Product {
     constructor(product_id = null) {
@@ -70,11 +18,9 @@ export class Product {
 
     toDict() {
         const framesDict = {};
-
         for (const frame of this.arr_frames) {
             Object.assign(framesDict, frame.toDict());
         }
-
         return {
             [this.product_id]: framesDict
         };
@@ -102,7 +48,7 @@ export class Product {
             );
         }
         for (const [frame_id, frameData] of Object.entries(framesData)) {
-            try {
+            // try {
                 const frame = Frame.fromDict({
                     [frame_id]: frameData
                 });
@@ -110,14 +56,15 @@ export class Product {
                     throw new Error("Frame trả về null");
                 }
                 product.addFrame(frame);
-            } catch (err) {
-                throw new Error(
-                    `Lỗi khi đọc Frame '${frame_id}': ${err.message}`
-                );
-            }
+            // } catch (err) {
+            //     throw new Error(
+            //         `Lỗi khi đọc Frame '${frame_id}': ${err.message}`
+            //     );
+            // }
         }
         return product;
     }
+    
 
     find_item_object_corresponding(frame_id, item_id , type){
         let obj_frame_iD = this.getFrame(frame_id);
@@ -154,21 +101,90 @@ export class Product {
        return obj_line;
     }
 
+
+    getAllInspectors(type) {
+        const inspectors = [];
+        for (const frame of this.arr_frames) {
+            for (const item of frame.arr_items) {
+                const objInspector = item.getInspector(type);
+
+                if (objInspector) {
+                    inspectors.push({
+                        frame_id: frame.frame_id,
+                        item_id: item.items_id,
+                        inspector: objInspector
+                    });
+                }
+            }
+        }
+        return inspectors;
+    }
+
+    hasInspectorData(inspectors, frame_id, item_id, propertyName) {
+        const obj = inspectors.find(
+            item => String(item.frame_id) === String(frame_id) && String(item.item_id) === String(item_id)
+        );
+        if (!obj || !obj.inspector) {
+            // console.warn(`[Inspector] Không tìm thấy dữ liệu cho Frame: ${frame_id}, Item: ${item_id}`);
+            return false;
+        }
+        const data = obj.inspector[propertyName];
+        if (data === undefined || data === null) {
+            console.warn(`[Inspector] Thuộc tính '${propertyName}' không tồn tại trên Item: ${item_id}`);
+            return false;
+        }
+        if (Array.isArray(data)) {
+            const isValid = data.length > 0;
+            console.log(`[Inspector Check] '${propertyName}' (Array) -> Valid: ${isValid}`);
+            return isValid;
+        }
+        if (typeof data === "object") {
+            if (typeof data.isValid === "function") {
+                const isValid = data.isValid();
+                console.log(`[Inspector Check] '${propertyName}' (isValid()) -> Valid: ${isValid}`);
+                return isValid;
+            }
+            const isValid = Object.keys(data).length > 0;
+            console.log(`[Inspector Check] '${propertyName}' (Object) -> Valid: ${isValid}`);
+            return isValid;
+        }
+        console.warn(`[Inspector] Kiểu dữ liệu không hợp lệ cho '${propertyName}':`, typeof data);
+        return false;
+    }
+
+    highlightItems(container, type, propertyName, className = "active_hightlight") {
+        const inspectors = this.getAllInspectors(type);
+        console.log("Dữ liệu để chuyển Items màu xanh",inspectors);
+        container.querySelectorAll(".box-frame").forEach(frame => {
+            const frame_id = frame.dataset.frameId;
+            frame.querySelectorAll(".img-item").forEach(item => {
+                const item_id = item.dataset.id;
+                const text = item.querySelector(".img-text");
+                item.classList.remove(className);
+                text?.classList.remove(className);
+                if (this.hasInspectorData(inspectors, frame_id, item_id, propertyName)) {
+                    item.classList.add(className);
+                    text?.classList.add(className);
+                }
+            });
+        });
+    }
+
+    clearHighlight(container, className = "active_hightlight") {
+        if (!container) return;
+        container.querySelectorAll(".box-frame").forEach(frame => {
+            frame.querySelectorAll(".img-item").forEach(item => {
+                const text = item.querySelector(".img-text");
+                item.classList.remove(className);
+                text?.classList.remove(className);
+            });
+        });
+    }
+    clearAllInspectors() {
+        for (const frame of this.arr_frames) {
+            if (frame && typeof frame.clearAllInspectors === "function") {
+                frame.clearAllInspectors();
+            }
+        }
+    }
 }
-
-// ItemsInspector.TYPE_MEASUREMENT
-// import {ItemsInspector} from "../services/items_inspector.js";
-// import { Measurement } from "../model/model_measurement.js";
-// import {MeasurementItemsInspector} from "../services/measurement_items_inspector.js"
-// const restored = Product.fromDict(dictdata);
-// // console.log("-------------------------------------");
-// //Lấy đối tượng Frame
-
-// // let Frame_ID = restored.getFrame("0");   // cái này chính là Object Frame
-// // console.log("Object Frame Find",Frame_ID);   
-
-// // console.log("Số phần tử item inspector",Frame_ID.getItemCount());
-// // console.log("Lấy item tại index thứ 0",getItemCount());
-
-// // restored.find_item_object_corresponding("1","0","measurement");
-// restored.find_line_object_corresponding("1","0","measurement",0);

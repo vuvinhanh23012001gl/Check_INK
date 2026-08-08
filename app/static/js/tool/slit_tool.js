@@ -1,5 +1,6 @@
 import {scroll_container,canvasManager,WIDTH_IMG_SHAPE}from "../common_value.js"
-import {additional_events,obj_measure_slit_width_canvas,boxContentMeasureSlitWidth,get_obj_product,selected,checkSelected
+import {additional_events,obj_measure_slit_width_canvas,boxContentMeasureSlitWidth,get_obj_product,selected,
+    checkSelected,create_obj_cross_item,write_log_clear,write_log_append,setNameEventActivate,refesh_btn,panner_measure_slit_width
 } from "./common_value_tool.js"   
 import {LineDrawer} from "../canvas/line_drawer_canvas.js"
 import {ModelSlit} from "../model/model_slit.js"
@@ -9,14 +10,16 @@ import {Line} from "../model/model_line.js"
 import {postData} from "../utills/api.js";
 
 
+
+
 additional_events.set("slit_width_tool", event_transition_items);
 const log_slit_measure = document.getElementById("log-slit-measure");
 const btn_judment_slit = document.getElementById("btn-judment-slit");
-
-
+const btn_clear_slit   = document.getElementById("btn-clear-slit");
+const btn_exit_slit   = document.getElementById("btn-exit-slit");
 let imageWidth = 0;//Cai nay se thay doi khi nhan vao che do tu dong quy uoc    
-let obj_slit_item_inspector  =  null; // đối tượng cho file này
 let line = new Line();   // đối tượng line vẽ hiện tại.
+
 
 
 obj_measure_slit_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_RIGHT_LINE,func_callback_click_mouse_right_into_line);
@@ -24,16 +27,14 @@ obj_measure_slit_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE,func_c
 obj_measure_slit_width_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE_HAVE_AREALY,func_callback_click_on_line_have_aready);
 
 
-
-function event_transition_items(){
-    if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){console.log("Lỗi chưa chọn sản phâm");return;};
+//Hàm này sẽ được gọi khi vừa nhấn nút mở tool hoac chuyen event deu chay ham nay
+export function event_transition_items(){
     boxContentMeasureSlitWidth.innerHTML = ""; 
-    obj_slit_item_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_SLIT);
-    if (!obj_slit_item_inspector){
-            let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
-            obj_slit_item_inspector =  new SlitItemInspector();
-            obj_items_inspector.setSlitItems(obj_slit_item_inspector);
-    }
+    write_log_clear(log_slit_measure,"");
+    get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_SLIT,"slits"); //cái này cần đọc log để biết "slits" là gì. 
+    if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){console.log("Lỗi chưa chọn sản phâm");return;};
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
+    if(!obj_slit_item_inspector){return;}
     obj_measure_slit_width_canvas.reset();
     obj_slit_item_inspector.drawAllSlits(canvasManager);
     let polygons = obj_slit_item_inspector.getPolygons();
@@ -42,23 +43,22 @@ function event_transition_items(){
 }
 
 // Hàm này sẽ được gọi khi vừa nhấn nút mở tool
-export function handleMeasurementSlit(){
-     if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){console.log("Lỗi chưa chọn sản phâm");return;};
-    boxContentMeasureSlitWidth.innerHTML = ""; 
-    obj_slit_item_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_SLIT);
-    if (!obj_slit_item_inspector){
-            let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
-            obj_slit_item_inspector =  new SlitItemInspector();
-            obj_items_inspector.setSlitItems(obj_slit_item_inspector);
-    }
-    obj_measure_slit_width_canvas.reset();
+
+btn_clear_slit.addEventListener("click",()=>{
+    console.log("Bạn vừa nhấn vào tẩy Frame");
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
+    obj_slit_item_inspector.clearAll();
+    canvasManager.clearShapeCanvas();
+    boxContentMeasureSlitWidth.innerHTML = ""; // reset html con
     obj_slit_item_inspector.drawAllSlits(canvasManager);
     let polygons = obj_slit_item_inspector.getPolygons();
-    if (polygons && imageWidth!= 0){obj_slit_item_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}        
-    console.log("đã tạo đối tượng ");
-}
+    get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_SLIT,"slits"); 
+    if (polygons && imageWidth!= 0){obj_slit_item_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
+});
+
 
 function func_callback_click_on_line_have_aready(coordinate_now){
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
      boxContentMeasureSlitWidth.innerHTML = ""; 
      let coordinate_now_x = coordinate_now?.x;
      let coordinate_now_y = coordinate_now?.y;
@@ -71,6 +71,7 @@ function func_callback_click_on_line_have_aready(coordinate_now){
 }
 
 function func_callback_click_on_line_drawn(line_current){
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
     boxContentMeasureSlitWidth.innerHTML = ""; 
     if (!line_current) return;
     line.xEnd =   Number(line_current?.xEnd);
@@ -98,22 +99,22 @@ function func_callback_click_on_line_drawn(line_current){
 
 
 function func_callback_click_mouse_right_into_line(coordinate){
+        let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
         boxContentMeasureSlitWidth.innerHTML = ""; 
         let result_find_line  = obj_slit_item_inspector.findClickedLine(coordinate.x,coordinate.y);
-        if (result_find_line||data.status_check_point_in_line_current){
+        if (result_find_line){
                 obj_measure_slit_width_canvas.is_available_one_line = false;  // moi them
                 obj_slit_item_inspector.removeSlit(result_find_line?.id_line);
                 canvasManager.clearShapeCanvas();
+                get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_SLIT,"slits"); 
                 obj_slit_item_inspector.drawAllSlits(canvasManager);
-                // console.log("Danh sách sau khi xóa:",obj_slit_item_inspector.toDict());  
-                 
-            //     let polygons = obj_slit_item_inspector.getPolygons();
-            //    if (polygons && imageWidth!= 0){obj_slit_item_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
-    
+                let polygons = obj_slit_item_inspector.getPolygons();
+                if (polygons && imageWidth!= 0){obj_slit_item_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
         }
 }
 
 function func_callback_click_mouse_left_into_line(data){
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
     console.log("đã click chuột trái vào line",data);
     line.xEnd =  Number(data?.xEnd);
     line.yEnd =  Number(data?.yEnd);
@@ -125,6 +126,7 @@ function func_callback_click_mouse_left_into_line(data){
 
 
 function createMeasureSlitWidthTable(id_line,data_line) {
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
     const existed = document.getElementById(
         `measure-slit-width-wrapper-${id_line}`
     );
@@ -204,7 +206,8 @@ function createMeasureSlitWidthTable(id_line,data_line) {
             console.log("obj_probationary",obj_probationary);
             obj_slit_item_inspector.addSlit(obj_probationary);
             console.log("Kết quả sau khi thêm Line mới:", obj_slit_item_inspector.toDict());
-            write_log_clear("✅ Dữ liệu hợp lệ.");
+            write_log_clear(log_slit_measure,"✅ Dữ liệu hợp lệ.");
+            get_obj_product().highlightItems( scroll_container,ItemsInspector.TYPE_SLIT,"slits"); 
             obj_measure_slit_width_canvas.is_available_one_line = false;
             obj_measure_slit_width_canvas.reset();
             canvasManager.clearShapeCanvas();
@@ -218,15 +221,15 @@ function createMeasureSlitWidthTable(id_line,data_line) {
 
         } else {
             let alertMessage = "❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n\n";
-            write_log_clear(alertMessage);
+            write_log_clear(log_slit_measure,alertMessage);
             result_validate_probationarier.errors.forEach(err => {
-                write_log_append(`📍 Dòng lỗi: [${err.rowName}]`);
-                write_log_append(` - Giá trị hiện tại: ${err.currentVal}`);
-                write_log_append(` - Yêu cầu nên là: ${err.expected}`);  
+                write_log_append(log_slit_measure,`📍 Dòng lỗi: [${err.rowName}]`);
+                write_log_append(log_slit_measure,` - Giá trị hiện tại: ${err.currentVal}`);
+                write_log_append(log_slit_measure,` - Yêu cầu nên là: ${err.expected}`);  
             });
         }
     });
-
+    
     const btnClear = document.createElement("button");
     btnClear.className = "btn btn-clear"; // Giữ nguyên class CSS cũ
     btnClear.id = `btn-clear-${id_line}`;
@@ -244,17 +247,30 @@ function createMeasureSlitWidthTable(id_line,data_line) {
     return wrapper; 
 }
 
+btn_exit_slit.addEventListener("click",()=>{
+    console.log("Bạn vừa exit đo khe hàn");
+    canvasManager.clearShapeCanvas();
+    canvasManager.clearPreviewCanvas();
+    canvasManager.setTool(null);//đặt canvas bằng null
+    boxContentMeasureSlitWidth.innerHTML = "";
+    panner_measure_slit_width.classList.remove("active");
+    refesh_btn();
+    get_obj_product().clearHighlight(scroll_container);
+    setNameEventActivate(null);
+});
+
 btn_judment_slit.addEventListener("click",async()=>{
+    let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
     console.log("Bạn vừa nhấn vào phán định khe hàn");
     let status_selected =  checkSelected(selected);
     if (status_selected){
-        write_log_clear("");
+        write_log_clear(log_slit_measure,"");
         let result_judment = await postData("/law_regulation/measurement/judment_item",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;
         if (!status_judment){
-                write_log_clear(message_judment);return;
+                write_log_clear(log_slit_measure,message_judment);return;
         }
         let width_judment =  result_judment?.data?.width;
         let polygon_judment =  result_judment?.data?.polygon;
@@ -268,13 +284,5 @@ btn_judment_slit.addEventListener("click",async()=>{
 })
 
 
-function write_log_clear(text){
-    log_slit_measure.textContent = text;
-}
-
-function write_log_append(text){
-    log_slit_measure.style.whiteSpace = "pre-line"; 
-    log_slit_measure.textContent += text + "\n";
-}
 
 

@@ -1,5 +1,8 @@
 import {scroll_container,canvasManager,WIDTH_IMG_SHAPE}from "../common_value.js"
-import {additional_events,obj_measure_film_border_canvas,boxConetentBorderFilm,get_obj_product,selected,checkSelected
+import {additional_events,obj_measure_film_border_canvas,boxConetentBorderFilm,
+    get_obj_product,selected,checkSelected,create_obj_cross_item,
+    write_log_clear,write_log_append,panner_measure_border_film,
+    setNameEventActivate,refesh_btn
 } from "./common_value_tool.js"   
 import {LineDrawer} from "../canvas/line_drawer_canvas.js"
 import {FilmBorder} from "../model/model_film_border.js"
@@ -8,30 +11,59 @@ import {BorderFilmInspector} from "../services/border_film_inspector.js"
 import {Line} from "../model/model_line.js"
 import {postData} from "../utills/api.js";
 
-let imageWidth = 0;//Cai nay se thay doi khi nhan vao che do tu dong quy uoc  
-let obj_film_border_item_inspector = null;
 let line = new Line();   // đối tượng line vẽ hiện tại.
+let imageWidth = 0;//Cai nay se thay doi khi nhan vao che do tu dong quy uoc  
+
+
 additional_events.set("border_film_tool", event_transition_items);
 const log_border_film  = document.getElementById("log-border-film");
 const btn_judment_border_film =  document.getElementById("btn-judment-border-film");
+const btn_erase_border_film = document.getElementById("btn-erase-border-film");
+const btn_exit_border_film  = document.getElementById("btn-exit-border-film");
 
 obj_measure_film_border_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_RIGHT_LINE,func_callback_click_mouse_right);
 obj_measure_film_border_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE,func_callback_click_on_line_drawn);
 obj_measure_film_border_canvas.on(LineDrawer.NAME_EVENT_WHEN_CLICK_ON_LINE_HAVE_AREALY,func_callback_click_on_line_have_aready);
 
 
+btn_erase_border_film.addEventListener("click",()=>{
+    console.log("Bạn nhấn vào tẩy Frame");
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
+    obj_film_border_item_inspector.clearAll();
+    boxConetentBorderFilm.innerHTML = ""; // reset html con
+    canvasManager.clearShapeCanvas();
+    obj_film_border_item_inspector.drawAll(canvasManager);
+    let polygons = obj_film_border_item_inspector.getPolygons();
+    get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_BORDER_FILM,"lines"); 
+    if (polygons && imageWidth!= 0){obj_film_border_item_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}
+});
+
+
+btn_exit_border_film.addEventListener("click",()=>{
+    console.log("Bạn nhấn vào thoát Frame");
+    canvasManager.clearShapeCanvas();
+    canvasManager.clearPreviewCanvas();
+    canvasManager.setTool(null);//đặt canvas bằng null
+    boxConetentBorderFilm.innerHTML = "";
+    panner_measure_border_film.classList.remove("active");
+    refesh_btn();
+    get_obj_product().clearHighlight(scroll_container);
+    setNameEventActivate(null);
+});
+
 
 btn_judment_border_film.addEventListener("click",async()=>{
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
     console.log("Bạn vừa nhấn vào phán định đường viền");
     let status_selected =  checkSelected(selected);
     if (status_selected){
-        write_log_clear("");
+        write_log_clear(log_border_film,"");
         let result_judment = await postData("/law_regulation/boder_film/judment_item",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;
         if (!status_judment){
-                    write_log_clear(message_judment);return;
+                    write_log_clear(log_border_film,message_judment);return;
         }
         let width_judment =  result_judment?.data?.width;
         let polygon_judment =  result_judment?.data?.polygon;
@@ -44,9 +76,11 @@ btn_judment_border_film.addEventListener("click",async()=>{
             }
         }
 });
+    
 
-
-function event_transition_items(){
+export function event_transition_items(){
+    get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_BORDER_FILM,"lines"); //cái này cần đọc log để biết "slits" là gì. 
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
     if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){console.log("Lỗi chưa chọn sản phâm");return;};
     boxConetentBorderFilm.innerHTML = ""; 
     obj_film_border_item_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_BORDER_FILM);
@@ -65,11 +99,13 @@ function event_transition_items(){
 }
 
 function func_callback_click_mouse_right(coordinate){
+           let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
            boxConetentBorderFilm.innerHTML = ""; 
            let result_find_line  = obj_film_border_item_inspector.findClickedLine(coordinate.x,coordinate.y);
            if (result_find_line||coordinate.status_check_point_in_line_current){
                    obj_measure_film_border_canvas.is_available_one_line = false;  // moi them
                    obj_film_border_item_inspector.removeLine(result_find_line?.id_line);
+                   get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_BORDER_FILM,"lines"); //cái này cần đọc log để biết "slits" là gì. 
                    canvasManager.clearShapeCanvas();
                    obj_film_border_item_inspector.drawAll(canvasManager);
              
@@ -80,6 +116,7 @@ function func_callback_click_mouse_right(coordinate){
 }
 
 function func_callback_click_on_line_drawn(line_current){
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
     console.log("line_current",line_current);
     boxConetentBorderFilm.innerHTML = ""; // reset html con
     // console.log("dict sau khi chuyen thanh de ve",obj_measurement_items_inspector.getAllDictLine());
@@ -105,6 +142,7 @@ function func_callback_click_on_line_drawn(line_current){
         
 }
 function func_callback_click_on_line_have_aready(coordinate_now){
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
     console.log("Click vao line da ton tai");
          boxConetentBorderFilm.innerHTML = ""; 
          let coordinate_now_x = coordinate_now?.x;
@@ -121,6 +159,7 @@ function func_callback_click_on_line_have_aready(coordinate_now){
 
 
 function createMeasureBorderFilmTable(id_line, data_line) {
+    let obj_film_border_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_BORDER_FILM,BorderFilmInspector,"setBorderFilmItems");
     const existed = document.getElementById(
         `measure-border-film-wrapper-${id_line}`
     );
@@ -223,8 +262,8 @@ function createMeasureBorderFilmTable(id_line, data_line) {
                 obj_film_border_item_inspector.toDict()
             );
 
-            write_log_clear("✅ Dữ liệu hợp lệ.");
-
+            write_log_clear(log_border_film,"✅ Dữ liệu hợp lệ.");
+            get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_BORDER_FILM,"lines"); //cái này cần đọc log để biết "slits" là gì. 
             obj_measure_film_border_canvas.is_available_one_line = false;
             obj_measure_film_border_canvas.reset();
 
@@ -244,12 +283,12 @@ function createMeasureBorderFilmTable(id_line, data_line) {
                 );
             }
         } else {
-            write_log_clear("❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n");
+            write_log_clear(log_border_film,"❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n");
 
             resultValidate.errors.forEach(err => {
-                write_log_append(`📍 Dòng lỗi: [${err.rowName}]`);
-                write_log_append(` - Giá trị hiện tại: ${err.currentVal}`);
-                write_log_append(` - Yêu cầu: ${err.expected}`);
+                write_log_append(log_border_film,`📍 Dòng lỗi: [${err.rowName}]`);
+                write_log_append(log_border_film,` - Giá trị hiện tại: ${err.currentVal}`);
+                write_log_append(log_border_film,` - Yêu cầu: ${err.expected}`);
             });
         }
     });
@@ -275,13 +314,4 @@ function createMeasureBorderFilmTable(id_line, data_line) {
     wrapper.appendChild(actions);
 
     return wrapper;
-}
-
-function write_log_clear(text){
-    log_border_film.textContent = text;
-}
-
-function write_log_append(text){
-    log_border_film.style.whiteSpace = "pre-line"; 
-    log_border_film.textContent += text + "\n";
 }

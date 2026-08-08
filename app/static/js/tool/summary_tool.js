@@ -5,13 +5,21 @@ import {panner_measure_weld_width,panner_measure_slit_width,
     obj_measure_weld_width_canvas,obj_measure_slit_width_canvas,
     obj_region_arm_sensor_canvas,panner_region_arm_sensor,obj_region_arm_cover_canvas,
     panner_region_cover_sensor,additional_events,obj_measure_film_border_canvas,
-    panner_measure_border_film,panner_permeable_membrane,obj_region_permeable_membrane_canvas
+    panner_measure_border_film,panner_permeable_membrane,obj_region_permeable_membrane_canvas,obj_region_hole_canvas,panner_region_hole
+    ,panner_region_scratched_pipe,obj_region_scratched_pipe_canvas
+    ,panner_region_end_chipping,obj_region_end_chipping_canvas,refesh_btn,setNameEventActivate,getNameEventActivate
    ,set_obj_product,get_obj_product} from "./common_value_tool.js"
 import {Product} from "../model/model_product.js"
 import { ItemsInspector } from "../services/items_inspector.js"
-import {handleMeasurementSlit} from "./slit_tool.js"
-
-
+import { event_transition_items as eventTransitionSlit } from "./slit_tool.js";
+import { event_transition_items as eventTransitionScratchedPipe } from "./scratched_pipe_tool.js";
+import { event_transition_items as eventTransitionPermeableMembrane } from "./permeable_membrane_tool.js";
+import { event_transition_items as eventTransitionMeasureWeldWidth } from "./measure_weld_width_tool.js";
+import { event_transition_items as eventTransitionHole } from "./hole_tool.js";
+import { event_transition_items as eventTransitionEndChipping } from "./end_chipping_tool.js";
+import { event_transition_items as eventTransitionBorderFilm } from "./border_film_tool.js";
+import { event_transition_items as eventTransitionArmCover } from "./arm_cover_tool.js";
+import { event_transition_items as eventTransitionArmSensor } from "./arm_sensor_tool.js";
 
 
 const panner_adjust_master = document.getElementById("panner-adjust-master");
@@ -23,8 +31,18 @@ const btn_check_arm_sensor  = document.getElementById("btn-check-arm-sensor");
 const btn_check_arm_cover  = document.getElementById("btn-check-arm-cover");
 const btn_border_film      =  document.getElementById("btn-border-film");
 const btn_check_permeable_membrane = document.getElementById("btn-check-permeable-membrane");
-
-
+const btn_check_hole = document.getElementById("btn-check-hole");
+const btn_check_scratched_pipe = document.getElementById("btn-check-scratched-pipe");
+const btn_check_end_chipping = document.getElementById("btn-check-end-chipping");
+const btn_erase_all_draw = document.getElementById("btn-erase-all-draw");
+const confirm_overlay = document.getElementById("confirm-exit-overlay");
+const btn_confirm_yes = document.getElementById("btn-confirm-yes");
+const btn_confirm_no = document.getElementById("btn-confirm-no");
+const close_adjust_master = document.getElementById("close-adjust-master");
+// Ở cấp con nhất (ScratchedPipeItemInspector, SlitItemInspector, ...): Khi !this.rectangle hoặc không có dữ liệu, phương thức toDict() trả về null
+// Ở cấp ItemsInspector: Loại bỏ các inspector bị null. Nếu cả item không còn inspector nào $\rightarrow$ ItemsInspector.toDict() trả về null.
+// Ở cấp Frame: Bỏ qua các Item trả về null. Nếu Frame không có Item nào $\rightarrow$ Frame.toDict() trả về null.
+// Ở cấp Product: Chỉ thu thập các Frame còn dữ liệu. Chuỗi JSON cuối cùng thu được từ obj_product.toDict() sẽ sạch sẽ và không chứa bất kỳ key dư thừa nào.
 
 let current_frame_box = null;
 let has_clicked_tool = false; 
@@ -33,8 +51,87 @@ let selected =  {
         frame_id: -1,
         items_id: -1
 }
+close_adjust_master.addEventListener("click",()=>{
+    console.log("Tến hành thoát thay đổi master");
+      fetch('/law_regulation/exit')
+      .then(response => {
+          console.log("responsd")
+          if (response.redirected) {
+              window.location.href = response.url;
+          } else {
+              response.json().then(data => {
+                  window.location.href = data.redirect_url;
+              });
+          }
+      });
+});
 
-let name_event_activate = null; //event khi nhấn vào các Items set thành loại tương
+
+
+
+btn_erase_all_draw.addEventListener("click",()=>{
+    confirm_overlay.style.display = "flex";
+});
+
+btn_confirm_no.addEventListener("click",()=>{
+    confirm_overlay.style.display = "none";
+
+});
+
+btn_confirm_yes.addEventListener("click",()=>{
+    console.log("Xác nhận xóa ARM cover");
+    let obj_product = get_obj_product();
+    let status_erase  = obj_product.clearAllInspectors();
+    canvasManager.clearAllCanvas();
+    canvasManager.setTool(null);//đặt canvas bằng null
+    refesh_btn();
+    get_obj_product().clearHighlight(scroll_container);
+    setNameEventActivate(null);
+    refreshPanels();
+    confirm_overlay.style.display = "none";
+});
+
+
+
+btn_check_end_chipping.addEventListener("click",()=>{
+    console.log("bạn vừa click vào check end chipping");
+    has_clicked_tool = true; // đã click tool
+    refreshPanels();
+    changeToolEvent(btn_check_end_chipping, btn_check_end_chipping.dataset.tool);
+    canvasManager.setTool(obj_region_end_chipping_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_end_chipping.classList.add("active");
+    eventTransitionEndChipping();
+});
+
+btn_check_scratched_pipe.addEventListener("click",()=>{
+    console.log("bạn vừa click vào check scratched pipe");
+    has_clicked_tool = true; // đã click tool
+    refreshPanels();
+    changeToolEvent(btn_check_scratched_pipe, btn_check_scratched_pipe.dataset.tool);
+    canvasManager.setTool(obj_region_scratched_pipe_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_scratched_pipe.classList.add("active");
+    eventTransitionScratchedPipe();
+});
+
+
+btn_check_hole.addEventListener("click",()=>{
+    console.log("bạn vừa click vào check hole");
+    has_clicked_tool = true; // đã click tool
+    console.log("Bạn vừa nhấn vào nút check cảm biến sensor");
+    refreshPanels();
+    changeToolEvent(btn_check_hole, btn_check_hole.dataset.tool);
+    canvasManager.setTool(obj_region_hole_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_hole.classList.add("active");
+    eventTransitionHole();
+
+});
+
 
 btn_check_arm_sensor.addEventListener("click",()=>{
     has_clicked_tool = true; // đã click tool
@@ -45,7 +142,7 @@ btn_check_arm_sensor.addEventListener("click",()=>{
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_region_arm_sensor.classList.add("active");
-
+    eventTransitionArmSensor();
 });
 
 btn_check_permeable_membrane.addEventListener("click",()=>{
@@ -57,6 +154,7 @@ btn_check_permeable_membrane.addEventListener("click",()=>{
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_permeable_membrane.classList.add("active");
+    eventTransitionPermeableMembrane();
 });
 
 
@@ -71,6 +169,7 @@ btn_check_arm_cover.addEventListener("click",()=>{
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_region_cover_sensor.classList.add("active");
+    eventTransitionArmCover();
     
 });
 
@@ -85,7 +184,7 @@ btn_measurement_slit.addEventListener("click",()=>{
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_measure_slit_width.classList.add("active");
-    handleMeasurementSlit();
+    eventTransitionSlit();
 });
 
 btn_border_film.addEventListener("click",function(){
@@ -98,7 +197,7 @@ btn_border_film.addEventListener("click",function(){
     canvasManager.clearPreviewCanvas();
     canvasManager.clearShapeCanvas();
     panner_measure_border_film.classList.add("active");
-     //handleMeasurementSlit();
+    eventTransitionBorderFilm();
 });
 
 
@@ -113,22 +212,19 @@ btn_measure_weld_width.addEventListener("click",()=>{
     refreshPanels();
     panner_measure_weld_width.classList.add("active");
     canvasManager.setTool(obj_measure_weld_width_canvas);
-    
+    eventTransitionMeasureWeldWidth();
+
 });
 
 function changeToolEvent(button, tool) {
     refesh_btn();
-    name_event_activate = tool;
+    setNameEventActivate(tool);
     button.classList.add("active");
 }
 
-function refesh_btn(){
-    const buttons = document.querySelectorAll("#choose-tool button");
-    buttons.forEach((btn,index)=>{
-        // console.log("btn",btn);
-        btn.classList.remove("active");
-    });
-}
+
+
+
 
 btn_save_law_regulation.addEventListener("click",async ()=>{
     console.log("Bạn vừa click vào lưu dữ liệu luật phán định");
@@ -171,7 +267,6 @@ function create_object_need(tree){
         console.log("tree ObJect",product);
         // const product_json = JSON.stringify(tree);
         // console.log("product_json",product_json);
-        
         set_obj_product(product);
 }
 
@@ -237,12 +332,13 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
             // console.log("coordinate y",y);
             // console.log("coordinate z",z);
             // console.log("frame_box",frame_box);
+           
             img_item.classList.add("active");
             current_frame_box = frame_box;
             selected.items_id = Number(img_item.dataset.id);  
             selected.frame_id = Number(frame_id);
             if (typeof additional_events.onFrameChange === "function") {
-                    additional_events.onFrameChange(selected.product_id ,selected.frame_id, selected.items_id,name_event_activate);
+                    additional_events.onFrameChange(selected.product_id ,selected.frame_id, selected.items_id,getNameEventActivate());
             }
             console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.items_id}`);
             return;

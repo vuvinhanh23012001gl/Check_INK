@@ -43,6 +43,12 @@ def header_function(services: ServiceContainer = Depends(get_services)):
         "tree": tree,
     }).to_dict()
 
+@router.get("/exit")
+async def exit():
+    return {
+        "status": "ok",
+        "redirect_url": "/"
+}
 
 @router.post("/save")
 def save(data:dict= Body(),services: ServiceContainer = Depends(get_services)):
@@ -339,10 +345,10 @@ async def judment_item_boder_film(
         "width": img.shape[1],
         "polygon": polygon_json,
     }).to_dict()
-    
+
+
+
 # Permeable membrane
-
-
 @router.post("/permemble_membrane/judment_item")
 async def judment_item_permeable_membrane(
     data: dict = Body(), services: ServiceContainer = Depends(get_services)
@@ -382,6 +388,149 @@ async def judment_item_permeable_membrane(
         
         result_objects = services.obj_judment_permeable_membrane_service.extract_membrane_polygons(img,x_start,y_start,x_end,y_end,width_canvas)
         print("result_objects",result_objects)
+        
+        if not result_objects.ok:
+            return result_objects.to_dict()
+        detected_objects = result_objects.data
+        return Result.Ok(
+            {
+                "width": img.shape[1],
+                "objects": detected_objects,
+            }
+        ).to_dict()
+
+    except Exception as e:
+        print(f"Lỗi hệ thống trong quá trình xử lý: {str(e)}")
+        return {
+            "ok": False,
+            "data": None,
+            "error_code": ErrorCode.DATA_INVALID.value,
+            "error_name": ErrorCode.DATA_INVALID.name,
+            "message": f"[Lỗi hệ thống] {str(e)}"
+        }
+
+
+
+@router.post("/hole/judment_item")
+async def judment_item_hole(
+    data: dict = Body(), services: ServiceContainer = Depends(get_services)
+):
+    print("Payload nhận được:", data)
+    result_val = ValidateToolLawRegulation.validate_judment_item(data)
+    if not result_val.ok:
+        # Trả về lỗi định dạng kèm Message lỗi tương ứng
+        return result_val.to_dict()
+    print("Kiểm tra dữ liệu thành công")
+    select_data = data["select"]
+    box_data = data["box"]
+    product_id = int(select_data["product_id"])
+    frame_id = int(select_data["frame_id"])
+    items_id = int(select_data["items_id"])
+    
+    x_start = int(box_data["xStart"])
+    y_start = int(box_data["yStart"])
+    x_end = int(box_data["xEnd"])
+    y_end = int(box_data["yEnd"])
+    width_canvas = int(data.get("WidthCanvas", 1)) 
+    label_name = services.CLASS_STRUCTURE_NAME.HOLE.value
+    print("label_name",label_name)
+    try:
+        result_get_path_img_master = (
+            services.obj_point_service.get_path_img_point(
+                product_id, frame_id, items_id
+            )
+        )
+        print("result_get_path_img_master:", result_get_path_img_master)
+        if not result_get_path_img_master.ok:
+            return result_get_path_img_master.to_dict()
+        path_img = str(result_get_path_img_master.data)
+        img = cv2.imread(path_img)
+        
+        if img is None:
+            print("Không tìm thấy ảnh tại đường dẫn:", path_img)
+            return Result.Fail(ErrorCode.IMAGE_NOT_FOUND).to_dict()
+        result_objects = (
+            services.obj_structure_model_service.get_objects_by_label(
+                image=img, 
+                x1=x_start, 
+                y1=y_start, 
+                x2=x_end, 
+                y2=y_end, 
+                label = label_name, 
+                width_canvas = width_canvas
+            )
+        )
+        
+        if not result_objects.ok:
+            return result_objects.to_dict()
+        detected_objects = result_objects.data
+        return Result.Ok(
+            {
+                "width": img.shape[1],
+                "objects": detected_objects,
+            }
+        ).to_dict()
+
+    except Exception as e:
+        print(f"Lỗi hệ thống trong quá trình xử lý: {str(e)}")
+        return {
+            "ok": False,
+            "data": None,
+            "error_code": ErrorCode.DATA_INVALID.value,
+            "error_name": ErrorCode.DATA_INVALID.name,
+            "message": f"[Lỗi hệ thống] {str(e)}"
+        }
+    
+
+@router.post("/scratched_pipe/judment_item")
+async def judment_scratched_pipe(
+    data: dict = Body(), services: ServiceContainer = Depends(get_services)
+):
+    print("Payload nhận được:", data)
+    result_val = ValidateToolLawRegulation.validate_judment_item(data)
+    if not result_val.ok:
+        # Trả về lỗi định dạng kèm Message lỗi tương ứng
+        return result_val.to_dict()
+    print("Kiểm tra dữ liệu thành công")
+    select_data = data["select"]
+    box_data = data["box"]
+    product_id = int(select_data["product_id"])
+    frame_id = int(select_data["frame_id"])
+    items_id = int(select_data["items_id"])
+    
+    x_start = int(box_data["xStart"])
+    y_start = int(box_data["yStart"])
+    x_end = int(box_data["xEnd"])
+    y_end = int(box_data["yEnd"])
+    width_canvas = int(data.get("WidthCanvas", 1)) 
+    label_name = services.CLASS_SURFACE_NAME.SCRATCH.value #cai nay can sua
+    print("label_name",label_name)
+    try:
+        result_get_path_img_master = (
+            services.obj_point_service.get_path_img_point(
+                product_id, frame_id, items_id
+            )
+        )
+        print("result_get_path_img_master:", result_get_path_img_master)
+        if not result_get_path_img_master.ok:
+            return result_get_path_img_master.to_dict()
+        path_img = str(result_get_path_img_master.data)
+        img = cv2.imread(path_img)
+        
+        if img is None:
+            print("Không tìm thấy ảnh tại đường dẫn:", path_img)
+            return Result.Fail(ErrorCode.IMAGE_NOT_FOUND).to_dict()
+        result_objects = (
+            services.obj_surface_model_service.get_objects_by_label(
+                image=img, 
+                x1=x_start, 
+                y1=y_start, 
+                x2=x_end, 
+                y2=y_end, 
+                label = label_name, 
+                width_canvas = width_canvas
+            )
+        )
         
         if not result_objects.ok:
             return result_objects.to_dict()

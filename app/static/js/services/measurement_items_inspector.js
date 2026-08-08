@@ -2,7 +2,7 @@ import { Measurement } from "../model/model_measurement.js";
 import * as draw from "../utills/draw.js";
 
 export class MeasurementItemsInspector {
-    static NAME = "measurement" 
+    static NAME = "MeasurementWeldInspector" 
     constructor() {
         this.arr_measure = [];
         this.polygons = []; //danh sach cac diem polygon
@@ -20,7 +20,9 @@ export class MeasurementItemsInspector {
     getPolygons() {
         return this.polygons;
     }
-    
+    getPolygonCount() {
+        return this.polygons ? this.polygons.length : 0;
+    }
     setPolygons(polygons) {
         this.polygons = Array.isArray(polygons) ? polygons : [];
     }
@@ -335,6 +337,11 @@ export class MeasurementItemsInspector {
             });
 
             ctx.restore();
+        }
+        clearAll() {
+            this.arr_measure = [];
+            this.polygons = [];
+            return { status: true, message: "Đã xóa toàn bộ dữ liệu thành công." };
         }
 
 

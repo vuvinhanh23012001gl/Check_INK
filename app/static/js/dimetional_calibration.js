@@ -241,6 +241,22 @@ function high_light_item(frame_id_active, items_id_active) {
         };
     });
 }
+// function high_light_item(frame_id_active, items_id_active) {
+//     // 1. Tìm đúng frame đang hoạt động
+//     const activeFrame = scroll_container.querySelector(`.box-frame[data-frame-id="${frame_id_active}"]`);
+//     if (!activeFrame) return;
+//     // 2. Xóa highlight của tất cả item đang có trong frame đó
+//     activeFrame.querySelectorAll(".active_hightlight").forEach(el => {
+//         el.classList.remove("active_hightlight");
+//     });
+//     // 3. Tìm item cần highlight và thêm class
+//     const targetItem = activeFrame.querySelector(`.img-item[data-id="${items_id_active}"]`);
+//     if (targetItem) {
+//         targetItem.classList.add("active_hightlight");
+//         const text = targetItem.querySelector(".img-text");
+//         if (text) text.classList.add("active_hightlight");
+//     }
+// }
 
 
 function createButton(id, text ,class_name,fields) {

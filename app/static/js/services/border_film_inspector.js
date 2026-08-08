@@ -1,7 +1,7 @@
 import { FilmBorder } from '../model/model_film_border.js'; 
 import * as draw from "../utills/draw.js";
 export class BorderFilmInspector {
-    static NAME = "border_film"
+    static NAME = "BorderFilmInspector"
     
     constructor() {
         // Quản lý danh sách các đường kiểm định biên (Border Lines)
@@ -9,7 +9,14 @@ export class BorderFilmInspector {
         this.polygons = []; // Danh sách các điểm polygon
         this.line_current = null;
     }
-        
+    
+    clearAll() {
+            this.line_current = null;
+            this.lines = [];
+            this.polygons = [];
+            return { status: true, message: "Đã xóa toàn bộ dữ liệu thành công." };
+    }
+
     getPolygons() {
         return this.polygons;
     }

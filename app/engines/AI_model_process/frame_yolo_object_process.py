@@ -17,6 +17,7 @@ class FrameModelYoloObject:
             x2, y2: Tọa độ góc phải dưới của vùng crop.
         Returns:
             list[dict]: Danh sách các đối tượng kèm tọa độ đã quy đổi về ảnh gốc.
+            image_crop : anh da crop
         """
         # Crop ảnh sử dụng công cụ OpenCV có sẵn của hệ thống
         image_crop, left, top = Tool_OpenCv2.crop_image(
@@ -32,7 +33,7 @@ class FrameModelYoloObject:
             image.shape[1],  # image_width
             image.shape[0]   # image_height
         )
-        return list_coordinate_object
+        return list_coordinate_object,image_crop
 
 
     def convert_objects_to_original_image(
@@ -150,13 +151,14 @@ class FrameModelYoloObject:
                 - list[dict]: Danh sách đối tượng sau khi lọc.
         """
         messages = []
-        objects = self.get_objects(img, x1, y1, x2, y2)
+        objects,img_crop= self.get_objects(img, x1, y1, x2, y2)
+        print("objects",objects)
         filtered_objects, _ = self.filter_objects_by_class_name(objects, target_class_value)
         img_result = self.draw_rectangle(img, x1, y1, x2, y2)
         img_result = self.draw(img_result, filtered_objects)
         if not filtered_objects:
             messages.append(f"LỖI: Không tìm thấy đối tượng '{target_class_value}'.")
-            return False, messages, img, []
+            return False, messages, img_crop, []
         if isinstance(self.limit_number_object, int) and len(filtered_objects) > self.limit_number_object:
             messages.append(f"LỖI: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}', vượt giới hạn {self.limit_number_object}.")
         for index, obj in enumerate(filtered_objects, start=1):
@@ -167,6 +169,43 @@ class FrameModelYoloObject:
         messages.append(f"OK: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}' hợp lệ.")
         return True, messages, img_result, filtered_objects
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
     def search_negative(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, target_class_value: str) -> Tuple[bool, list[str], np.ndarray]: # ham nay nguoc voi ham search

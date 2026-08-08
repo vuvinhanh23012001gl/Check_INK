@@ -38,7 +38,13 @@ export class Frame{
 
         return frame;
     }
-
+    clearAllInspectors() {
+        for (const item of this.arr_items) {
+            if (item && typeof item.clearInspectors === "function") {
+                item.clearInspectors();
+            }
+        }
+    }
     getItemCount() {
         return this.arr_items.length;
     }

@@ -1,33 +1,49 @@
 console.log("Vào File Arm Cover Tool");
-import { ModelRectangle } from '../model/model_rectangel.js'; 
+import { ModelRectangle } from '../model/model_rectangle.js'; 
 import {scroll_container,canvasManager,WIDTH_IMG_SHAPE}from "../common_value.js"
-import {additional_events,obj_region_arm_cover_canvas,boxContentArmCover,get_obj_product,selected,checkSelected
+import {additional_events,obj_region_arm_cover_canvas,boxContentArmCover,get_obj_product,selected,checkSelected,
+    COLOR_RECT_SHAPE_REGION_DETECT,write_log_clear,write_log_append,create_obj_cross_item,
+    ACTIVATION_DISTANCE_WHEN_CLICKING_THE_SQUARE,refesh_btn,setNameEventActivate,panner_region_cover_sensor
 } from "./common_value_tool.js"   
 import {RectangleDrawer} from "../canvas/rectangel_drawer_canvas.js"
 import {ItemsInspector} from "../services/items_inspector.js"
 import {ArmCoverItemInspector} from "../services/arm_cover_item_inspector.js"
 import {postData} from "../utills/api.js";
 
-let color_rect_shape = "#0000FF";
+
 additional_events.set("arm_cover_tool", event_transition_items);
-let obj_arm_cover_item_inspector = null;
 const btn_judment_arm_sensor = document.getElementById("btn-judment-arm-cover");
 const log_arm_cover = document.getElementById("log-arm-cover");
+const btn_exit_arm_cover = document.getElementById("btn-exit-arm-cover");
 
 obj_region_arm_cover_canvas.on(RectangleDrawer.NAME_EVENT_WHEN_CLICK_ON_RECT,func_callback_click_on_rect);
 obj_region_arm_cover_canvas.on(RectangleDrawer.NAME_EVENT_WHEN_CLICK_RIGHT_RECT,func_callback_click_mouse_right_into_line);
 obj_region_arm_cover_canvas.on(RectangleDrawer.NAME_EVENT_WHEN_CLICK_ON_RECT_HAVE_ALREADY,func_callback_click_on_line_have_aready);
 
 
+btn_exit_arm_cover.addEventListener("click",()=>{
+    console.log("Nhấn vào đóng Frame");
+    canvasManager.clearShapeCanvas();
+    canvasManager.clearPreviewCanvas();
+    canvasManager.setTool(null);//đặt canvas bằng null
+    boxContentArmCover.innerHTML = "";
+    panner_region_cover_sensor.classList.remove("active");
+    refesh_btn();
+    get_obj_product().clearHighlight(scroll_container);
+    setNameEventActivate(null);
+});
+    
+
 btn_judment_arm_sensor.addEventListener("click",async ()=>{
     console.log("Bạn vừa nhấn vào phán định ARM cover");
     const status_selected = checkSelected(selected);
        if (!status_selected) return;
-       write_log_clear("");
+       write_log_clear(log_arm_cover,"");
+       let obj_arm_cover_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_ARM_COVER,ArmCoverItemInspector,"setArmCoverItems");
        // 2. Lấy thông tin hình chữ nhật ARM Sensor hiện có từ inspector
        const box_detect = obj_arm_cover_item_inspector.getRectangle();
        if (!box_detect) {
-           write_log_clear("Hiện tại chưa vẽ khung ARM Cover hãy tiến hành vẽ");
+           write_log_clear(log_arm_cover,"Hiện tại chưa vẽ khung ARM Cover hãy tiến hành vẽ");
            return;
        }
        console.log("box_detect gửi đi:", box_detect);
@@ -38,7 +54,7 @@ btn_judment_arm_sensor.addEventListener("click",async ()=>{
            "WidthCanvas": WIDTH_IMG_SHAPE
        };
        console.log("data_send gửi đi:", data_send);
-       write_log_clear("⏳ Đang xử lý phán định ARM Sensor...");
+       write_log_clear(log_arm_cover,"⏳ Đang xử lý phán định ARM Sensor...");
        try {
            const result_judment = await postData("/law_regulation/arm_cover/judment_item", data_send);
            console.log("result_judment nhận được:", result_judment);
@@ -46,13 +62,14 @@ btn_judment_arm_sensor.addEventListener("click",async ()=>{
                const data_res = result_judment.data;
                const objects = data_res?.objects || [];
                if (objects.length === 0) {
-                   write_log_clear("⚠️ Không tìm thấy đối tượng ARM Sensor nào trong vùng đã chọn.");
+                   write_log_clear(log_arm_cover,"⚠️ Không tìm thấy đối tượng ARM Sensor nào trong vùng đã chọn.");
                    return;
                }
-               write_log_clear(`✅ Phán định thành công! Đã phát hiện ${objects.length} đối tượng.`);
+               write_log_clear(log_arm_cover,`✅ Phán định thành công! Đã phát hiện ${objects.length} đối tượng.`);
+               obj_arm_cover_item_inspector.removeBoxs();
                // Xóa canvas hình vẽ cũ và vẽ lại khung vùng chứa (ARM Sensor) chính trước
                canvasManager.clearShapeCanvas();
-               obj_arm_cover_item_inspector.drawAllRectangles(canvasManager, color_rect_shape);
+               obj_arm_cover_item_inspector.drawAllRectangles(canvasManager, COLOR_RECT_SHAPE_REGION_DETECT);
                // Duyệt qua từng đối tượng được phát hiện từ API và vẽ lên canvas
                objects.forEach((obj) => {
                    const imgWidthReal = obj.image_width || data_res.width || 2048;
@@ -70,51 +87,44 @@ btn_judment_arm_sensor.addEventListener("click",async ()=>{
                    };
                    obj_arm_cover_item_inspector.appendBoxes(detectData);   // cai nay la mang nhe
                    console.log("obj_arm_sensor_item_inspector.boxs",obj_arm_cover_item_inspector.boxs);
-                   obj_arm_cover_item_inspector.drawDetectedObject(canvasManager, detectData);
-                   write_log_append(`📍 Tìm thấy: ${obj.class_name}`);
-                   write_log_append(` - Độ tin cậy: ${(obj.confidence * 100).toFixed(2)}%`);
+                   write_log_append(log_arm_cover,`📍 Tìm thấy: ${obj.class_name}`);
+                   write_log_append(log_arm_cover,` - Độ tin cậy: ${(obj.confidence * 100).toFixed(2)}%`);
                });
+                 obj_arm_cover_item_inspector.drawDetectedObjects(canvasManager);
            } else {
                const error_msg = result_judment?.message || "Lỗi không xác định từ Server.";
-               write_log_clear(`❌ THẤT BẠI:\n${error_msg}`);
+               write_log_clear(log_arm_cover,`❌ THẤT BẠI:\n${error_msg}`);
                if (result_judment?.error_code) {
-                   write_log_append(`Mã lỗi: ${result_judment.error_code} (${result_judment.error_name})`);
+                   write_log_append(log_arm_cover,`Mã lỗi: ${result_judment.error_code} (${result_judment.error_name})`);
                }
            }
    
        } catch (err) {
            // 6. Xử lý lỗi kết nối mạng, server sập hoặc lỗi logic client
            console.error("Lỗi kết nối / xử lý API:", err);
-           write_log_clear(`❌ Lỗi kết nối mạng hoặc lỗi hệ thống client:\n${err.message}`);
+           write_log_clear(log_arm_cover,`❌ Lỗi kết nối mạng hoặc lỗi hệ thống client:\n${err.message}`);
        }
 });
 
-function event_transition_items(){
+
+export function event_transition_items(){
     // console.log("event_transition_items");
+    // if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){console.log("Lỗi chưa chọn sản phâm");return;};
+    let obj_arm_cover_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_ARM_COVER,ArmCoverItemInspector,"setArmCoverItems");
     boxContentArmCover.innerHTML = ""; 
     obj_arm_cover_item_inspector = get_obj_product().find_item_object_corresponding(String(selected?.frame_id),String(selected?.items_id),ItemsInspector.TYPE_ARM_COVER);
-        if (!obj_arm_cover_item_inspector){
-                let obj_items_inspector = get_obj_product().get_item_object(String(selected?.frame_id),String(selected?.items_id));
-                obj_arm_cover_item_inspector =  new ArmCoverItemInspector();
-                obj_items_inspector.setArmCoverItems(obj_arm_cover_item_inspector);
-        }
-        obj_region_arm_cover_canvas.reset();
-        canvasManager.clearShapeCanvas();
-        obj_arm_cover_item_inspector.drawAllRectangles(canvasManager, color_rect_shape);
-        const savedBoxs = obj_arm_cover_item_inspector.getBoxs(); // Hàm getter trả về mảng this.boxs
-        console.log("savedBoxs",savedBoxs);
-        if (Array.isArray(savedBoxs) && savedBoxs.length > 0) {
-            console.log(`Tiến hành vẽ lại ${savedBoxs.length} đối tượng con đã lưu...`);
-            savedBoxs.forEach((detectData) => {
-                detectData.canvasWidth = WIDTH_IMG_SHAPE;
-                obj_arm_cover_item_inspector.drawDetectedObject(canvasManager, detectData);
-            });
-        } else {
-            console.log("Danh sách đối tượng nhận diện trống (chưa thực hiện phán định hoặc đối tượng mới tạo).");
-        }
-        console.log("Hoàn thành việc chuyển đổi và khôi phục trạng thái hiển thị ARM Sensor.");
+    obj_region_arm_cover_canvas.reset();
+    canvasManager.clearShapeCanvas();
+    get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_ARM_COVER,"rectangle");
+    if (obj_arm_cover_item_inspector){
+        obj_arm_cover_item_inspector.drawAllRectangles(canvasManager, COLOR_RECT_SHAPE_REGION_DETECT);
+        const rectangle = obj_arm_cover_item_inspector.getRectangle(); // Hàm getter trả về mảng this.boxs
+        if (rectangle){obj_arm_cover_item_inspector.drawDetectedObjects(canvasManager);}
+    }
 }
 
+
+  
 
 
 function func_callback_click_on_rect(data_shape){
@@ -123,26 +133,29 @@ function func_callback_click_on_rect(data_shape){
     boxContentArmCover.appendChild(createMeasureShapeTable(data_shape)); 
 };
 
+
 function func_callback_click_mouse_right_into_line(coordinate){
+    let obj_arm_cover_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_ARM_COVER,ArmCoverItemInspector,"setArmCoverItems");
     boxContentArmCover.innerHTML = ""; 
-    let result_find_line  = obj_arm_cover_item_inspector.isPointOnRectangleBorder(coordinate.x,coordinate.y);
+    let result_find_line  = obj_arm_cover_item_inspector.isPointOnRectangleBorder(coordinate.x,coordinate.y,ACTIVATION_DISTANCE_WHEN_CLICKING_THE_SQUARE);
     if (result_find_line){
             console.log("Click trúng đường viền");
             obj_arm_cover_item_inspector.removeRectangle();
             obj_arm_cover_item_inspector.removeBoxs();
             canvasManager.clearShapeCanvas();
             obj_arm_cover_item_inspector.drawAllRectangles(canvasManager);
-
+            get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_ARM_COVER,"rectangle");
     }
 };
 
 
 function func_callback_click_on_line_have_aready(coordinate){
+        let obj_arm_cover_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_ARM_COVER,ArmCoverItemInspector,"setArmCoverItems");
         if (!obj_arm_cover_item_inspector) return;
         const rect = obj_arm_cover_item_inspector.getRectangle();
         if (!rect) return;
         console.log("click o day 1");
-        if (obj_arm_cover_item_inspector.isPointOnRectangleBorder(coordinate.x, coordinate.y)) {
+        if (obj_arm_cover_item_inspector.isPointOnRectangleBorder(coordinate.x, coordinate.y,ACTIVATION_DISTANCE_WHEN_CLICKING_THE_SQUARE)) {
             console.log("da vao line");
             boxContentArmCover.innerHTML = "";
             obj_region_arm_cover_canvas.have_return =  true; 
@@ -152,6 +165,7 @@ function func_callback_click_on_line_have_aready(coordinate){
 
 
 function createMeasureShapeTable(data_shape = null) {
+    let obj_arm_cover_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_ARM_COVER,ArmCoverItemInspector,"setArmCoverItems");
     const wrapper = document.createElement("div");
     wrapper.id = "arm-cover-shape-wrapper";
     const table = document.createElement("table");
@@ -192,7 +206,6 @@ function createMeasureShapeTable(data_shape = null) {
     btnAccept.id = "btn-accept-shape";
     btnAccept.textContent = "Chấp nhận";
     btnAccept.addEventListener("click", () => {
-
         const nameShape =
             document.getElementById("arm-cover-input-0")?.value || "";
         const objRectangle = new ModelRectangle(
@@ -208,20 +221,30 @@ function createMeasureShapeTable(data_shape = null) {
         if (resultValidate.isValid) {
             boxContentArmCover.innerHTML = "";
             console.log("obj_arm_cover_item_inspector",obj_arm_cover_item_inspector);
+            if (!obj_arm_cover_item_inspector){
+                 const status_selected = checkSelected(selected);
+                 if (!status_selected){
+                    write_log_clear(log_arm_cover,"Hiện tại bạn chưa chọn sản phẩm")
+                    return;
+                 };
+
+            }
             obj_arm_cover_item_inspector.setRectangle(objRectangle);
-            write_log_clear("✅ Dữ liệu hợp lệ.");
+            write_log_clear(log_arm_cover,"✅ Dữ liệu hợp lệ.");
             obj_region_arm_cover_canvas.is_available_one_line = false;
             obj_region_arm_cover_canvas.reset();
             canvasManager.clearShapeCanvas();
-            obj_arm_cover_item_inspector.drawAllRectangles(canvasManager,color_rect_shape);
-
+            obj_arm_cover_item_inspector.drawAllRectangles(canvasManager,COLOR_RECT_SHAPE_REGION_DETECT);
+            get_obj_product().highlightItems(scroll_container,ItemsInspector.TYPE_ARM_COVER,"rectangle");
+            const rectangle = obj_arm_cover_item_inspector.getRectangle() //ve lai
+            if (rectangle){obj_arm_cover_item_inspector.drawDetectedObjects(canvasManager);}
         } else {
             let alertMessage = "❌ THÔNG BÁO LỖI DỮ LIỆU NHẬP VÀO:\n\n";
-            write_log_clear(alertMessage);
+            write_log_clear(log_arm_cover,alertMessage);
             resultValidate.errors.forEach(err => {
-                write_log_append(`📍 ${err.rowName}`);
-                write_log_append(` - Giá trị hiện tại: "${err.currentVal}"`);
-                write_log_append(` - Yêu cầu: ${err.expected}`);
+                write_log_append(log_arm_cover,`📍 ${err.rowName}`);
+                write_log_append(log_arm_cover,` - Giá trị hiện tại: "${err.currentVal}"`);
+                write_log_append(log_arm_cover,` - Yêu cầu: ${err.expected}`);
             });
         }
     });
@@ -240,12 +263,5 @@ function createMeasureShapeTable(data_shape = null) {
     return wrapper;
 }
 
-function write_log_clear(text){
-    log_arm_cover.textContent = text;
-}
 
-function write_log_append(text){
-    log_arm_cover.style.whiteSpace = "pre-line"; 
-    log_arm_cover.textContent += text + "\n";
-}
 
