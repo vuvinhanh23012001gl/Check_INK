@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from app.config import PATH_FILE_DATA_CONFIG_COM
+
 class ComRepository:
     def __init__(self):
         self.path_file = Path(
@@ -14,12 +15,12 @@ class ComRepository:
         # CREATE FILE
         # =====================
         if not self.path_file.exists():
-
             self.save_config({})
 
     # =========================
     # LOAD CONFIG
     # =========================
+    
     def load_config(
         self
     ) -> dict:

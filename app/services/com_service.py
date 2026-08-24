@@ -1,6 +1,9 @@
 from app.manager.serial import ManagerSerial
+from app.model import SerialConfig
+from app.config import ComConfig
 import time
 import threading
+
 FORMAT_COMAND_SEND_ARM  =  "cmd:"
 TIME_OUT_WAIT_ARM_RESEND = 4
 
@@ -19,6 +22,54 @@ class ComService:
     def get_shake_hands_complete(self) -> bool:
         with self._lock:
             return self.shake_hands_compelete
+
+    def get_configuration_data(self):
+        """Lấy cấu hình COM hiện tại và danh sách cổng serial trên máy.
+
+        Input: không có.
+        Output: dictionary gồm cấu hình, danh sách cổng và trạng thái kết nối.
+        Errors: lỗi liệt kê cổng được trả về dưới dạng danh sách rỗng.
+        """
+        try:
+            ports = self.manager.serial_com.list_ports()
+        except Exception as error:
+            print(f"[ComService] List ports failed: {error}")
+            ports = []
+        config = ComConfig.from_serial_config(self.manager.serial_com.config)
+        return {
+            "config": config.to_dict(),
+            "ports": ports,
+            "connected": bool(self.manager.serial_com.ser and self.manager.serial_com.ser.is_open),
+        }
+
+
+    def configure_connection(self, port_name: str, baudrate: int) -> dict:
+        """Đổi cổng COM, lưu cấu hình và yêu cầu ManagerSerial kết nối lại.
+
+        Input: ``port_name`` là tên cổng COM; ``baudrate`` là tốc độ truyền.
+        Output: dictionary gồm trạng thái mở cổng, cấu hình hiện tại,
+            trạng thái kết nối và danh sách cổng COM đang có.
+        Errors: ``ValueError`` nếu payload sai; kết nối thất bại được trả về
+            trong ``success=False`` để giao diện vẫn có thể hiển thị kết quả.
+        """
+        requested_config = ComConfig.from_values(port_name, baudrate)
+        previous_config = self.manager.serial_com.config.to_dict()
+        status = self.manager.update_com(
+            requested_config.port_name,
+            requested_config.baudrate,
+        )
+        if not status:
+            self.manager.serial_com.config = SerialConfig.from_dict(previous_config)
+            self.manager.serial_com.save_config()
+            print("[ComService] Kết nối thất bại, đã khôi phục COM.json trước đó")
+        result = self.get_configuration_data()
+        result["success"] = status
+        result["message"] = (
+            "Mở và lưu cổng COM thành công"
+            if status
+            else "Không thể mở cổng COM đã chọn"
+        )
+        return result
 
     def send_and_wait(self, x, y, z, timeout = TIME_OUT_WAIT_ARM_RESEND):
         """
@@ -95,4 +146,3 @@ class ComService:
                 
 
 
-66

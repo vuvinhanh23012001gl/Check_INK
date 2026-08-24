@@ -1,6 +1,7 @@
 import {fetchGet, postData} from "../utills/api.js"
 import {scroll_container,canvasManager}from "../common_value.js"
 import {getValue} from "../utills/logic.js"
+import {write_log_clear,write_log_append} from "./common_value_tool.js"
 import {panner_measure_weld_width,panner_measure_slit_width,
     obj_measure_weld_width_canvas,obj_measure_slit_width_canvas,
     obj_region_arm_sensor_canvas,panner_region_arm_sensor,obj_region_arm_cover_canvas,
@@ -20,6 +21,7 @@ import { event_transition_items as eventTransitionEndChipping } from "./end_chip
 import { event_transition_items as eventTransitionBorderFilm } from "./border_film_tool.js";
 import { event_transition_items as eventTransitionArmCover } from "./arm_cover_tool.js";
 import { event_transition_items as eventTransitionArmSensor } from "./arm_sensor_tool.js";
+import {openOptionPanel} from "../panel_manager.js";
 
 
 const panner_adjust_master = document.getElementById("panner-adjust-master");
@@ -39,6 +41,8 @@ const confirm_overlay = document.getElementById("confirm-exit-overlay");
 const btn_confirm_yes = document.getElementById("btn-confirm-yes");
 const btn_confirm_no = document.getElementById("btn-confirm-no");
 const close_adjust_master = document.getElementById("close-adjust-master");
+const log_regulations = document.getElementById("log-regulations");
+const master_tool_buttons = panner_adjust_master.querySelectorAll(".tool-btn");
 // Ở cấp con nhất (ScratchedPipeItemInspector, SlitItemInspector, ...): Khi !this.rectangle hoặc không có dữ liệu, phương thức toDict() trả về null
 // Ở cấp ItemsInspector: Loại bỏ các inspector bị null. Nếu cả item không còn inspector nào $\rightarrow$ ItemsInspector.toDict() trả về null.
 // Ở cấp Frame: Bỏ qua các Item trả về null. Nếu Frame không có Item nào $\rightarrow$ Frame.toDict() trả về null.
@@ -46,6 +50,7 @@ const close_adjust_master = document.getElementById("close-adjust-master");
 
 let current_frame_box = null;
 let has_clicked_tool = false; 
+let master_load_promise = null;
 let selected =  {
         product_id: -1,
         frame_id: -1,
@@ -243,22 +248,73 @@ function refreshPanels() {
 }
 
 
-header_adjust_master.addEventListener("click",async ()=>{
+async function loadMasterDataOnce(openPanel = false){
     console.log("--------Bạn đã nhấn vào thay đổi master--------");
-    console.log("Bạn vừa click vào hiệu chuẩn kích thước");
-    panner_adjust_master.classList.add("active");
-    let head_data_master = await  fetchGet("/law_regulation");
+    write_log_clear(log_regulations, "🔧 Bắt đầu điều chỉnh master...");
+    write_log_append(log_regulations, "🔎 Đang xác định sản phẩm hiện tại...");
+    if (openPanel) {
+        openOptionPanel(panner_adjust_master);
+    }
+    master_tool_buttons.forEach(button => button.disabled = true);
+
+    write_log_append(log_regulations, "📡 Đang yêu cầu dữ liệu master từ hệ thống...");
+    let head_data_master = await fetchGet("/law_regulation");
     console.log("head_data_master",head_data_master);
-    let data_point =  head_data_master?.data?.data_point;
-    selected.product_id = head_data_master?.data?.product?._id;
+
+    if (!head_data_master?.ok || !head_data_master?.data) {
+        write_log_append(log_regulations, "❌ Không thể lấy dữ liệu master. Vui lòng kiểm tra sản phẩm đang chọn và kết nối hệ thống.");
+        master_tool_buttons.forEach(button => button.disabled = false);
+        return;
+    }
+
+    let data_point = head_data_master.data.data_point;
+    selected.product_id = head_data_master.data.product?._id;
     console.log("ID sản phẩm đang chọn là :",selected.product_id);
-    let data_master = head_data_master?.data?.data_master;
+    write_log_append(log_regulations, `✅ Đã xác định sản phẩm: ${selected.product_id ?? "chưa có mã"}.`);
+
+    let data_master = head_data_master.data.data_master;
     console.log("Data master",data_master);
-    let actual_wid_img = head_data_master?.data?.wid_img;
-    let actual_hei_img = head_data_master?.data?.hei_img;
-    create_img_items_dimesion_calibration(data_point);
-    create_object_need(head_data_master?.data?.tree?.data);
+    write_log_append(log_regulations, `📸 Đã lấy danh sách master (${Object.keys(data_point || {}).length} frame).`);
+
+    let actual_wid_img = head_data_master.data.wid_img;
+    let actual_hei_img = head_data_master.data.hei_img;
+    write_log_append(log_regulations, `📐 Kích thước ảnh master: ${actual_wid_img} x ${actual_hei_img}.`);
+    write_log_append(log_regulations, "📋 Đang nạp cây luật phán định của master...");
+    try {
+        create_object_need(head_data_master.data.tree?.data);
+    } catch (error) {
+        console.error("Lỗi nạp cây luật phán định:", error);
+        write_log_append(log_regulations, "⚠️ Không thể nạp cây luật phán định, nhưng vẫn hiển thị ảnh master.");
+    }
+
+    scroll_container.querySelectorAll(".box-frame").forEach(frame => frame.remove());
+    create_img_items_dimesion_calibration(data_point || {});
+    master_tool_buttons.forEach(button => button.disabled = false);
+    write_log_append(log_regulations, "✅ Hoàn tất lấy master. Có thể chọn ảnh và điều chỉnh các vùng kiểm tra.");
+}
+
+async function loadMasterData(openPanel = false){
+    if (master_load_promise) {
+        if (openPanel) {
+            openOptionPanel(panner_adjust_master);
+        }
+        return master_load_promise;
+    }
+
+    master_load_promise = loadMasterDataOnce(openPanel);
+    try {
+        return await master_load_promise;
+    } finally {
+        master_tool_buttons.forEach(button => button.disabled = false);
+        master_load_promise = null;
+    }
+}
+
+header_adjust_master.addEventListener("click", async ()=>{
+    await loadMasterData(true);
 });
+
+loadMasterData();
 
 function create_object_need(tree){
     // try {
@@ -312,8 +368,8 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
     if(!frame_box){console.log("Lỗi hoặc không có sản phẩm");return;}
     frame_box.appendChild(img_item);
         img_item.addEventListener("click",()=>{
-            if (!has_clicked_tool){return;}
             canvasManager.clearShapeCanvas();
+            canvasManager.clearPreviewCanvas();
             canvasManager.show_img_items(img_img);
             scroll_container.querySelectorAll(".box-frame").forEach(frame => {
                 frame.querySelectorAll(".img-item").forEach(items => {
@@ -337,7 +393,7 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
             current_frame_box = frame_box;
             selected.items_id = Number(img_item.dataset.id);  
             selected.frame_id = Number(frame_id);
-            if (typeof additional_events.onFrameChange === "function") {
+                if (has_clicked_tool && typeof additional_events.onFrameChange === "function") {
                     additional_events.onFrameChange(selected.product_id ,selected.frame_id, selected.items_id,getNameEventActivate());
             }
             console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.items_id}`);

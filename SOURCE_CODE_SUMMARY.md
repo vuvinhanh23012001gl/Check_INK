@@ -1,0 +1,503 @@
+# Tong hop du an Python Detect Width Line
+
+> Ngay tong hop: 2026-08-20
+> Pham vi: toan bo source Python, cau hinh, tai lieu, test, template/static va tai nguyen runtime dang co trong workspace.
+
+> Workspace co khoang 139 file Python. Cac file model nhi phan, virtual environment, anh, PatchCore index, TensorBoard event va artifact huan luyen duoc ghi nhan theo vai tro nhung khong doc nhu source van ban.
+
+## 1. Muc dich du an
+
+Day la ung dung kiem tra chat luong san pham tren day chuyen (width line), ket hop:
+
+- FastAPI lam HTTP API va phuc vu giao dien web.
+- Socket.IO de day log/du lieu theo thoi gian thuc cho client.
+- Camera de chup anh tai cac diem kiem tra.
+- Ket noi serial/COM voi ARM/IAI va MCU, co co che handshake, TX/RX queue.
+- Calibration de anh va toa do vat ly co the quy doi/phuc vu do kich thuoc.
+- AI vision de phat hien cau truc, loi be mat, vien film, mang ban tham va duong han.
+- Product, point, regulation va calibration duoc luu trong cac file JSON/anh duoi `app/storage`.
+
+Kich thuoc anh camera duoc dat mac dinh la `2048 x 1536`.
+
+## 2. Cach chay
+
+File `run.py` chay Uvicorn voi import `app.main:app`:
+
+- Host: `127.0.0.1`
+- Port: `8000`
+- `reload=False`
+- WebSocket ping interval tat (`ws_ping_interval=None`)
+
+Lenh tuong duong:
+
+```text
+python run.py
+```
+
+Hoac dung file `run_fastapi.bat` neu moi truong Windows da duoc cau hinh.
+
+Khi ung dung khoi dong, `app.main` tao FastAPI app, mount static/storage, dang ky router va boc app bang `socketio.ASGIApp`.
+
+## 3. Luong khoi dong
+
+```mermaid
+flowchart TD
+    A[run.py] --> B[uvicorn app.main:app]
+    B --> C[FastAPI lifespan]
+    C --> D[create_container]
+    D --> E[ServiceContainer]
+    E --> F[Queues, camera, serial, services]
+    E --> G[YOLO, UNet, calibration coordinator]
+    C --> H[Pipeline background thread]
+    C --> I[log_sender background task]
+    B --> J[HTTP routers]
+    B --> K[Socket.IO]
+```
+
+`lifespan` thuc hien cac viec chinh:
+
+1. Goi `create_container()` va gan container vao `fastapi_app.state.services`.
+2. Tao `Pipeline` de khoi dong luong xu ly nen.
+3. Tao task `log_sender` de gui log qua Socket.IO.
+4. Khi shutdown hien tai moi in thong bao don dep; `Pipeline`, camera, serial, worker va task log chua co quy trinh stop day du.
+
+`ServiceContainer` tao model va warmup ngay trong luc startup. Vi vay viec khoi dong phu thuoc vao model file, PyTorch/Ultralytics, SDK camera `stapipy` va trang thai phan cung COM. Container cung tao nhieu thread/queue co side effect, nen test hoac import truc tiep can mock hardware va model.
+
+## 4. Kien truc module
+
+### 4.1. `app/main.py`
+
+Diem vao cua ung dung. Tao FastAPI, mount:
+
+- `/static` -> `app/static`
+- `/storage` -> `app/storage`
+
+Dang ky cac nhom router: home, camera, software, product, capture product, draw regulations, calibration, COM, dimensional calibration va tool/law regulation.
+
+### 4.2. `app/container.py`
+
+`ServiceContainer` la composition root cua ung dung. Tai day cac dependency duoc tao va noi voi nhau:
+
+- `IAIConfig` va `IAIService`.
+- `QueueManager`, cac `Worker` va queue noi bo.
+- `ManagerSerial`, `SerialConnect`, `ComRepository`, `ComService`.
+- `Camera`.
+- Repository/service cho point, product, choose product, calibration va judgment law.
+- `Infor_Software`, `Config_SoftWare`.
+- Model va service AI.
+- `CalibSearchCoordinator` cho quy trinh calibration tu dong.
+
+Container cung cap `set_mode()`/`get_mode()` co khoa `threading.Lock` de pipeline doc/ghi mode an toan hon trong moi truong nhieu luong.
+
+### 4.3. `app/pipeline.py` va `app/stages/`
+
+Pipeline chay trong daemon thread, lap moi 1 giay:
+
+- `MODE_PREPOCESS`: chay `StagePreprocess` de kiem tra ket noi va dua ARM ve goc.
+- `MODE_TRANSFORM`: chay `StageTransform` de lay product dang chon, gui toa do XYZ cho ARM, cho phan hoi va trigger camera chup anh.
+- `MODE_EXPORT`: hien chua co xu ly trong `StageExport`.
+
+Cac stage hien tai:
+
+- `stage_1_preprocess.py`: xoa RX/TX queue, gui `move_to_org:`, cho `has_returned_org:`; neu thanh cong dat handshake va chuyen sang transform.
+- `stage_2_transform.py`: lay cac diem XYZ va duong dan retrain, gui lenh dang `cmd:x,y,z,80`, cho phan hoi, sau do chup anh.
+- `stage_3_export.py`: moi chi co constructor.
+
+### 4.4. `app/config/`
+
+- `path_config.py`: tao duong dan den storage, input model, JSON config, anh san pham, calibration va cac file model.
+- `ai_config.py`: dat tham so UNet/YOLO/PatchCore, device, image size, confidence, IoU, threshold va ten class.
+- `app_config.py`: kieu du lieu gui, kich thuoc anh camera.
+- `queue_config.py`: ten queue va size queue.
+- `iai_config.py`: cau hinh IAI.
+- `calibration_config.py`: cau hinh calibration.
+
+Cac class AI quan trong:
+
+- `UnetConfig` va `UnetCofigAutoDetectLineMaster`.
+- `YoloDetectObjectConfig`, `YoloSegmentConfig`.
+- `ClassNameObjectStructureDetectConfig`: `hole`, `cover_arm`, `sensor_arm`.
+- `ClassNameModelSurfaceConfig`: `air_bubble`, `scratch`.
+- `PatchCoreAnomalyConfig`: index, nprobe, image size va device CPU/CUDA.
+
+### 4.5. `app/engines/`
+
+`engines/model_AI/` la lop bao boc model:
+
+- `model_yolo_object.py`: YOLO object detection.
+- `model_yolo_segment.py`: YOLO segmentation.
+- `model_unet.py`: UNet segmentation/edge detection.
+- `model_patch_core.py`: PatchCore anomaly detection.
+
+`engines/AI_model_process/` chuyen output model thanh dang phuc vu xu ly:
+
+- `frame_yolo_object_process.py`.
+- `frame_yolo_segment_process.py`.
+
+`engines/service/` la lop nghiep vu cho tung bai toan:
+
+- `structure_frame_yolo_service.py`: cau truc, hole, arm cover, arm sensor.
+- `surface_fram_yolo_service.py`: air bubble/scratch tren be mat.
+- `boder_film_unet_service.py`: bien film.
+- `permeable_membrane_yolo_service.py`: mang ban tham, phan trong va bien.
+- `weld_seamunet_unet_service.py`: duong han va tim bien/polygon.
+- Cac service nay duoc tao trong container va duoc router judgment goi.
+
+### 4.6. `app/judger/structure/`
+
+Chua cac detector/phuong thuc phan dinh nghiep vu:
+
+- `hole_detector.py`.
+- `arm_cover_detector.py`.
+- `arm_sensor_detector.py`.
+- `border_detector.py`.
+- `semi_permeable_membrane.py`.
+- `weld_seam_air_bubbles_detector.py`.
+- `scratch_the_pipe_detector.py`.
+
+Day la tang sau AI, noi ket qua detection/segmentation voi luat phan dinh va ket qua tra ve cho client.
+
+### 4.7. `app/services/`
+
+Service layer hien co:
+
+- `product_service.py`: CRUD/thao tac san pham.
+- `product_choose_service.py`: san pham dang duoc chon.
+- `point_service.py`: diem kiem tra, duong dan anh va toa do.
+- `calibration_service.py`: doc/ghi va xu ly calibration.
+- `com_service.py`: giao tiep thong qua serial manager.
+- `iai_service.py`: kiem tra toa do/logic lien quan IAI.
+- `judment_law_product_service.py`: luat phan dinh theo san pham.
+
+`services/camera/`:
+
+- `camera_connect.py`: ket noi camera va chup frame.
+- `start_trigger.py`: co che trigger/chup.
+- `test.py`: ma test/thuc nghiem camera.
+
+`services/log/`:
+
+- `log_txt.py`, `log_csv.py`, `log_img.py`: ghi log theo dang.
+- `log_manager.py`: quan ly log.
+- `infor_software.py`, `config_software.py`: thong tin va cau hinh phan mem.
+
+`services/calculate_the_dimensions/` la tang cu/bo xu ly do kich thuoc va calibration, gom handler model, frame, calibration, aggregate va work detect. Mot so file co code dang comment hoac co tinh chat legacy.
+
+### 4.8. `app/repository/`
+
+Repository lam viec voi du lieu luu cuc bo:
+
+- `product_repository.py`.
+- `choose_product_repository.py`.
+- `point_repository.py`.
+- `calibration_reponsitory.py`.
+- `judment_law_product_reponsitory.py`.
+- `com_repository.py`.
+
+Du lieu khong thay mot tang database quan he; thiet ke hien tai nghieng ve JSON, anh va file cau hinh trong storage.
+
+### 4.9. `app/model/`
+
+Cac model du lieu/noi bo:
+
+- `product.py`, `point.py`, `line.py`.
+- `calibratioin_model.py`.
+- `serial.py`.
+- `queue_all.py`: queue manager va worker.
+- `model_AI.py`.
+
+### 4.10. `app/core/` va `app/validate/`
+
+- `core/dependencies.py`: FastAPI dependency lay `ServiceContainer` tu app state.
+- `core/result.py`: wrapper ket qua thanh cong/that bai.
+- `core/erro_code.py`: ma loi.
+- `core/context.py`: context dung chung.
+- `validate/validate_capture_product.py`: validate du lieu capture.
+- `validate/validate_dimesional_calibration.py`: validate calibration kich thuoc.
+- `validate/validate_tool_law_regulation.py`: validate payload phan dinh.
+
+## 5. API va giao dien
+
+### Home
+
+`home.py` phuc vu giao dien root `/` bang Jinja2 template va co endpoint `/data_home` de lay/gui du lieu home.
+
+### Camera
+
+`api_config_camera.py` dang ky prefix `/camera`; hien co `/camera/status` tra ve trang thai co ban.
+
+### Product va software
+
+- `api_product.py`: them/sua/xoa, lay san pham va chon san pham.
+- `api_config_software.py`: cau hinh/thong tin phan mem.
+- `api_config_camera.py`: cau hinh/trang thai camera.
+
+### Capture product
+
+`api_captureproduct.py` dang ky prefix `/captureproduct`, phuc vu luong chay frame/product, xoa anh item, chay diem va cac thao tac lien quan camera + ARM.
+
+### Calibration
+
+- `/calibration`: capture, calculator, init data, exit.
+- `/dimesional_calibration`: gui diem XYZ cho ARM, chay quy trinh calibration tu dong, exit.
+
+Dimensional calibration su dung `IAIService` de validate vi tri, `ComService` de gui lenh va `CalibSearchCoordinator` de chay algorithm.
+
+### Draw regulations
+
+`api_draw_regulations.py` dang ky prefix `/draw-regulations`, co cac thao tac ve ve/quy dinh, chap nhan du lieu va thoat man hinh.
+
+### Law regulation / judgment
+
+`api_tool_law_regulations.py` dang ky prefix `/law_regulation`, gom:
+
+- Measurement va tu dong tao line.
+- Judgment cho arm sensor.
+- Judgment cho arm cover.
+- Judgment border film.
+- Judgment permeable membrane.
+- Judgment hole.
+- Judgment scratched pipe.
+- Luu law/regulation.
+
+Luong pho bien: validate payload -> lay anh master tu PointService -> doc anh bang OpenCV -> chay AI service/detector -> quy doi box theo kich thuoc canvas -> tra `Result`.
+
+`api_tool_law_regulations.py` hien co cac nhom judgment cho measurement, arm sensor, arm cover, border film, permeable membrane, hole va scratched pipe. Cac endpoint nay ket noi truc tiep toi service AI va detector trong `app/judger/structure/`.
+
+### Socket.IO
+
+`socketio_log.py` tao namespace `/log` va `/data`, doc queue log/data va emit trang thai camera, COM, capture, calibration va ket qua calibration. Cau hinh `cors_allowed_origins="*"` dang cho phep moi origin.
+
+### COM va Socket.IO
+
+- `api_com.py` dang ky `/com`; mot so endpoint hien la khung chua hoan thien.
+- `socketio_log.py` tao `sio` va task gui log queue den client.
+
+## 6. Luong nghiep vu chinh
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as FastAPI/Socket.IO
+    participant Services as ServiceContainer
+    participant Arm as ARM/IAI qua COM
+    participant Camera
+    participant AI
+    participant Store as JSON/Anh storage
+
+    Client->>API: Chon product / cau hinh diem
+    API->>Services: Goi Product/Point/Calibration service
+    Services->>Store: Doc/ghi cau hinh va anh
+    Services->>Arm: Kiem tra handshake, gui XYZ
+    Arm-->>Services: Phan hoi trang thai
+    Services->>Camera: Trigger chup anh
+    Camera-->>Services: Frame/image
+    Services->>AI: Detect/segment/anomaly
+    AI-->>Services: Box/polygon/ket qua
+    Services-->>API: Result OK/Fail
+    API-->>Client: JSON va log realtime
+```
+
+Pipeline tu dong hien thuc hien handshake ve goc truoc, sau do di qua cac diem cua product dang chon, chup anh tai moi diem. Phan AI va phan dinh co the duoc goi qua cac API judgment; stage export chua duoc trien khai day du.
+
+## 7.1. Data flow cua mot lan kiem tra
+
+```text
+Payload API
+    -> validate
+    -> PointService lay anh master/path/model
+    -> OpenCV doc va crop ROI
+    -> YOLO/UNet/PatchCore infer
+    -> detector loc ket qua va quy doi toa do
+    -> Result.Ok/Fail
+    -> HTTP response va Socket.IO log
+```
+
+Calibration tu dong di theo luong: API nhan cau hinh -> `CalibSearchCoordinator` dieu khien ARM -> camera chup nhieu anh -> worker chay UNet -> `CalibrationService` tinh median/MAD, loc outlier va scale mm/pixel -> ghi JSON va gui log realtime.
+
+## 7. Tai nguyen model va du lieu
+
+### Model/du lieu trong workspace
+
+- `app/input/model/`: model runtime duoc `path_config.py` tham chieu, gom UNet, YOLO va PatchCore.
+- `model_air_bubble/`: du lieu/model lien quan air bubble.
+- `model_patch_core/`: `patchcore_ivf.index`, `patchcore_memory.npy`.
+- `unet_test_model_vien/`: model UNet test.
+- `train17`, `train18`, `train38`, `train42`: artifact huan luyen, `args.yaml`, `results.csv`, `weights` va TensorBoard event.
+- `model_air_bubble/train16`: artifact huan luyen khac.
+- `app/storage/`: anh san pham, anh ROI, JSON san pham, point, calibration, regulation, config COM/IAI va log khi chay.
+- `app/static/`, `app/templates/`: tai nguyen giao dien.
+
+Model binaries, anh va virtual environment khong duoc doc nhu van ban trong ban tong hop nay; chi ghi nhan duong dan va vai tro cua chung.
+
+## 8. Test hien co
+
+Workspace co cac nhom test cho:
+
+- Product service, choose product, point service.
+- Calibration.
+- Serial connect va serial manager.
+- IAI service.
+- Model YOLO object/segment, UNet, PatchCore.
+- Frame AI model process.
+- Structure/surface judgment detector.
+- Camera va cac ham crop/xu ly anh.
+- Calibration search coordinator.
+
+Test dang nam trong `app/tests/`. Can kiem tra lai fixture, hardware dependency, duong dan local va model file truoc khi chay full suite.
+
+Mot so file la script thu nghiem co `main()` hon la unit test pytest chuan. Chua thay bo fixture/mock hardware co he thong; mot so test import symbol/module khong con dong bo, dung duong dan tuyet doi hoac can model/anh ngoai workspace. Chua co integration test ro rang cho FastAPI lifespan va toan bo API.
+
+## 9. Phu thuoc ky thuat quan sat duoc
+
+`requirements.txt` la nguon phu thuoc cua du an. Ma nguon cho thay cac nhom thu vien chinh sau:
+
+- FastAPI, Uvicorn, Socket.IO.
+- OpenCV.
+- PyTorch va cac thu vien model/vision.
+- NumPy va xu ly anh.
+- Serial/COM.
+- Pydantic/Jinja2.
+
+Du an kem mot thu muc `venv-project-width-line`; khong nen coi virtualenv nay la source code hoac dua vao version control.
+
+`requirements.txt` dang dung encoding UTF-16/BOM, do do can doc bang encoding phu hop khi kiem tra danh sach dependency day du.
+
+## 10. Diem can chu y va rui ro ky thuat
+
+1. `StageTransform.run()` goi `EnumMode.MODE_DEAFAULT`, nhung `EnumMode` chi khai bao `MODE_PREPOCESS`, `MODE_TRANSFORM`, `MODE_EXPORT`. Nhanh loi nay se gay `AttributeError` khi ARM khong phan hoi.
+2. `StagePreprocess.check_protocol_connect_com()` cho vong lap cho phan hoi ma khong thay timeout ro rang, nen pipeline co the bi block neu COM khong phan hoi.
+3. `Pipeline._run_pipeline()` la vong lap vo han; `stop_task_pipeline()` chi dat co, nhung vong lap khong ngu/ngat theo co khi da dung va khong duoc goi trong lifespan shutdown.
+4. `StageExport` chua co logic.
+5. Mot so endpoint, dac biet trong `api_com.py`, con `pass` hoac chi la skeleton.
+6. `ServiceContainer` load nhieu model ngay luc khoi dong, co the ton bo nho va lam cham startup; cau hinh mac dinh cua YOLO la CPU neu khong doi.
+7. `main.py` dung duong dan tuong doi cho `app/static`, `app/storage`, `app/templates`; chay tu thu muc goc la dieu kien quan trong.
+8. `api_calibration.py` co duong dan anh test cung hard-code theo may phat trien; can thay bang config/storage khi dua vao moi truong khac.
+9. `routers.__all__` co dau hieu khong dong bo: tham chieu `socket_log` khong duoc import va thieu dau phay giua hai ten cuoi. Import truc tiep trong `main.py` van dang dung cac symbol rieng, nhung `from app.routers import *` co the loi.
+10. Ten file va ten symbol co nhieu typo/khong dong nhat (`dimesional`, `reponsitory`, `judment`, `MODE_PREPOCESS`). Chua can doi ten neu khong co ke hoach migration vi co the pha import.
+11. Quan ly queue, camera, COM va browser thread co nhieu side effect khi import/khoi tao; test don vi nen mock hardware va model.
+12. Quy trinh shutdown moi chi in log, chua dong camera, serial, worker, thread pipeline va task Socket.IO mot cach tuong minh.
+13. `api_captureproduct.py` dung `EnumMode.MODE_RUN_ONE_FRAME`, nhung enum hien tai khong khai bao mode nay; endpoint `/captureproduct/run_frame` co the loi khi duoc goi.
+14. `api_calibration.py` tham chieu `services.obj_cv2`, `services.obj_logic` va `services.obj_calibration`, nhung cac thuoc tinh nay khong thay duoc khoi tao trong `ServiceContainer` hien tai.
+15. `api_draw_regulations.py` tham chieu `services.obj_logic`, `services.obj_products_service` va mot so method/property khong thay dong bo voi container/service hien tai.
+16. `StageTransform` lay `result_path` tu frame 0 nhung dung trong vong lap cho nhieu frame, co nguy co dung sai duong dan retrain.
+17. Calibration coordinator va mot so handler/test con hard-code duong dan nhu `C:\Users\anhuv\Desktop\test_tool\...` va `C:\Users\anhuv\Desktop\train\...`.
+18. Trong calibration coordinator, mot so trang thai camera/COM bi gan cung thanh `True`, co the che mat loi phan cung thuc te. Thread calibration duoc tao non-daemon co the giu process chua thoat khi shutdown.
+
+## 11. Trang thai tong quat
+
+### Da co khung va dang duoc su dung
+
+- FastAPI app + Uvicorn entrypoint.
+- Service container va dependency injection.
+- Product/point/calibration repository-service.
+- Camera, serial/COM, queue worker.
+- YOLO object/segment, UNet va PatchCore wrapper.
+- API cho product, capture, calibration, regulation va software config.
+- Storage JSON/anh va giao dien template/static.
+- Bo test tuong doi rong cho service, model va judgment.
+
+### Dang phat trien/chua hoan tat
+
+- Pipeline export.
+- Mot so endpoint COM va luong hardware.
+- Shutdown lifecycle.
+- Mot so handler tinh kich thuoc cu/legacy.
+- Kiem thu end-to-end tren hardware that.
+- Chuan hoa ten, duong dan va cau hinh moi truong.
+
+## 12. Thu tu nen doc khi tiep tuc phat trien
+
+1. `run.py` -> `app/main.py` de nam entrypoint.
+2. `app/container.py` de nam dependency va side effect startup.
+3. `app/pipeline.py` -> `app/stages/` de nam luong tu dong.
+4. `app/routers/` de nam contract voi frontend/client.
+5. `app/services/` -> `app/repository/` -> `app/model/` de nam luong du lieu.
+6. `app/engines/` -> `app/judger/` de nam AI va phan dinh.
+7. `app/config/`, `app/storage/`, `app/input/model/` de doi chieu cau hinh/runtime.
+8. `app/tests/` de kiem tra hanh vi va phat hien phu thuoc hardware/model.
+
+## 13. Ket luan
+
+Du an la mot he thong inspection cong nghiep ket hop dieu khien co khi va computer vision. Kien truc hien tai da tach kha ro router, service, repository, model va engine, nhung `ServiceContainer` van dang om phan lon viec khoi tao va side effect. Trong ngan han, uu tien nen la sua loi mode fallback, them timeout/shutdown cho pipeline va hardware, bo sung test mock cho COM/camera, sau do moi hoan thien export va chuan hoa cau hinh duong dan.
+
+Ban tong hop nay duoc cap nhat sau khi quet toan bo workspace vao ngay 2026-08-20. Chua chay full application/test suite vi viec nay co the khoi tao camera, COM va model AI that; cac nhan dinh ve runtime can duoc xac nhan them bang test co mock hoac moi truong hardware phu hop.
+
+## 14. Thay doi gan day va diem bat dau cho section moi
+
+Day la muc doc nhanh cho cac thay doi sau ngay 2026-08-20.
+
+### 14.1. Camera configuration
+
+- `app/config/camera_config.py`: `CameraConfig`, validation va parser doc truc tiep file GenApi `features.cfg`.
+- `app/services/camera/camera_connect.py`: doc, apply, save, reset va rollback camera feature.
+- `app/routers/api_config_camera.py`: API web camera.
+- `app/templates/home.html`: panel `#paner-camera-config`.
+- `app/static/css/camera_config_panel.css`: CSS panel camera.
+- `app/static/js/camera_config_panel.js`: load config, Stream Video, Accept, Save, Thoat va console log.
+- Nguon cau hinh duy nhat: `app/storage/features.cfg`; khong dung `config_camera.json`.
+
+Cac gia tri co selector trong `features.cfg` phai doc dung context:
+
+- `AcquisitionFrameRate`: dong khong selector, hien tai `98.2376`.
+- `ExposureTime`: dong `ExposureTimeSelector=Common`, hien tai `9998.78`.
+- `Gain`: dong `GainSelector=AnalogAll`, hien tai `100`.
+- `BlackLevel`: dong `BlackLevelSelector=AnalogAll`.
+- `BalanceRatio`: doc rieng Red/Green/Blue theo `BalanceRatioSelector` (`229/128/272`).
+- `TriggerMode`: doc dong `TriggerSelector=FrameStart`.
+
+API camera:
+
+- `GET /camera/status`
+- `GET /camera/config`
+- `POST /camera/config/apply`: apply tam thoi, khong ghi feature file.
+- `POST /camera/config/save`: apply va ghi nodemap bang `FeatureBag.store_nodemap_to_bag()` + `save_to_file()`.
+- `POST /camera/config/reset`: nap lai `features.cfg`.
+- `GET /camera/exit`: tra `redirect_url` ve `/`.
+
+Neu Apply/Save that bai, camera config runtime va file feature duoc rollback ve trang thai truoc do. `CameraConfig.OPERATOR_FIELDS` khong cho operator sua white balance calibration.
+
+### 14.2. Camera panel frontend
+
+Panel camera nam trong `.show-option`, dung `openOptionPanel()` tu `app/static/js/panel_manager.js` de dong panel khac. `Stream Video` dung cung luong `active_sceen_show_video()` + `show_video_product()` voi dimensional calibration. White Balance Auto la custom button: `Off` khoa Red/Green/Blue, `On` mo ba input. Console log dung prefix `[CameraConfig]`.
+
+### 14.3. COM configuration
+
+- `app/config/com_config.py`: `ComConfig`, validation va chuyen doi voi `SerialConfig`.
+- `app/services/com_service.py`: list port, configure connection va rollback khi mo cong that bai.
+- `app/routers/api_com.py`: `GET /com/config`, `POST /com/config`.
+- `app/templates/home.html`: overlay `#overlay_config_com`.
+- `app/static/css/config_com.css`: giao dien overlay dark phong cach panel chon san pham.
+- `app/static/js/config_com.js`: load danh sach cong, render, submit va dong overlay.
+- `app/storage/config/COM.json`: cau hinh duoc luu de lan chay sau.
+
+`SerialConnect` doc `COM.json` khi khoi tao; `ManagerSerial` tu kiem tra va mo lai cong da luu. `ComService` dung `ManagerSerial.update_com()` de dong cong cu, mo cong moi, luu config va khoi dong lai RX/TX.
+
+### 14.4. Product header va panel switching
+
+`app/routers/home.py` lay product dang chon, tra ten qua `ProductService` va truyen `selected_product_name`. `app/templates/home.html` hien thi `#current-product-text` ben phai header; CSS nam trong `app/static/css/home.css`, font 14px va ellipsis cho ten dai.
+
+`app/static/js/panel_manager.js` xoa `active` tren cac `.show-option > .paner` truoc khi them `active` cho panel moi. Cac luong capture, dimensional calibration, adjustment master va camera config deu dung helper nay. Tranh gan `transform`, `opacity`, `z-index` inline vi co the lam panel cu tiep tuc che panel moi.
+
+### 14.5. Thu tu doc nhanh cho section moi
+
+1. Doc `app/container.py` de biet service va side effect startup.
+2. Doc router lien quan de biet endpoint/dependency.
+3. Doc service de biet nghiep vu va hardware operation.
+4. Doc config/repository de biet nguon du lieu luu tru.
+5. Doc template + JS + CSS de biet ID/class giao dien.
+6. Chay `venv-project-width-line\Scripts\python.exe -m py_compile` va focused test/harness.
+
+Trang thai da xac nhan:
+
+- SDK StApi co `FeatureBag.store_nodemap_to_bag`, `save_to_file`, `store_file_to_bag`, `load`.
+- Parser `features.cfg` da tra dung cac gia tri camera selector-aware.
+- Camera config rollback va COM config separation da duoc kiem tra bang runtime harness.
+- Cac file lien quan da compile va diagnostics khong bao loi tai thoi diem cap nhat.
+
+Rui ro con lai:
+
+- Chua co integration test voi camera/COM that.
+- Ten node GenApi phu thuoc model camera Sentech.
+- Khong nen sua thu cong `features.cfg` trong production; nen luu qua SDK.
+- Full app startup khoi tao model, camera, COM va thread; test router nen dung service fake.

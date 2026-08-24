@@ -2,6 +2,7 @@
 import {scroll_container,SocketLog,canvasManager,
     get_camera_connection,active_sceen_show_video,show_video_product}from "./common_value.js";  // Khoi ghein thi anh
 import {postData}from "./utills/api.js";
+import {openOptionPanel} from "./panel_manager.js";
 
 
 console.log("-- Mở File capture hình ảnh thành công --");
@@ -108,7 +109,7 @@ btn_add_point.addEventListener("click", () => {
 
 header_btn_function_capture_product.addEventListener("click",function(){       
         console.log("Click vào chụp ảnh sản phẩm");
-        paner_capture_product.classList.add("active");
+        openOptionPanel(paner_capture_product);
         active_sceen_show_video();
         postData("/captureproduct", {"status": "UI_Capture"}).then(data => {
             console.log("Data Receive:",data.data);

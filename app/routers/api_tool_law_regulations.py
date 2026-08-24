@@ -17,23 +17,38 @@ router = APIRouter(
 
 @router.get("/")
 def header_function(services: ServiceContainer = Depends(get_services)):
-    print("Client vừa nhấn cấu hình law_regulation")
+    print("🔧 [Master] Người dùng đã nhấn 'Điều chỉnh master'.")
+    print("🔎 [Master] Đang xác định sản phẩm hiện tại...")
     choose_product_current = services.obj_choose_product.get_choose_product()
-    print("Sản phẩm đang chọn", choose_product_current)
+    print("📦 [Master] Sản phẩm đang chọn:", choose_product_current)
     if not choose_product_current.ok:
+        print("❌ [Master] Không xác định được sản phẩm đang chọn.")
         return Result.Fail(choose_product_current.error).to_dict()
     product_id = choose_product_current.data
     product_result = services.obj_products_service.get_product_by_id(product_id)
     if not product_result.ok:
+        print(f"❌ [Master] Không lấy được thông tin sản phẩm: {product_id}")
         return Result.Fail(product_result.error).to_dict()
     product = product_result.data
+    print(f"✅ [Master] Đã lấy thông tin sản phẩm: {product_id}")
+
+    print("📸 [Master] Đang lấy danh sách ảnh master và điểm kiểm tra...")
     points_result = services.obj_point_service.get_points_by_product_id(product_id)
-    # Ưu tiên lấy dữ liệu từ law_regulation_service
+    if points_result.ok:
+        print(f"✅ [Master] Đã lấy dữ liệu điểm/ảnh master cho sản phẩm: {product_id}")
+    else:
+        print("⚠️ [Master] Không lấy được đầy đủ dữ liệu điểm/ảnh master.")
+
+    print("📋 [Master] Đang lấy cây luật phán định...")
     tree = services.obj_law_regulation_service.get_product_data(str(product_id))
-    # Nếu thất bại thì dùng dữ liệu từ point_service
     if not tree.ok or tree.data is None:
+        print("⚠️ [Master] Chưa có cây luật riêng, chuyển sang lấy cây điểm mặc định...")
         tree = services.obj_point_service.get_point_tree_by_product_id(product_id)
-    # print("tree:", tree.data if tree.ok else None)
+    if tree.ok and tree.data is not None:
+        print("✅ [Master] Đã lấy cây luật phán định của master.")
+    else:
+        print("⚠️ [Master] Không có cây luật phán định để nạp.")
+    print("✅ [Master] Hoàn tất chuẩn bị dữ liệu điều chỉnh master.")
     return Result.Ok({
         "wid_img": WIDTH_IMG_CAMERA_CAPTURE,
         "hei_img": HEIGHT_IMG_CAMERA_CAPTURE,

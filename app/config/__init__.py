@@ -6,3 +6,5 @@ from .ai_config import (UnetConfig,UnetCofigAutoDetectLineMaster,YoloSegmentConf
                         YoloDetectObjectConfig,ClassNameModelSurfaceConfig,
                         ClassNameObjectStructureDetectConfig,PatchCoreAnomalyConfig)
 from .calibration_config import CalibrationConfig
+from .camera_config import CameraConfig
+from .com_config import ComConfig

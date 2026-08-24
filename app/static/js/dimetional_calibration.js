@@ -2,6 +2,7 @@ import {fetchGet,postData} from "./utills/api.js"
 import {scroll_container,canvasManager,active_sceen_show_video,show_video_product,get_camera_connection,SocketData,SocketLog,HEIGH_IMG_SHAPE,WIDTH_IMG_SHAPE}from "./common_value.js";
 import {DimesionalCalibrationCanvas} from "./canvas/dimesional_calibration_canvas.js"
 import {}from "./utills/logic.js";
+import {openOptionPanel} from "./panel_manager.js";
 
 
 
@@ -280,7 +281,7 @@ function selection_data_input(element, data, placeholder = "default") {
 
 header_dimetional_calibration.addEventListener("click",async ()=>{
    
-    paner_draw_calibration.classList.add("active");
+    openOptionPanel(paner_draw_calibration);
     canvasManager.setTool(obj_draw_calibration); 
     console.log("Bạn vừa click vào hiệu chuẩn kích thước");
     let head_data = await  fetchGet("/dimesional_calibration");
@@ -508,15 +509,22 @@ function create_hight_light_items_for_frame(data){
     }
 } 
 
-run_point.addEventListener("click",()=>{
+run_point.addEventListener("click",async ()=>{
     console.log("Bạn vừa click vào run point");
-    if (coordinate_items_now.x == -1 || coordinate_items_now.y == -1 || coordinate_items_now.z == -1){
+    const {x, y, z} = coordinate_items_now;
+    if (![x, y, z].every(Number.isFinite) || [x, y, z].some(value => value === -1)){
          console.log("Muốn chạy điểm dữ liệu x y z phải khác -1");
          write_log_calibration_clear("❌Bạn chưa chọn điểm nào để di chuyển.\n✅ Hãy click vào hình muốn di chuyển đến.\n");
          return;
     }
     write_log_calibration_clear("");
-     postData("/dimesional_calibration/run_point_define_value",{x:coordinate_items_now.x,y:coordinate_items_now.y,z:coordinate_items_now.z});   
+    const result = await postData(
+        "/dimesional_calibration/run_point_define_value",
+        {x, y, z}
+    );
+    write_log_calibration_clear(
+        result?.message || "❌ Không nhận được phản hồi từ server."
+    );
 });
 
 
@@ -608,16 +616,9 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
                             create_line(calibration_frame,img_item.dataset.id);}
                         }
 
-                    // console.log("data_point",data_point);
-                    let x = getValue(data_point?.x);
-                    let y = getValue(data_point?.y);
-                    let z = getValue(data_point?.z);
-                    coordinate_items_now.x = x;
-                    coordinate_items_now.y = y;
-                    coordinate_items_now.z = z;
-                    // console.log("coordinate x",x);
-                    // console.log("coordinate y",y);
-                    // console.log("coordinate z",z);
+                    const coordinates = loadPointCoordinates(data_point);
+                    coordinate_items_now = coordinates;
+                    console.log("Tọa độ point đã chọn:", coordinate_items_now);
                     
                     img_item.classList.add("active");
                     current_frame_box = frame_box; //đối tượng dom
@@ -684,8 +685,19 @@ function write_log_calibration_append(text){
 }
 
 
-function getValue(value) {
-    return value ?? -1;
+function loadPointCoordinates(dataPoint) {
+    if (!dataPoint || [dataPoint.x, dataPoint.y, dataPoint.z].some(value => value === null || value === undefined || value === "")) {
+        return {x: -1, y: -1, z: -1};
+    }
+    const coordinates = {
+        x: Number(dataPoint?.x),
+        y: Number(dataPoint?.y),
+        z: Number(dataPoint?.z),
+    };
+    if (!Object.values(coordinates).every(Number.isFinite)) {
+        return {x: -1, y: -1, z: -1};
+    }
+    return coordinates;
 }
 
 

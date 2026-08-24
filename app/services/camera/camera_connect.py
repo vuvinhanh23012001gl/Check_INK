@@ -1,9 +1,9 @@
-# from pathlib import Path
+from pathlib import Path
 # import sys
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 
-from app.config import PATH_FEATUERES_CFG_CAM 
+from app.config import CameraConfig, PATH_FEATUERES_CFG_CAM
 import stapipy as st
 import cv2
 import numpy as np
@@ -19,6 +19,9 @@ class Camera():
     TIMEDELAY_TASK_THREAD_CAMERA = 0.1
 
     def __init__(self):
+
+        self.config = CameraConfig()
+        self._lock_config = threading.Lock()
 
         self.camera_lost = False
 
@@ -109,6 +112,8 @@ class Camera():
                 featurebag = st.create_featurebag()
                 featurebag.store_file_to_bag(PATH_FEATUERES_CFG_CAM)
                 featurebag.load(self.nodemap, verify=True)
+                self.featurebag = featurebag
+                self.config = CameraConfig.from_feature_file(PATH_FEATUERES_CFG_CAM)
                 print("Camera config loaded compelete")
                 self.create_task_camera()
                 self.camera_lost = False
@@ -119,6 +124,261 @@ class Camera():
         except:
             self.camera_lost = True
             print("--------- Init Camera thất bại -------")
+
+    def _set_float_node(self, node_name, value):
+        """Ghi giá trị float vào node camera.
+
+        Input: tên node và giá trị số.
+        Output: không trả về giá trị.
+        Errors: exception từ SDK nếu node không tồn tại hoặc không writable.
+        """
+        node = st.PyIFloat(self.nodemap.get_node(node_name))
+        node.value = value
+
+    def _read_float_node(self, node_name):
+        """Đọc giá trị float từ node camera.
+
+        Input: tên node cần đọc.
+        Output: giá trị float hiện tại của node.
+        Errors: exception từ SDK nếu node không tồn tại hoặc không đọc được.
+        """
+        return float(st.PyIFloat(self.nodemap.get_node(node_name)).value)
+
+    def _read_enum_node(self, node_name):
+        """Đọc symbolic value của node enumeration camera.
+
+        Input: tên node enumeration.
+        Output: tên symbolic hiện tại.
+        Errors: exception từ SDK nếu node không tồn tại hoặc không đọc được.
+        """
+        enumeration = st.PyIEnumeration(self.nodemap.get_node(node_name))
+        entry = enumeration.current_entry
+        return str(entry.symbolic_value if entry else enumeration.value)
+
+    def sync_config_from_camera(self):
+        """Đồng bộ cấu hình runtime từ nodemap đã nạp từ features.cfg.
+
+        Input: nodemap camera đã được khởi tạo.
+        Output: không trả về; cập nhật ``self.config`` tại chỗ.
+        Errors: node không hỗ trợ sẽ giữ giá trị mặc định tương ứng.
+        """
+        if self.nodemap is None:
+            return
+        float_fields = {
+            "acquisition_frame_rate": "AcquisitionFrameRate",
+            "exposure_time": "ExposureTime",
+            "gain": "Gain",
+            "gamma": "Gamma",
+            "black_level": "BlackLevel",
+        }
+        enum_fields = {
+            "exposure_auto": "ExposureAuto",
+            "trigger_mode": "TriggerMode",
+            "trigger_selector": "TriggerSelector",
+            "balance_white_auto": "BalanceWhiteAuto",
+        }
+        for field, node_name in float_fields.items():
+            try:
+                setattr(self.config, field, self._read_float_node(node_name))
+            except Exception as error:
+                print(f"[CameraConfig] Read FAILED: {node_name} - {error}")
+        for field, node_name in enum_fields.items():
+            try:
+                setattr(self.config, field, self._read_enum_node(node_name))
+            except Exception as error:
+                print(f"[CameraConfig] Read FAILED: {node_name} - {error}")
+        for color, field in (
+            ("Red", "balance_ratio_red"),
+            ("Green", "balance_ratio_green"),
+            ("Blue", "balance_ratio_blue"),
+        ):
+            try:
+                self.set_enumeration("BalanceRatioSelector", color)
+                setattr(self.config, field, self._read_float_node("BalanceRatio"))
+            except Exception as error:
+                print(f"[CameraConfig] Read FAILED: BalanceRatio {color} - {error}")
+
+    def apply_config(self):
+        """Áp dụng cấu hình hiện tại vào các node camera.
+
+        Input: không có, sử dụng ``self.config``.
+        Output: dictionary gồm trạng thái và lỗi theo từng node.
+        Errors: lỗi node được thu thập trong ``errors`` để không dừng camera.
+        """
+        if self.nodemap is None:
+            return {"applied": False, "errors": ["Camera nodemap is unavailable"]}
+        node_values = {
+            "AcquisitionFrameRate": self.config.acquisition_frame_rate,
+            "ExposureTime": self.config.exposure_time,
+            "Gain": self.config.gain,
+            "ExposureAuto": self.config.exposure_auto,
+            "TriggerMode": self.config.trigger_mode,
+            "TriggerSelector": self.config.trigger_selector,
+            "Gamma": self.config.gamma,
+            "BlackLevel": self.config.black_level,
+        }
+        errors = []
+        for node_name, value in node_values.items():
+            try:
+                print(f"[CameraConfig] Sending {node_name} = {value}")
+                if isinstance(value, str):
+                    self.set_enumeration(node_name, value)
+                else:
+                    self._set_float_node(node_name, value)
+                print(f"[CameraConfig] Sent OK: {node_name}")
+            except Exception as error:
+                print(f"[CameraConfig] Send FAILED: {node_name} - {error}")
+                errors.append(f"{node_name}: {error}")
+        try:
+            print(f"[CameraConfig] Sending BalanceWhiteAuto = {self.config.balance_white_auto}")
+            self.set_enumeration("BalanceWhiteAuto", self.config.balance_white_auto)
+            print("[CameraConfig] Sent OK: BalanceWhiteAuto")
+            if self.config.balance_white_auto.lower() == "off":
+                for color, ratio in (
+                    ("Red", self.config.balance_ratio_red),
+                    ("Green", self.config.balance_ratio_green),
+                    ("Blue", self.config.balance_ratio_blue),
+                ):
+                    print(f"[CameraConfig] Sending BalanceRatio {color} = {ratio}")
+                    self.set_enumeration("BalanceRatioSelector", color)
+                    self._set_float_node("BalanceRatio", ratio)
+                    print(f"[CameraConfig] Sent OK: BalanceRatio {color}")
+        except Exception as error:
+            print(f"[CameraConfig] Send FAILED: WhiteBalance - {error}")
+            errors.append(f"WhiteBalance: {error}")
+        print(f"[CameraConfig] Completed: applied={not errors}, errors={len(errors)}")
+        return {"applied": not errors, "errors": errors}
+
+    def get_config(self):
+        """Lấy cấu hình camera hiện tại.
+
+        Input: không có.
+        Output: dictionary JSON-compatible.
+        Errors: không phát sinh.
+        """
+        with self._lock_config:
+            return self.config.to_dict()
+
+    def apply_config_values(self, values):
+        """Áp dụng tạm thời field vận hành mà chưa lưu file.
+
+        Input: dictionary field vận hành.
+        Output: cấu hình tạm thời và kết quả áp dụng node.
+        Errors: ``ValueError`` nếu payload không hợp lệ.
+        """
+        with self._lock_config:
+            print(f"[CameraConfig] Apply request: {values}")
+            previous_config = CameraConfig(**self.config.to_dict())
+            temporary_config = CameraConfig(**self.config.to_dict())
+            temporary_config.update_operator_values(values)
+            self.config = temporary_config
+            try:
+                apply_result = self.apply_config()
+                if not apply_result["applied"]:
+                    self.config = previous_config
+                    self.reload_feature_file()
+                    return {
+                        "config": previous_config.to_dict(),
+                        "apply_result": apply_result,
+                        "rolled_back": True,
+                    }
+                result = {"config": temporary_config.to_dict(), "apply_result": apply_result}
+            finally:
+                if self.config is temporary_config:
+                    self.config = previous_config
+            return result
+
+    def save_config_values(self, values):
+        """Cập nhật, lưu file và áp dụng cấu hình vận hành.
+
+        Input: dictionary field vận hành.
+        Output: cấu hình đã lưu và kết quả áp dụng node.
+        Errors: ``ValueError`` hoặc ``OSError`` nếu cấu hình không hợp lệ.
+        """
+        with self._lock_config:
+            print(f"[CameraConfig] Save request: {values}")
+            previous_config = CameraConfig(**self.config.to_dict())
+            feature_path = Path(PATH_FEATUERES_CFG_CAM)
+            previous_feature = feature_path.read_bytes()
+            self.config.update_operator_values(values)
+            apply_result = self.apply_config()
+            if not apply_result["applied"]:
+                self.config = previous_config
+                self.reload_feature_file()
+                return {
+                    "config": previous_config.to_dict(),
+                    "apply_result": apply_result,
+                    "feature_save_result": {"saved": False, "error": "Apply failed; configuration restored"},
+                    "rolled_back": True,
+                }
+            save_result = self.save_feature_config()
+            if not save_result["saved"]:
+                feature_path.write_bytes(previous_feature)
+                self.config = previous_config
+                self.reload_feature_file()
+                return {
+                    "config": previous_config.to_dict(),
+                    "apply_result": apply_result,
+                    "feature_save_result": save_result,
+                    "rolled_back": True,
+                }
+            return {
+                "config": self.config.to_dict(),
+                "apply_result": apply_result,
+                "feature_save_result": save_result,
+            }
+
+    def reload_feature_file(self):
+        """Nạp lại features.cfg để khôi phục camera sau thao tác thất bại.
+
+        Input: không có; sử dụng ``PATH_FEATUERES_CFG_CAM``.
+        Output: không trả về giá trị.
+        Errors: lỗi SDK được ghi log và giữ nguyên cấu hình runtime cũ.
+        """
+        try:
+            featurebag = st.create_featurebag()
+            featurebag.store_file_to_bag(PATH_FEATUERES_CFG_CAM)
+            featurebag.load(self.nodemap, verify=True)
+            self.featurebag = featurebag
+            self.config = CameraConfig.from_feature_file(PATH_FEATUERES_CFG_CAM)
+            print("[CameraConfig] Rolled back from features.cfg")
+        except Exception as error:
+            print(f"[CameraConfig] Rollback FAILED: {error}")
+
+    def save_feature_config(self):
+        """Ghi trực tiếp nodemap hiện tại vào file features.cfg.
+
+        Input: không có; sử dụng nodemap camera đã được áp dụng cấu hình.
+        Output: dictionary trạng thái lưu file feature.
+        Errors: lỗi SDK được trả về trong ``error`` thay vì làm mất trạng thái.
+        """
+        if self.nodemap is None:
+            print("[CameraConfig] Feature save FAILED: nodemap unavailable")
+            return {"saved": False, "error": "Camera nodemap is unavailable"}
+        try:
+            featurebag = st.create_featurebag()
+            featurebag.store_nodemap_to_bag(self.nodemap)
+            featurebag.save_to_file(PATH_FEATUERES_CFG_CAM)
+            self.featurebag = featurebag
+            print(f"[CameraConfig] Feature file saved: {PATH_FEATUERES_CFG_CAM}")
+            return {"saved": True, "path": PATH_FEATUERES_CFG_CAM}
+        except Exception as error:
+            print(f"[CameraConfig] Feature save FAILED: {error}")
+            return {"saved": False, "error": str(error)}
+
+    def reset_config(self):
+        """Đọc lại cấu hình đã lưu và áp dụng vào camera.
+
+        Input: không có.
+        Output: cấu hình sau reset và kết quả áp dụng node.
+        Errors: ``ValueError`` nếu file JSON không hợp lệ.
+        """
+        with self._lock_config:
+            self.featurebag = st.create_featurebag()
+            self.featurebag.store_file_to_bag(PATH_FEATUERES_CFG_CAM)
+            self.featurebag.load(self.nodemap, verify=True)
+            self.config = CameraConfig.from_feature_file(PATH_FEATUERES_CFG_CAM)
+            return {"config": self.config.to_dict(), "apply_result": {"applied": True, "errors": []}}
             
 
     def enable_software_trigger(self):

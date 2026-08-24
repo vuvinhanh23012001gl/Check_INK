@@ -9,11 +9,28 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request):
+    """Hiển thị màn hình chính cùng tên sản phẩm đang được chọn.
+
+    Input: request FastAPI và service container.
+    Output: HTML response có tên sản phẩm hiện tại hoặc trạng thái chưa chọn.
+    Errors: không phát sinh; sản phẩm không tồn tại được hiển thị là chưa chọn.
+    """
+    selected_product_name = "Chưa chọn sản phẩm"
+    try:
+        services = request.app.state.services
+        selected_product_id = services.obj_choose_product.get_choose_product().data
+        if selected_product_id != -1:
+            product_result = services.obj_products_service.get_product_by_id(selected_product_id)
+            if product_result.ok:
+                selected_product_name = product_result.data.name
+    except (AttributeError, KeyError, RuntimeError):
+        pass
     return templates.TemplateResponse(
         "home.html",
         {
             "request": request,
-            "msg": "Xin chào Ánh 👋"
+            "msg": "Xin chào Ánh 👋",
+            "selected_product_name": selected_product_name,
         }
     )
 
