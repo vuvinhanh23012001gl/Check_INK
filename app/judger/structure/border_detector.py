@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
 from app.engines.model_AI import ModelUnet
+from .base_ai import BaseJudgerAI
 
-
-class BorderDetector:
+class BorderDetector(BaseJudgerAI):
     """Lớp xử lý kiểm tra các đường thẳng cắt qua đa giác (Polygon) được trích
     xuất từ mô hình ModelUnet.
     """
@@ -13,7 +13,20 @@ class BorderDetector:
             unet_model (ModelUnet): Thực thể của mô hình Unet đã được load trọng
             số.
         """
+        super().__init__()
         self.unet_model = unet_model
+
+    def define(self, image, lines, Approx_value=0.002, min_area=100):
+        """Lấy kết quả giao giữa line runtime và polygon từ ảnh."""
+        return self.process_lines_from_image(image, lines, Approx_value, min_area)
+
+    def compare(self, standard_data, runtime_data):
+        """So sánh dữ liệu đường biên chuẩn với dữ liệu runtime."""
+        raise NotImplementedError
+
+    def judge(self, comparison_data):
+        """Phán định dữ liệu đường biên thành OK hoặc NG."""
+        raise NotImplementedError
 
 
     def process_lines_from_image(

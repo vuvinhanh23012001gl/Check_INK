@@ -73,33 +73,6 @@ class FrameModelYoloObject:
         return objects
 
 
-    def show(self, image: np.ndarray, objects: list[dict], window_name: str = "Result Detection") -> None:
-        """Hiển thị ảnh gốc kèm bounding box và nhãn của đối tượng theo màu sắc riêng biệt cho từng class.
-        Lưu ý: cần môi trường có GUI (không chạy được trên server headless).
-        Args:
-            image (np.ndarray): Ảnh gốc đầu vào cần vẽ.
-            objects (list[dict]): Danh sách các đối tượng detected, mỗi đối tượng chứa bbox, class_id, class_name, confidence.
-            window_name (str, optional): Tên cửa sổ hiển thị của OpenCV. Defaults to "Result Detection".
-        Returns:
-            None
-        """
-        image_draw = image.copy()
-        for obj in objects:
-            bbox = obj["bbox"]
-            class_id = obj["class_id"]
-            x1, y1, x2, y2 = int(bbox["x1"]), int(bbox["y1"]), int(bbox["x2"]), int(bbox["y2"])
-            np.random.seed(class_id)
-            color = tuple(int(c) for c in np.random.randint(0, 255, size=3))
-            cv2.rectangle(image_draw, (x1, y1), (x2, y2), color, 2)
-            text_y = max(20, y1 - 5)
-            label = f'{obj["class_name"]} {obj["confidence"]:.2f}'
-            cv2.putText(image_draw, label, (x1, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-        cv2.imshow(window_name, image_draw)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-
-
     def filter_objects_by_class_name(
         self, 
         list_coordinate_object: list[dict], 
@@ -156,6 +129,7 @@ class FrameModelYoloObject:
         filtered_objects, _ = self.filter_objects_by_class_name(objects, target_class_value)
         img_result = self.draw_rectangle(img, x1, y1, x2, y2)
         img_result = self.draw(img_result, filtered_objects)
+        self.show(img_result, filtered_objects, window_name="Detection Result")
         if not filtered_objects:
             messages.append(f"LỖI: Không tìm thấy đối tượng '{target_class_value}'.")
             return False, messages, img_crop, []
@@ -169,44 +143,6 @@ class FrameModelYoloObject:
         messages.append(f"OK: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}' hợp lệ.")
         return True, messages, img_result, filtered_objects
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
     def search_negative(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, target_class_value: str) -> Tuple[bool, list[str], np.ndarray]: # ham nay nguoc voi ham search
         """Kiểm tra xem vùng chỉ định có SẠCH/TRỐNG (không chứa vật thể mục tiêu) hay không.
@@ -228,7 +164,7 @@ class FrameModelYoloObject:
         """    
         messages = []
         # 1. Lấy tất cả các đối tượng trong vùng crop
-        all_objects = self.get_objects(img, x1, y1, x2, y2)
+        all_objects, _ = self.get_objects(img, x1, y1, x2, y2)
         # 2. Lọc ra danh sách chứa class_name mục tiêu cấm xuất hiện
         filtered_objects, is_exist = self.filter_objects_by_class_name(all_objects, target_class_value)
         # 3. Tiến hành vẽ các đối tượng vi phạm lên ảnh (nếu có)
@@ -355,13 +291,45 @@ class FrameModelYoloObject:
             return image_draw
 
 
-    def show(self, image_to_display: np.ndarray, window_name: str = "Result Detection") -> None:
-        """Hiển thị ảnh lên màn hình bằng cửa sổ giao diện OpenCV.
-        Lưu ý: Cần môi trường có hỗ trợ GUI (không chạy được trên các server Linux headless nếu không cấu hình X11).
+    def show(
+        self,
+        image: np.ndarray,
+        objects: Optional[list[dict]] = None,
+        window_name: str = "Result Detection"
+    ) -> None:
+        """Hiển thị ảnh kết quả detection bằng cửa sổ OpenCV.
+
         Args:
-            image_to_display (np.ndarray): Ảnh đã sẵn sàng để hiển thị (có thể là ảnh gốc hoặc ảnh đã qua hàm draw).
-            window_name (str, optional): Tên của cửa sổ hiển thị. Defaults to "Result Detection".
+            image: Ảnh gốc hoặc ảnh đã được vẽ kết quả.
+            objects: Danh sách object cần vẽ lên ảnh gốc. Nếu là ``None``,
+                ảnh được hiển thị nguyên trạng.
+            window_name: Tên cửa sổ OpenCV.
+        Returns:
+            None.
+        Raises:
+            cv2.error: Nếu môi trường không hỗ trợ cửa sổ GUI của OpenCV.
         """
-        cv2.imshow(window_name, image_to_display)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if image is None or image.size == 0:
+            raise ValueError("Ảnh cần hiển thị không được rỗng")
+        image_to_display = self.draw(image, objects) if objects is not None else image
+        try:
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            height, width = image_to_display.shape[:2]
+            max_width = 1200
+            if width > max_width:
+                scale = max_width / width
+                cv2.resizeWindow(window_name, int(width * scale), int(height * scale))
+            else:
+                cv2.resizeWindow(window_name, width, height)
+            cv2.imshow(window_name, image_to_display)
+            cv2.waitKey(0)
+        except cv2.error as error:
+            raise RuntimeError(
+                "Không thể hiển thị ảnh bằng OpenCV. "
+                "Hãy chạy trong môi trường có GUI hoặc lưu image_to_display ra file."
+            ) from error
+        finally:
+            try:
+                cv2.destroyWindow(window_name)
+            except cv2.error:
+                pass

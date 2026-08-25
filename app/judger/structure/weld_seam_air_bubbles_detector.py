@@ -1,10 +1,13 @@
 from app.engines.AI_model_process import FrameModelYoloObject
 import numpy as np
 from typing import Tuple
+from .base_ai import BaseJudgerAI
 
-class WeldSeamAirBubbles:
+class WeldSeamAirBubbles(BaseJudgerAI):
     def __init__(self,model_bubble:FrameModelYoloObject):
+        super().__init__()
         self.model_bubble  = model_bubble
+
         
     def define(self, img: np.ndarray, bounding_box_abnormal: list) -> Tuple[bool, list[str], np.ndarray]:
             """
@@ -44,6 +47,14 @@ class WeldSeamAirBubbles:
                     # Cập nhật lại ảnh đầu ra chứa các nét vẽ bounding box lỗi từ hàm search_all_negative
                     img_output = img_visualized
             return is_all_valid, all_messages, img_output
+
+    def compare(self, standard_data, runtime_data):
+        """So sánh dữ liệu bọt khí chuẩn với dữ liệu runtime."""
+        raise NotImplementedError
+
+    def judge(self, comparison_data):
+        """Phán định dữ liệu bọt khí thành OK hoặc NG."""
+        raise NotImplementedError
 
 
     def _xywh_to_xyxy(self, box: tuple[int, int, int, int]) -> tuple[int, int, int, int]:

@@ -501,3 +501,109 @@ Rui ro con lai:
 - Ten node GenApi phu thuoc model camera Sentech.
 - Khong nen sua thu cong `features.cfg` trong production; nen luu qua SDK.
 - Full app startup khoi tao model, camera, COM va thread; test router nen dung service fake.
+
+## 15. Cap nhat da xac nhan ngay 2026-08-24
+
+### 15.1. Pipeline va startup
+
+- `EnumMode` da co `MODE_IDLE` trong `app/container.py`.
+- Sau khi `StagePreprocess` gui `move_to_org:` va nhan `has_returned_org:`, pipeline dat mode `MODE_IDLE` thay vi tu dong chuyen sang `MODE_TRANSFORM`.
+- Muc dich la khi mo phan mem chi homing ARM, khong tu dong chay qua toan bo danh sach point.
+- `StageTransform` xu ly mot luot, dung `ComService.send_and_wait()`, lay duong dan theo tung frame va dat `MODE_EXPORT` sau khi ket thuc de tranh gui lap lai.
+- Van con cac rui ro cu can xu ly tiep: `MODE_RUN_ONE_FRAME` va `MODE_DEAFAULT` tung duoc tham chieu o mot so nhanh code cu; shutdown Pipeline/hardware chua day du.
+
+### 15.2. COM
+
+- Luong COM: `ComConfig` -> `ComRepository` -> `SerialConnect` -> `ManagerSerial` -> `ComService` -> API `/com/config`.
+- Cau hinh hien tai duoc doc tu `app/storage/config/COM.json`; workspace da kiem tra voi `COM3`, baudrate `9600`.
+- `ManagerSerial` co cac thread `CheckCOM`, `SerialRX`, `SerialTX`, cung `rx_queue` va `tx_queue`.
+- `POST /com/config` da tra ve ca `success`, `message`, `config`, `connected` va `ports`, ke ca khi mo cong that bai; frontend khong con mat danh sach cong sau khi luu.
+- `ComService.configure_connection()` rollback cau hinh JSON neu mo cong moi that bai.
+- `shake_hands_compelete` la trang thai handshake ARM, khac voi trang thai cong serial vat ly dang mo. Can tach hai trang thai neu muon hien thi chinh xac hon.
+
+### 15.3. Frontend va canvas
+
+- `controler.js` import cac module frontend; `home.js` phu trach man hinh chinh, `capture_frame.js` phu trach Lay anh mau, `dimetional_calibration.js` phu trach hieu chuan kich thuoc, `tool/summary_tool.js` phu trach Dieu chinh Master.
+- Cac man hinh dung chung `.scroll-container`, nen item cu co the con ton tai khi doi panel. Handler item trong `summary_tool.js` chi `stopPropagation()` khi panel Dieu chinh Master dang active; khi o man hinh chinh, click duoc xu ly boi `home.js` va hien anh tren canvas.
+- Khi vao Dieu chinh Master, click item khong tu hien anh; sau khi chon tool, anh item duoc hien qua `showSelectedImage()`.
+- `video-product` duoc an ban dau de khong hien alt text `Video feed`; chi nut `Stream Video` moi bat video.
+- Loi `coordinate_items_now` giu `-1` tung do click nham item do `summary_tool.js` tao hoac dung bien `coordinates` truoc khi khai bao; handler dimensional da duoc sua de cap nhat toa do theo item.
+
+### 15.4. AI va detector structure
+
+- `object_structure_detect.pt` dung chung cho `hole`, `cover_arm`, `sensor_arm`.
+- `object_surface_detect.pt` dung cho `scratch`.
+- Cac router production dang dung `StructureFrameYoloService` va `SurfaceFrameYoloService`; cac detector trong `app/judger/structure` phan lon la lop logic cu/test-oriented.
+- `ClassNameObjectTargerDetectConfig` khong ton tai; ten hien tai la `ClassNameObjectStructureDetectConfig`. Scratch dung `ClassNameModelSurfaceConfig.SCRATCH`.
+- `BaseJudgerAI` trong `app/judger/structure/base_ai.py` la abstract contract bat buoc cac lop con co `define`, `compare`, `judge`; co them `evaluate()` de goi theo thu tu `define -> compare -> judge`.
+- `JudgmentResult` tra ve `ok`, `status`, `standard_data`, `runtime_data`, `comparison_data`, `message`, `errors`.
+- `ArmCoverDetector.compare()` nhan `standard_data` bool: `True` nghia la ROI phai co Cover Arm, `False` nghia la ROI khong duoc co Cover Arm. `runtime_data` la output tuple cua `define()`: `(status, messages, image, objects)`.
+- Script model that `app/tests/test_judment/test_structure/test_run_armcoverdetector.py` khong dung Mock; script load weights that, doc anh, chay `define`, `compare`, `judge` va in log. Anh da kiem tra `app/storage/img_points/1/0/4.jpg`, ROI `0,0,2016,619` phat hien `sensor_arm` confidence khoang `0.983`, khong phat hien `cover_arm`, nen `standard_data=True` cho ket qua `NG` la dung.
+- Script test thuong `test_armcoverdetector.py` dung Mock de test orchestration, khong phai test model accuracy. Pytest chua duoc cai trong virtualenv.
+
+### 15.5. Quy uoc tiep tuc phat trien
+
+1. Khi test logic detector, dung script thuong voi Mock neu khong can model that.
+2. Khi kiem tra model, dung `test_run_armcoverdetector.py`, sua cac hang `MODEL_PATH`, `IMAGE_PATH`, `STANDARD_DATA`, `X1`, `Y1`, `X2`, `Y2` o dau file.
+3. Chay compile bang `venv-project-width-line\\Scripts\\python.exe -m py_compile <files>`.
+4. Khong chay full app/test suite tuy tien vi startup khoi tao camera, COM, model va thread.
+
+## 16. Cap nhat detector structure va test ngay 2026-08-25
+
+### 16.1. Arm Sensor va Hole
+
+- `app/judger/structure/arm_sensor_detector.py` da hoan thien theo contract cua `BaseJudgerAI`:
+    `define() -> compare() -> judge()`.
+- `ArmSensorDetector.define()` goi `FrameModelYoloObject.search()` voi class `sensor_arm` va tra runtime tuple gom `(status, messages, image, objects)`.
+- `compare()` kiem tra `standard_data` la bool, xac dinh `runtime_exists` va dem so object.
+- `judge()` tra `JudgmentResult` voi trang thai `OK`/`NG` tuy theo Sensor Arm co dung voi cau hinh hay khong.
+- `app/judger/structure/hole_detector.py` da duoc hoan thien tuong tu, su dung class `hole`.
+- Test logic:
+    - `app/tests/test_judment/test_structure/test_logic_armsensor.py`
+    - `app/tests/test_judment/test_structure/test_logic_hole.py`
+- Moi bo test logic gom 5 truong hop va da PASS bang model Mock.
+- Test model that:
+    - `app/tests/test_judment/test_structure/test_run_armsensor.py`
+    - `app/tests/test_judment/test_structure/test_run_hole.py`
+- Anh `app/storage/img_points/1/0/4.jpg` da duoc dung de kiem tra model structure. Model phat hien `sensor_arm` voi confidence khoang `0.977`; khong phat hien `hole`, vi vay Hole voi `standard_data=True` cho ket qua `NG` la dung.
+
+### 16.2. Semi-permeable membrane
+
+- `app/judger/structure/semi_permeable_membrane.py` da hoan thien `compare()` va `judge()`.
+- Luat co dinh: polygon `inner` phai nam hoan toan ben trong polygon `border`.
+- `inner` de len bien, cat bien, nam ngoai hoac thieu mot trong hai polygon deu la `NG`.
+- Kiem tra hinh hoc van dung `shapely.geometry.Polygon.contains()` trong ham logic da co san.
+- `define()` tra `(status, intersection_points, image_visualized)`; `compare()` va `judge()` chuyen ket qua nay thanh `JudgmentResult`.
+- Test logic: `app/tests/test_judment/test_logic_semi_permeable_membrane.py` da PASS 5 truong hop, gom ca inner nam trong, de len border, nam ngoai va thieu polygon.
+- Test runtime: `app/tests/test_judment/test_semi_permeable_membrane_judment.py` da duoc cap nhat dung path model/anh trong workspace va kiem tra ca `define()`, `compare()`, `judge()`.
+- Test runtime da load duoc hai model segmentation that. Ket qua phu thuoc anh; neu khong tao duoc polygon hop le thi phai tra `NG`, khong duoc coi la `OK`.
+
+### 16.3. Scratch The Pipe
+
+- `app/judger/structure/scratch_the_pipe_detector.py` da hoan thien theo luat phu dinh:
+    phat hien Scratch -> `NG`, khong phat hien Scratch -> `OK`.
+- `define()` su dung `FrameModelYoloObject.search_negative()` voi class `scratch`.
+- `compare()` va `judge()` xu ly `runtime_clean`: `True` la vung sach, `False` la co Scratch.
+- Test logic: `app/tests/test_judment/test_logic_scratch_the_pipe.py` da PASS 4 truong hop.
+- Test runtime: `app/tests/test_judment/test_run_scratch_the_pipe.py` da load model `object_surface_detect.pt` va anh that. Anh da kiem tra phat hien 1 object `scratch`, do do ket qua `NG` la dung.
+- Trong `app/engines/AI_model_process/frame_yolo_object_process.py`, `search_negative()` da unpack dung ket qua `get_objects()` theo dang `(all_objects, image_crop)`.
+
+### 16.4. Hien thi anh OpenCV
+
+- `FrameModelYoloObject.show()` da ho tro ca anh da ve san va anh kem danh sach object.
+- Ham hien thi tao cua so co the resize, tu dong thu nho anh lon va cho phep nhan phim de ket thuc.
+- `test_run_scratch_the_pipe.py` hien goi `frame_model.show(image_result, window_name="Scratch The Pipe Result")` sau khi phan dinh.
+- Cleanup cua `show()` va `show_image()` da xu ly `cv2.error` khi cua so chua duoc tao hoac da bi dong, tranh loi thu cap tu `destroyWindow()`.
+- Neu moi truong khong co GUI, OpenCV van khong the mo cua so; khi do can luu `image_result` ra file hoac chay test trong phien Windows co desktop.
+
+### 16.5. Kiem tra da thuc hien
+
+- Da chay `py_compile` cho cac detector va test lien quan.
+- Test logic Arm Sensor: PASS.
+- Test runtime Arm Sensor voi model that: PASS, ket qua OK tren anh da kiem tra.
+- Test logic Hole: PASS.
+- Test runtime Hole voi model that: PASS, ket qua NG do anh khong co Hole.
+- Test logic Semi-permeable membrane: PASS.
+- Test runtime Semi-permeable membrane: model load thanh cong; ket qua `OK` hoac `NG` tuy polygon model phat hien duoc.
+- Test logic Scratch: PASS.
+- Test runtime Scratch voi model that: PASS, phat hien 1 Scratch va tra `NG`.

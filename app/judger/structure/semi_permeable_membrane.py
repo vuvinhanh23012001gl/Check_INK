@@ -3,15 +3,24 @@ from shapely.geometry import Polygon
 import cv2
 import numpy as np
 from typing import Optional, List, Tuple, Dict
+from .base_ai import BaseJudgerAI, JudgmentResult
 
-class SemiPermeableMembrane:
+class SemiPermeableMembrane(BaseJudgerAI):
     # Lớp này lấy dữ liệu 
     #Lớp này nhận
     def __init__(self, border_semi_permeable_membrane: FrameModelYoloSegment, inner_semi_permeable_membrane: FrameModelYoloSegment):
+        super().__init__()
         self.border_semi_permeable_membrane = border_semi_permeable_membrane
         self.inner_semi_permeable_membrane = inner_semi_permeable_membrane
 
-    def define(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> Tuple[bool, Optional[List[Tuple[float, float]]]]:
+    def define(
+        self,
+        img: np.ndarray,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int
+    ) -> Tuple[bool, Optional[List[Tuple[float, float]]], np.ndarray]:
         """
         Thực hiện suy luận segmentation cho hai lớp màng (border và inner), kiểm tra
         xem màng inner có nằm hoàn toàn trong màng border hay không, đồng thời
@@ -30,11 +39,11 @@ class SemiPermeableMembrane:
             x2 (int): Tọa độ x góc dưới phải của vùng ROI.
             y2 (int): Tọa độ y góc dưới phải của vùng ROI.
         Returns:
-            Tuple[bool, Optional[List[Tuple[float, float]]]]:
-                - True, None: inner nằm hoàn toàn trong border.
-                - False, List[(x, y)]: inner không nằm hoàn toàn trong border
+            Tuple[bool, Optional[List[Tuple[float, float]]], np.ndarray]:
+                - True, None, image: inner nằm hoàn toàn trong border.
+                - False, List[(x, y)], image: inner không nằm hoàn toàn trong border
                 và trả về các điểm giao giữa hai polygon (nếu có).
-                - False, None: không phát hiện được polygon hợp lệ hoặc lỗi xử lý.W
+                - False, None, image: không phát hiện được polygon hợp lệ hoặc lỗi xử lý.
         Side Effects:
             - In log trạng thái ra console.
             - Hiển thị ảnh kết quả bằng OpenCV window.
@@ -49,8 +58,67 @@ class SemiPermeableMembrane:
             img_visualized = self.draw_intersection_points(img_visualized, data)
         print(f"Trạng thái (Nằm hoàn toàn trong): {status}")
         print(f"Các điểm cắt lỗi: {data}")
-        # self.show_image(img_visualized, window_name="Membrane Judgment Result")
+        self.show_image(img_visualized, window_name="Membrane Judgment Result")
         return status, data,img_visualized
+
+    def compare(self, standard_data, runtime_data):
+        """Kiểm tra luật inner phải nằm hoàn toàn trong border.
+
+        Input: ``standard_data`` phải là ``True`` vì đây là luật cố định;
+            ``runtime_data`` là tuple ``(status, intersection_points, image)``.
+        Output: dict chứa trạng thái hình học, các điểm giao và ảnh kết quả.
+        Errors: ``ValueError`` nếu chuẩn hoặc runtime không đúng cấu trúc.
+        """
+        if standard_data is not True:
+            raise ValueError("standard_data của màng bán thấm phải là True")
+        if not isinstance(runtime_data, tuple) or len(runtime_data) != 3:
+            raise ValueError("runtime_data phải là tuple (status, data, image)")
+        runtime_status, intersection_points, image = runtime_data
+        if not isinstance(runtime_status, bool):
+            raise ValueError("status trong runtime_data phải là bool")
+        if intersection_points is not None and not isinstance(intersection_points, list):
+            raise ValueError("intersection_points phải là list hoặc None")
+        return {
+            "required_inside": True,
+            "runtime_inside": runtime_status,
+            "intersection_points": intersection_points,
+            "image": image,
+        }
+
+    def judge(self, comparison_data):
+        """Phán định quan hệ hình học giữa inner và border.
+
+        Input: dict kết quả từ ``compare``.
+        Output: ``JudgmentResult`` với trạng thái ``OK`` khi inner nằm hoàn
+            toàn trong border, ngược lại là ``NG``.
+        Errors: ``ValueError`` nếu thiếu dữ liệu bắt buộc.
+        """
+        required_keys = {"required_inside", "runtime_inside", "intersection_points"}
+        if not required_keys.issubset(comparison_data):
+            raise ValueError("comparison_data thiếu dữ liệu màng bán thấm bắt buộc")
+        ok = (
+            comparison_data["required_inside"] is True
+            and comparison_data["runtime_inside"] is True
+        )
+        errors = [] if ok else [
+            "Polygon inner không nằm hoàn toàn trong polygon border"
+        ]
+        return JudgmentResult(
+            ok=ok,
+            status="OK" if ok else "NG",
+            standard_data={"inner_completely_inside_border": True},
+            runtime_data={
+                "inner_completely_inside_border": comparison_data["runtime_inside"],
+                "intersection_points": comparison_data["intersection_points"],
+            },
+            comparison_data=comparison_data,
+            message=(
+                "Polygon inner nằm hoàn toàn trong polygon border"
+                if ok
+                else "Polygon inner đè lên hoặc nằm ngoài polygon border"
+            ),
+            errors=errors,
+        )
 
 
     def get_first_class_polygon(self, segments: List[Dict]) -> Optional[np.ndarray]:
@@ -252,4 +320,8 @@ class SemiPermeableMembrane:
             print(f"[ERROR] Gặp lỗi khi hiển thị bằng OpenCV: {e}")
 
         finally:
-            cv2.destroyWindow(window_name)
+            try:
+                cv2.destroyWindow(window_name)
+            except cv2.error:
+                # Cửa sổ có thể chưa được tạo hoặc đã bị đóng bởi người dùng.
+                pass

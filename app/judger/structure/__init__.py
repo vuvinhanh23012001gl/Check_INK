@@ -1,6 +1,8 @@
+from .base_ai import BaseJudgerAI, JudgmentResult
 from .semi_permeable_membrane import SemiPermeableMembrane
 from .arm_cover_detector import ArmCoverDetector
 from .arm_sensor_detector import ArmSensorDetector
+from .hole_detector import HoleDetector
 from .scratch_the_pipe_detector import ScratchThePipeDetector
 from .weld_seam_air_bubbles_detector import WeldSeamAirBubbles
 from .border_detector import BorderDetector
