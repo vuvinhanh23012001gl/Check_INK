@@ -7,7 +7,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.judger.structure import JudgmentResult, SemiPermeableMembrane
+from app.judger import JudgmentResult, SemiPermeableMembrane
 
 
 def create_detector(border_segments, inner_segments):

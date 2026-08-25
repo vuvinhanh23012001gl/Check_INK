@@ -101,4 +101,4 @@ def test_point_service():
 
 test_point_service()
 
-#python -m app.tests.test_judment_law_product_service
+#python -m app.tests.services.test_judment_law_product_service

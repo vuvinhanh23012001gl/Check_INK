@@ -35,4 +35,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-    # python -m app.tests.vision.test_prediction_unet
+    # python -m app.tests.engines.unet_plus.test_prediction_unet

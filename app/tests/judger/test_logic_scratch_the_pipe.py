@@ -8,7 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.config import ClassNameModelSurfaceConfig
-from app.judger.structure import JudgmentResult, ScratchThePipeDetector
+from app.judger import JudgmentResult, ScratchThePipeDetector
 
 
 def create_detector(runtime_result):

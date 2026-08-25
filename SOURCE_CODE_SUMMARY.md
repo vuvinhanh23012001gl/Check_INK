@@ -143,7 +143,7 @@ Cac class AI quan trong:
 - `weld_seamunet_unet_service.py`: duong han va tim bien/polygon.
 - Cac service nay duoc tao trong container va duoc router judgment goi.
 
-### 4.6. `app/judger/structure/`
+### 4.6. `app/judger/`
 
 Chua cac detector/phuong thuc phan dinh nghiep vu:
 
@@ -262,7 +262,7 @@ Dimensional calibration su dung `IAIService` de validate vi tri, `ComService` de
 
 Luong pho bien: validate payload -> lay anh master tu PointService -> doc anh bang OpenCV -> chay AI service/detector -> quy doi box theo kich thuoc canvas -> tra `Result`.
 
-`api_tool_law_regulations.py` hien co cac nhom judgment cho measurement, arm sensor, arm cover, border film, permeable membrane, hole va scratched pipe. Cac endpoint nay ket noi truc tiep toi service AI va detector trong `app/judger/structure/`.
+`api_tool_law_regulations.py` hien co cac nhom judgment cho measurement, arm sensor, arm cover, border film, permeable membrane, hole va scratched pipe. Cac endpoint nay ket noi truc tiep toi service AI va detector trong `app/judger/`.
 
 ### Socket.IO
 
@@ -529,16 +529,16 @@ Rui ro con lai:
 - `video-product` duoc an ban dau de khong hien alt text `Video feed`; chi nut `Stream Video` moi bat video.
 - Loi `coordinate_items_now` giu `-1` tung do click nham item do `summary_tool.js` tao hoac dung bien `coordinates` truoc khi khai bao; handler dimensional da duoc sua de cap nhat toa do theo item.
 
-### 15.4. AI va detector structure
+### 15.4. AI va detector trong judger
 
 - `object_structure_detect.pt` dung chung cho `hole`, `cover_arm`, `sensor_arm`.
 - `object_surface_detect.pt` dung cho `scratch`.
-- Cac router production dang dung `StructureFrameYoloService` va `SurfaceFrameYoloService`; cac detector trong `app/judger/structure` phan lon la lop logic cu/test-oriented.
+- Cac router production dang dung `StructureFrameYoloService` va `SurfaceFrameYoloService`; cac detector trong `app/judger` phan lon la lop logic cu/test-oriented.
 - `ClassNameObjectTargerDetectConfig` khong ton tai; ten hien tai la `ClassNameObjectStructureDetectConfig`. Scratch dung `ClassNameModelSurfaceConfig.SCRATCH`.
-- `BaseJudgerAI` trong `app/judger/structure/base_ai.py` la abstract contract bat buoc cac lop con co `define`, `compare`, `judge`; co them `evaluate()` de goi theo thu tu `define -> compare -> judge`.
+- `BaseJudgerAI` trong `app/judger/base_ai.py` la abstract contract bat buoc cac lop con co `define`, `compare`, `judge`; co them `evaluate()` de goi theo thu tu `define -> compare -> judge`.
 - `JudgmentResult` tra ve `ok`, `status`, `standard_data`, `runtime_data`, `comparison_data`, `message`, `errors`.
 - `ArmCoverDetector.compare()` nhan `standard_data` bool: `True` nghia la ROI phai co Cover Arm, `False` nghia la ROI khong duoc co Cover Arm. `runtime_data` la output tuple cua `define()`: `(status, messages, image, objects)`.
-- Script model that `app/tests/test_judment/test_structure/test_run_armcoverdetector.py` khong dung Mock; script load weights that, doc anh, chay `define`, `compare`, `judge` va in log. Anh da kiem tra `app/storage/img_points/1/0/4.jpg`, ROI `0,0,2016,619` phat hien `sensor_arm` confidence khoang `0.983`, khong phat hien `cover_arm`, nen `standard_data=True` cho ket qua `NG` la dung.
+- Script model that `app/tests/test_run_armcoverdetector.py` khong dung Mock; script load weights that, doc anh, chay `define`, `compare`, `judge` va in log. Anh da kiem tra `app/storage/img_points/1/0/4.jpg`, ROI `0,0,2016,619` phat hien `sensor_arm` confidence khoang `0.983`, khong phat hien `cover_arm`, nen `standard_data=True` cho ket qua `NG` la dung.
 - Script test thuong `test_armcoverdetector.py` dung Mock de test orchestration, khong phai test model accuracy. Pytest chua duoc cai trong virtualenv.
 
 ### 15.5. Quy uoc tiep tuc phat trien
@@ -552,40 +552,40 @@ Rui ro con lai:
 
 ### 16.1. Arm Sensor va Hole
 
-- `app/judger/structure/arm_sensor_detector.py` da hoan thien theo contract cua `BaseJudgerAI`:
+- `app/judger/arm_sensor_detector.py` da hoan thien theo contract cua `BaseJudgerAI`:
     `define() -> compare() -> judge()`.
 - `ArmSensorDetector.define()` goi `FrameModelYoloObject.search()` voi class `sensor_arm` va tra runtime tuple gom `(status, messages, image, objects)`.
 - `compare()` kiem tra `standard_data` la bool, xac dinh `runtime_exists` va dem so object.
 - `judge()` tra `JudgmentResult` voi trang thai `OK`/`NG` tuy theo Sensor Arm co dung voi cau hinh hay khong.
-- `app/judger/structure/hole_detector.py` da duoc hoan thien tuong tu, su dung class `hole`.
+- `app/judger/hole_detector.py` da duoc hoan thien tuong tu, su dung class `hole`.
 - Test logic:
-    - `app/tests/test_judment/test_structure/test_logic_armsensor.py`
-    - `app/tests/test_judment/test_structure/test_logic_hole.py`
+    - `app/tests/test_logic_armsensor.py`
+    - `app/tests/test_logic_hole.py`
 - Moi bo test logic gom 5 truong hop va da PASS bang model Mock.
 - Test model that:
-    - `app/tests/test_judment/test_structure/test_run_armsensor.py`
-    - `app/tests/test_judment/test_structure/test_run_hole.py`
+    - `app/tests/test_run_armsensor.py`
+    - `app/tests/test_run_hole.py`
 - Anh `app/storage/img_points/1/0/4.jpg` da duoc dung de kiem tra model structure. Model phat hien `sensor_arm` voi confidence khoang `0.977`; khong phat hien `hole`, vi vay Hole voi `standard_data=True` cho ket qua `NG` la dung.
 
 ### 16.2. Semi-permeable membrane
 
-- `app/judger/structure/semi_permeable_membrane.py` da hoan thien `compare()` va `judge()`.
+- `app/judger/semi_permeable_membrane.py` da hoan thien `compare()` va `judge()`.
 - Luat co dinh: polygon `inner` phai nam hoan toan ben trong polygon `border`.
 - `inner` de len bien, cat bien, nam ngoai hoac thieu mot trong hai polygon deu la `NG`.
 - Kiem tra hinh hoc van dung `shapely.geometry.Polygon.contains()` trong ham logic da co san.
 - `define()` tra `(status, intersection_points, image_visualized)`; `compare()` va `judge()` chuyen ket qua nay thanh `JudgmentResult`.
-- Test logic: `app/tests/test_judment/test_logic_semi_permeable_membrane.py` da PASS 5 truong hop, gom ca inner nam trong, de len border, nam ngoai va thieu polygon.
-- Test runtime: `app/tests/test_judment/test_semi_permeable_membrane_judment.py` da duoc cap nhat dung path model/anh trong workspace va kiem tra ca `define()`, `compare()`, `judge()`.
+- Test logic: `app/tests/test_logic_semi_permeable_membrane.py` da PASS 5 truong hop, gom ca inner nam trong, de len border, nam ngoai va thieu polygon.
+- Test runtime: `app/tests/test_semi_permeable_membrane_judment.py` da duoc cap nhat dung path model/anh trong workspace va kiem tra ca `define()`, `compare()`, `judge()`.
 - Test runtime da load duoc hai model segmentation that. Ket qua phu thuoc anh; neu khong tao duoc polygon hop le thi phai tra `NG`, khong duoc coi la `OK`.
 
 ### 16.3. Scratch The Pipe
 
-- `app/judger/structure/scratch_the_pipe_detector.py` da hoan thien theo luat phu dinh:
+- `app/judger/scratch_the_pipe_detector.py` da hoan thien theo luat phu dinh:
     phat hien Scratch -> `NG`, khong phat hien Scratch -> `OK`.
 - `define()` su dung `FrameModelYoloObject.search_negative()` voi class `scratch`.
 - `compare()` va `judge()` xu ly `runtime_clean`: `True` la vung sach, `False` la co Scratch.
-- Test logic: `app/tests/test_judment/test_logic_scratch_the_pipe.py` da PASS 4 truong hop.
-- Test runtime: `app/tests/test_judment/test_run_scratch_the_pipe.py` da load model `object_surface_detect.pt` va anh that. Anh da kiem tra phat hien 1 object `scratch`, do do ket qua `NG` la dung.
+- Test logic: `app/tests/test_logic_scratch_the_pipe.py` da PASS 4 truong hop.
+- Test runtime: `app/tests/test_run_scratch_the_pipe.py` da load model `object_surface_detect.pt` va anh that. Anh da kiem tra phat hien 1 object `scratch`, do do ket qua `NG` la dung.
 - Trong `app/engines/AI_model_process/frame_yolo_object_process.py`, `search_negative()` da unpack dung ket qua `get_objects()` theo dang `(all_objects, image_crop)`.
 
 ### 16.4. Hien thi anh OpenCV

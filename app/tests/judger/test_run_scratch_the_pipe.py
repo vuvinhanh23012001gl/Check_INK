@@ -9,7 +9,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from app.config import PATH_FILE_MODEL_YOLO_SURFACE, YoloDetectObjectConfig
 from app.engines.AI_model_process import FrameModelYoloObject
 from app.engines.model_AI import ModelYoloObject
-from app.judger.structure import ScratchThePipeDetector
+from app.judger import ScratchThePipeDetector
 
 
 # Cấu hình chạy model YOLO thật. Có thể thay ảnh, ROI ở đây.

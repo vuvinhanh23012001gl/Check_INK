@@ -13,7 +13,7 @@ from app.config import (
 )
 from app.engines.model_AI import ModelYoloSegment
 from app.engines.AI_model_process import FrameModelYoloSegment
-from app.judger.structure import SemiPermeableMembrane
+from app.judger import SemiPermeableMembrane
 
 
 def test_semi_permeable_membrane_judment() -> None:
@@ -77,7 +77,7 @@ def test_semi_permeable_membrane_judment() -> None:
 
 if __name__ == "__main__":
     test_semi_permeable_membrane_judment()
-# python -m app.tests.test_judment.test_semi_permeable_membrane_judment 
+# python -m app.tests.test_semi_permeable_membrane_judment
     # judment.judment_semi_permeable_membrane(
     #     image,
     #     x1=0,

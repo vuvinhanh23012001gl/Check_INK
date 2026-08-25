@@ -1,6 +1,6 @@
 from app.engines.model_AI import ModelYoloObject,ModelUnet,ModelPatchCore
 from app.engines.AI_model_process import FrameModelYoloObject
-from app.judger.structure import WeldSeamAirBubbles
+from app.judger import WeldSeamAirBubbles
 from app.config import PatchCoreAnomalyConfig
 from app.engines.model_AI import ModelPatchCore
 from app.config import (UnetConfig)
@@ -104,5 +104,5 @@ main()
     #     print("touching_boxes",touching_boxes)
     #     print("img_touch",img_touch)
 
-# python -m app.tests.test_judment.test_surface.test_weld_seam_air_bubbles_detector
+# python -m app.tests.test_weld_seam_air_bubbles_detector
 

@@ -45,4 +45,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# python -m app.tests.model_AI.test_model_yolo_object   
+# python -m app.tests.engines.model_AI.test_model_yolo_object

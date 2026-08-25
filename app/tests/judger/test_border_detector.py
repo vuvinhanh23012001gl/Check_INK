@@ -1,6 +1,6 @@
 from app.config import UnetConfig
 from app.engines.model_AI import ModelUnet
-from app.judger.structure import BorderDetector
+from app.judger import BorderDetector
 import cv2
 import numpy as np
 from pathlib import Path
@@ -88,7 +88,7 @@ else:
     cv2.destroyAllWindows()
 
 
-# python -m app.tests.test_judment.test_surface.test_border_detector
+# python -m app.tests.test_border_detector
 
 
 
@@ -96,7 +96,7 @@ else:
 
 # from app.config import UnetConfig
 # from app.engines.model_AI import ModelUnet
-# from app.judger.structure import BorderDetector
+# from app.judger import BorderDetector
 # import cv2
 # from pathlib import Path
 

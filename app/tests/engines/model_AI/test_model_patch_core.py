@@ -32,4 +32,4 @@ if __name__ == "__main__":
     model.unload()
 
 
-# python -m app.tests.model_AI.test_model_patch_core   
+# python -m app.tests.engines.model_AI.test_model_patch_core

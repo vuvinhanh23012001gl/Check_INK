@@ -43,4 +43,4 @@ deployment = DeploymentUnetUnet(
         )
 
 test_automate_sampling_for_checking(deployment)
-#  python -m app.tests.AI.test_unet_deloyment 
+#  python -m app.tests.engines.unet_plus.test_unet_deloyment

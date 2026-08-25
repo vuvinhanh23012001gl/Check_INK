@@ -74,7 +74,7 @@
 # print("\n========== RAW DATA ==========")
 # print(repo.data)
 
-# python -m app.tests.reponsitory.judment_law_product_reponsitory
+# python -m app.tests.repository.judment_law_product_reponsitory
 
 
 # print("\n========== LOAD FROM DICT (REPLACE) ==========")

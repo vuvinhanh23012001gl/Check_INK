@@ -30,5 +30,5 @@ def main():
     
 if __name__ == "__main__":
     main()
-#python -m app.tests.test_AI_model_process.test_frame_yolo_object_process   
+#python -m app.tests.engines.AI_model_process.test_frame_yolo_object_process
 

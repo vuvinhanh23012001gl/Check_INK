@@ -55,6 +55,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-# python -m app.tests.engineer_sevice.test_structure_frame_yolo_service
+# python -m app.tests.engines.service.test_structure_frame_yolo_service
 
 #hole
