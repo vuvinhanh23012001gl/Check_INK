@@ -38,6 +38,8 @@ def header_function(services: ServiceContainer = Depends(get_services)):
         "data_dimesion":result_calibration.data
     }).to_dict()
 
+
+
 @router.post("/run_point_define_value")
 async def run_point_define_value(data:PointData,services: ServiceContainer = Depends(get_services)):
     print(data)
@@ -45,23 +47,23 @@ async def run_point_define_value(data:PointData,services: ServiceContainer = Dep
     y = data.y
     z = data.z
     print(f"Nhận tọa độ: X={x}, Y={y}, Z={z}")
-    if services.obj_com_service.get_shake_hands_complete():
+    if not services.obj_iai_control.can_move_iai("Chạy điểm calibration"):
+        return {
+            "ok": False,
+            "message": "❌ Không cho phép di chuyển: IAI chưa về gốc. Hãy nhấn nút xanh để về gốc trước.",
+        }
+    if services.obj_manager_serial.is_running():
         if services.obj_iai_service.is_valid_position(x,y,z):
-            if  services.obj_com_service.get_shake_hands_complete():
-                status_resquest_control_services_arm_move = services.obj_com_service.send_and_wait(x,y,z)
-                if status_resquest_control_services_arm_move:
-                    return {
-                        "ok": True,
-                        "message": f"✅ Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
-                    }
+            status_resquest_control_services_arm_move = services.obj_iai_control.move_to_point(x, y, z)
+            if status_resquest_control_services_arm_move:
                 return {
-                    "ok": False,
-                    "message": f"❌ Gửi điểm X:{x}, Y:{y}, Z:{z} thất bại."
+                    "ok": True,
+                    "message": f"✅ Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
                 }
             return {
-                    "ok": False,
-                    "message": f"❌ Quá trình bắt tay chưa thành công."
-                }
+                "ok": False,
+                "message": f"❌ Gửi điểm X:{x}, Y:{y}, Z:{z} thất bại."
+            }
         return {
             "ok": False,
             "message": f"⚠️Nhận điểm X:{x}, Y:{y}, Z:{z} nằm ngoài giới hạn trục."
@@ -74,7 +76,12 @@ async def run_point_define_value(data:PointData,services: ServiceContainer = Dep
 
 
 @router.get("/exit")
-async def exit():
+async def exit(services: ServiceContainer = Depends(get_services)):
+    try:
+        if services.obj_manager_serial.is_running():
+            services.obj_iai_control.move_to_origin()
+    except Exception as error:
+        print(f"[CALIBRATION_EXIT] Lỗi khi gửi lệnh về gốc IAI: {error}")
     return {
         "status": "ok",
         "redirect_url": "/"

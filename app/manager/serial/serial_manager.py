@@ -16,6 +16,8 @@ class ManagerSerial:
         self.serial_com = serial_com
         self.rx_queue = queue_rx or Queue()
         self.tx_queue = queue_tx or Queue()
+        self._rx_subscribers = [self.rx_queue]
+        self._connection_lock = threading.RLock()
 
 
         self.running_rx = False
@@ -34,7 +36,7 @@ class ManagerSerial:
 
 
     def open_thread_receive_and_send(self):
-        if self.running_rx or self.running_tx:
+        if self.running_rx and self.running_tx:
             return
         self.running_rx = True
         self.running_tx = True
@@ -55,7 +57,7 @@ class ManagerSerial:
 
 
 
-    def close_thread_receive_and_send(self):
+    def close_thread_receive_and_send(self, clear_tx=True):
         print("🛑 Dừng luồng RX/TX")
         self.running_rx = False
         self.running_tx = False
@@ -66,7 +68,8 @@ class ManagerSerial:
             self.tx_thread.join(timeout=1)
             print("✅ Đã dừng TX")
         self.clear_rx_queue()
-        self.clear_tx_queue()
+        if clear_tx:
+            self.clear_tx_queue()
 
 
 
@@ -84,30 +87,36 @@ class ManagerSerial:
                     print("vao2")
                     time.sleep(1)
                     continue
-                if not self.serial_com.check_port_exists(
-                    port_name
-                ):
-                    if self.com_is_open:
+                with self._connection_lock:
+                    port_exists = self.serial_com.check_port_exists(port_name)
+                if not port_exists:
+                    if self.com_is_open or (
+                        self.serial_com.ser
+                        and self.serial_com.ser.is_open
+                    ):
                         print(
                             f"❌ Mất kết nối {port_name}"
                         )
                         self.com_is_open = False
                         self.serial_com.close_port()
-                        self.close_thread_receive_and_send()
+                        self.close_thread_receive_and_send(clear_tx=False)
                     print("Cố gắng kết nối với COM ...")
                     time.sleep(5)
                     continue
-                if (
+                with self._connection_lock:
+                    if self.serial_com.ser and not self.serial_com.ser.is_open:
+                        self.serial_com.close_port()
+                        self.com_is_open = False
+                    needs_open = (
                         not self.serial_com.ser
                         or not self.serial_com.ser.is_open
-                    ):
+                    )
+                if needs_open:
                     print(
                         f"🔄 Đang mở {port_name}"
                     )
-                    status = (
-                        self.serial_com
-                        .open_port()
-                    )
+                    with self._connection_lock:
+                        status = self.serial_com.open_port()
                     if status:
                         print(
                             f"✅ Mở {port_name} thành công"
@@ -139,12 +148,10 @@ class ManagerSerial:
             f"🔄 Update COM: "
             f"{port_name} - {baudrate}"
         )
-        self.close_thread_receive_and_send()
-        self.serial_com.close_port()
-        status = self.serial_com.open_manual(
-            port_name,
-            baudrate
-        )
+        with self._connection_lock:
+            self.close_thread_receive_and_send()
+            self.serial_com.close_port()
+            status = self.serial_com.open_manual(port_name, baudrate)
         if status:
             self.com_is_open = True
             self.open_thread_receive_and_send()
@@ -176,25 +183,33 @@ class ManagerSerial:
             )
 
 
+    def subscribe_rx(self) -> Queue:
+        """Tạo queue riêng cho một consumer nhận bản tin Serial.
+
+        Input: không có.
+        Output: queue chỉ được ``SerialRX`` ghi và consumer đó đọc.
+        Errors: không phát sinh.
+        """
+        subscriber_queue = Queue()
+        self._rx_subscribers.append(subscriber_queue)
+        return subscriber_queue
+
+
     def receive_data(self):
-        data = (
-            self.serial_com
-            .receive_data()
-        )
+        with self._connection_lock:
+            data = self.serial_com.receive_data()
         if not data:
             return
-        try:
-            self.rx_queue.put_nowait(
-                data
-            )
-        except queue.Full:
-            print(
-                "⚠️ RX Queue đầy"
-            )
+        for subscriber_queue in tuple(self._rx_subscribers):
             try:
-                self.rx_queue.get_nowait()
-            except queue.Empty:
-                pass
+                subscriber_queue.put_nowait(data)
+            except queue.Full:
+                print("⚠️ RX Queue đầy")
+                try:
+                    subscriber_queue.get_nowait()
+                    subscriber_queue.put_nowait(data)
+                except queue.Empty:
+                    pass
 
 
     def _listen_serial(self):
@@ -215,12 +230,18 @@ class ManagerSerial:
         print("✅ Mở luồng TX")
         while self.running_tx:
             try:
+                if not self.is_running():
+                    time.sleep(0.05)
+                    continue
                 data = self.tx_queue.get(
                     timeout = 0.1
                 )
-                self.serial_com.send_data(
-                    data
-                )
+                with self._connection_lock:
+                    send_status = self.serial_com.send_data(data)
+                if not send_status:
+                    self.tx_queue.put_nowait(data)
+                    self.com_is_open = False
+                    self.running_tx = False
             except queue.Empty:
                 continue
             except Exception as e:
@@ -250,15 +271,14 @@ class ManagerSerial:
 
 
     def clear_rx_queue(self):
-        with self.rx_queue.mutex:
-            size = len(
-                self.rx_queue.queue
-            )
-            self.rx_queue.queue.clear()
-            self.rx_queue.unfinished_tasks = 0
-        print(
-            f"🗑️ Clear RX Queue: {size}"
-        )
+        total_size = 0
+        for subscriber_queue in tuple(self._rx_subscribers):
+            with subscriber_queue.mutex:
+                size = len(subscriber_queue.queue)
+                subscriber_queue.queue.clear()
+                subscriber_queue.unfinished_tasks = 0
+                total_size += size
+        print(f"🗑️ Clear RX Queue: {total_size}")
 
 
     def get_rx_queue_size(self):

@@ -34,6 +34,10 @@ class ModelPatchCore(BaseAI):
         self.transform = T.Compose([
             T.Resize((self.config.img_size, self.config.img_size)),
             T.ToTensor(),
+            T.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
         ])
         self.index = faiss.read_index(self.config.index_path)
         self.index.nprobe = self.config.nprobe
@@ -151,36 +155,103 @@ class ModelPatchCore(BaseAI):
 
     def get_bounding_box(self, anomaly_map: np.ndarray, img_shape: tuple[int, int], threshold_ratio: float = 0.3, min_area: int = 100) -> tuple[list[tuple[int, int, int, int]], np.ndarray]:
         """Tính toán phân ngưỡng động bản đồ bất thường, lọc nhiễu hạt và trích xuất danh sách tọa độ các khung bao lỗi.
-        Args:
-            anomaly_map (np.ndarray): Bản đồ chứa khoảng cách/độ bất thường thô trích xuất từ FAISS (14x14).
-            img_shape (tuple): Kích thước của ảnh gốc ban đầu ở dạng (H, W) hoặc (H, W, C).
-            threshold_ratio (float, optional): Tỷ lệ ngưỡng nhị phân hóa dựa trên khoảng giá trị max-min. Mặc định là 0.3.
-            min_area (int, optional): Diện tích tối thiểu bằng pixel của đường viền để loại bỏ các điểm nhiễu li ti. Mặc định là 100.
-        Returns:
-            tuple[list[tuple[int, int, int, int]], np.ndarray]: Cặp giá trị chứa danh sách các tọa độ hộp dạng [(x, y, w, h), ...] 
-                và mặt nạ nhị phân (thresh_mask) dùng để kiểm tra lỗi.
+
+        Phiên bản này dùng nhiều ngưỡng và xử lý morphology nhẹ để giảm hiện tượng gộp
+        nhiều vùng bất thường thành 1 bounding box khi các hotspot ở gần nhau.
         """
         h_max, h_min = anomaly_map.max(), anomaly_map.min()
         if h_max - h_min < 1e-6:
             return [], np.zeros(img_shape[:2], dtype=np.uint8)
-            
+
         heatmap = (anomaly_map - h_min) / (h_max - h_min + 1e-6)
         heatmap = cv2.resize(heatmap, (img_shape[1], img_shape[0]))
         heatmap = np.uint8(255 * heatmap)
-        
-        thresh_value = int(threshold_ratio * 255)
-        _, thresh = cv2.threshold(heatmap, thresh_value, 255, cv2.THRESH_BINARY)
-        
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-    
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        bounding_boxes = []
-        for contour in contours:
-            if cv2.contourArea(contour) > min_area:
-                x, y, w, h = cv2.boundingRect(contour)
-                bounding_boxes.append((x, y, w, h))
-        return bounding_boxes, thresh
+
+        thresholds = [
+            max(20, int(threshold_ratio * 255)),
+            max(15, int(threshold_ratio * 255 * 0.7)),
+        ]
+
+        bounding_boxes: list[tuple[int, int, int, int]] = []
+        final_mask = np.zeros(img_shape[:2], dtype=np.uint8)
+
+        for thresh_value in thresholds:
+            _, thresh = cv2.threshold(heatmap, thresh_value, 255, cv2.THRESH_BINARY)
+
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+            thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+            final_mask = cv2.bitwise_or(final_mask, thresh)
+
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                area = cv2.contourArea(contour)
+                if area > min_area:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    bounding_boxes.append((x, y, w, h))
+
+        if not bounding_boxes:
+            return [], final_mask
+
+        return self._merge_overlapping_boxes(bounding_boxes), final_mask
+
+    @staticmethod
+    def _merge_overlapping_boxes(
+        boxes: list[tuple[int, int, int, int]],
+    ) -> list[tuple[int, int, int, int]]:
+        """Gộp các box bất thường giao nhau hoặc nằm trong cùng một vùng.
+
+        Args:
+            boxes: Danh sách box dạng ``(x, y, width, height)``.
+
+        Returns:
+            list[tuple[int, int, int, int]]: Box đã gộp, không còn các vùng
+                giao nhau. Các box tách biệt vẫn được giữ riêng.
+
+        Raises:
+            ValueError: Nếu một box không có đủ bốn giá trị.
+        """
+        merged = []
+        for raw_box in sorted(boxes, key=lambda item: (item[0], item[1])):
+            if len(raw_box) != 4:
+                raise ValueError("bounding box phải có dạng (x, y, width, height)")
+            candidate = tuple(int(value) for value in raw_box)
+            index = 0
+            while index < len(merged):
+                current = merged[index]
+                if not ModelPatchCore._boxes_overlap(current, candidate):
+                    index += 1
+                    continue
+                candidate = ModelPatchCore._union_boxes(current, candidate)
+                merged.pop(index)
+                index = 0
+            merged.append(candidate)
+        return sorted(merged, key=lambda item: (item[0], item[1]))
+
+    @staticmethod
+    def _boxes_overlap(
+        first: tuple[int, int, int, int],
+        second: tuple[int, int, int, int],
+    ) -> bool:
+        """Kiểm tra hai box có giao nhau với diện tích dương hay không."""
+        first_x, first_y, first_width, first_height = first
+        second_x, second_y, second_width, second_height = second
+        return (
+            max(first_x, second_x) < min(first_x + first_width, second_x + second_width)
+            and max(first_y, second_y) < min(first_y + first_height, second_y + second_height)
+        )
+
+    @staticmethod
+    def _union_boxes(
+        first: tuple[int, int, int, int],
+        second: tuple[int, int, int, int],
+    ) -> tuple[int, int, int, int]:
+        """Trả box nhỏ nhất bao phủ toàn bộ hai box đầu vào."""
+        left = min(first[0], second[0])
+        top = min(first[1], second[1])
+        right = max(first[0] + first[2], second[0] + second[2])
+        bottom = max(first[1] + first[3], second[1] + second[3])
+        return left, top, right - left, bottom - top
 
     def draw_bounding_boxes(self, image: np.ndarray, boxes: list[tuple[int, int, int, int]], color: tuple[int, int, int] = (0, 255, 0), thickness: int = 2, label: str = "Anomaly") -> np.ndarray:
         """Thực hiện vẽ các hộp chữ nhật bao quanh vùng lỗi kèm nhãn nền màu tương ứng lên bản sao của ảnh gốc.

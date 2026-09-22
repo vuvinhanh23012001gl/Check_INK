@@ -19,6 +19,8 @@
         inset 0 1px 0 rgba(255,255,255,.05),
         0 4px 12px rgba(0,0,0,.25);
     height: 80%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .tool-content.active {
@@ -62,13 +64,19 @@
 
 .cof-and-inf-tool-content{
     flex:1;
+    min-height: 0;
+    min-width: 0;
     display:flex;
     flex-direction:column;
     gap:3px;
+    overflow-y:auto;
+    overflow-x:hidden;
 }
 
 .table-cof-tool-content{
-    max-height: 90%;
+    flex: 0 0 auto;
+    max-height: none;
+    min-height: 0;
     background:#eef2f2;
     border:1px solid #0d5b5b;
     border-radius:12px;
@@ -285,7 +293,10 @@
 }
 
 .controler-tool{
-    height: 11%;
+    flex: 0 0 11%;
+    min-height: 72px;
+    max-height: 120px;
+    box-sizing: border-box;
     padding:12px;
     background:#eef2f2;
     border:1px solid #0d5b5b;
@@ -349,6 +360,109 @@
 .measure-weld-width-config-table .config-input:focus {
     border-color: #149999;
     box-shadow: 0 0 6px rgba(20,153,153,0.25);
+}
+
+.end-chipping-save-runtime-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 32px;
+}
+
+.end-chipping-save-runtime-control > input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #38d996;
+    cursor: pointer;
+}
+
+.end-chipping-save-runtime-toggle {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.end-chipping-save-runtime-switch {
+    position: relative;
+    width: 60px;
+    height: 32px;
+    border-radius: 16px;
+    background: #c8c8c8;
+    cursor: pointer;
+    transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.end-chipping-save-runtime-switch::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.end-chipping-save-runtime-toggle:checked + .end-chipping-save-runtime-switch {
+    background: #38d996;
+}
+
+.end-chipping-save-runtime-toggle:checked + .end-chipping-save-runtime-switch::after {
+    transform: translateX(28px);
+}
+
+.end-chipping-save-runtime-toggle:disabled + .end-chipping-save-runtime-switch {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.air-bubbles-editor {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 40% 60%;
+    align-items: stretch;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.air-bubbles-editor > label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 14px;
+    background: #f7f9fc;
+    border-bottom: 1px solid #eef2f5;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.air-bubbles-editor > .config-input {
+    width: calc(100% - 28px);
+    min-width: 0;
+    margin: 12px 14px;
+    padding: 9px 10px;
+    border: 1px solid #d6dee6;
+    border-radius: 8px;
+    outline: none;
+    box-sizing: border-box;
+    background: #fff;
+    color: #1f2933;
+    transition: 0.2s;
+}
+
+.air-bubbles-editor > .config-input:focus {
+    border-color: #149999;
+    box-shadow: 0 0 6px rgba(20,153,153,0.25);
+}
+
+.air-bubbles-editor > .config-actions {
+    grid-column: 1 / -1;
+    width: 100%;
 }
 
 /* =========================

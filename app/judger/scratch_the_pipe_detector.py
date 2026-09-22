@@ -5,6 +5,8 @@ from app.config import ClassNameModelSurfaceConfig
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 class ScratchThePipeDetector(BaseJudgerAI):
+    INSPECTOR_NAME = "ScratchedPipeItemInspector"
+
     def __init__(self,scratch_the_pipe_model:FrameModelYoloObject):
         super().__init__()
         self.scratch_the_pipe_model = scratch_the_pipe_model

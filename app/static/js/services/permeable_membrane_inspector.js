@@ -10,7 +10,7 @@ export class PermeableMembraneInspector {
         this.rectangle = rectangle;
 
         /** @type {Array} Danh sách lưu các tập hợp polygon nhận được từ AI */
-        this.polygons = polygons ;
+        this.polygons = Array.isArray(polygons) ? polygons : [];
     }
 
     // ==========================================

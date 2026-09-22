@@ -1,5 +1,5 @@
 import {fetchGet, postData} from "../utills/api.js"
-import {scroll_container,canvasManager}from "../common_value.js"
+import {scroll_container,canvasManager,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE}from "../common_value.js"
 import {getValue} from "../utills/logic.js"
 import {write_log_clear,write_log_append} from "./common_value_tool.js"
 import {panner_measure_weld_width,panner_measure_slit_width,
@@ -9,6 +9,8 @@ import {panner_measure_weld_width,panner_measure_slit_width,
     panner_measure_border_film,panner_permeable_membrane,obj_region_permeable_membrane_canvas,obj_region_hole_canvas,panner_region_hole
     ,panner_region_scratched_pipe,obj_region_scratched_pipe_canvas
     ,panner_region_end_chipping,obj_region_end_chipping_canvas,refesh_btn,setNameEventActivate,getNameEventActivate
+    ,panner_region_foreign_object,obj_region_foreign_object_canvas
+    ,panner_region_air_bubbles,obj_region_air_bubbles_canvas
    ,set_obj_product,get_obj_product} from "./common_value_tool.js"
 import {Product} from "../model/model_product.js"
 import { ItemsInspector } from "../services/items_inspector.js"
@@ -18,9 +20,11 @@ import { event_transition_items as eventTransitionPermeableMembrane } from "./pe
 import { event_transition_items as eventTransitionMeasureWeldWidth } from "./measure_weld_width_tool.js";
 import { event_transition_items as eventTransitionHole } from "./hole_tool.js";
 import { event_transition_items as eventTransitionEndChipping } from "./end_chipping_tool.js";
+import { event_transition_items as eventTransitionForeignObject } from "./foreign_object_tool.js";
 import { event_transition_items as eventTransitionBorderFilm } from "./border_film_tool.js";
 import { event_transition_items as eventTransitionArmCover } from "./arm_cover_tool.js";
 import { event_transition_items as eventTransitionArmSensor } from "./arm_sensor_tool.js";
+import { event_transition_items as eventTransitionAirBubbles } from "./air_bubbles_tool.js";
 import {openOptionPanel} from "../panel_manager.js";
 
 
@@ -36,6 +40,8 @@ const btn_check_permeable_membrane = document.getElementById("btn-check-permeabl
 const btn_check_hole = document.getElementById("btn-check-hole");
 const btn_check_scratched_pipe = document.getElementById("btn-check-scratched-pipe");
 const btn_check_end_chipping = document.getElementById("btn-check-end-chipping");
+const btn_check_foreign_object = document.getElementById("btn-check-foreign-object");
+const btn_check_air_bubbles = document.getElementById("btn-check-air-bubbles");
 const btn_erase_all_draw = document.getElementById("btn-erase-all-draw");
 const confirm_overlay = document.getElementById("confirm-exit-overlay");
 const btn_confirm_yes = document.getElementById("btn-confirm-yes");
@@ -43,6 +49,11 @@ const btn_confirm_no = document.getElementById("btn-confirm-no");
 const close_adjust_master = document.getElementById("close-adjust-master");
 const log_regulations = document.getElementById("log-regulations");
 const master_tool_buttons = panner_adjust_master.querySelectorAll(".tool-btn");
+let pendingConfirmAction = null;
+const defaultConfirmLabels = {
+    confirm: btn_confirm_yes.textContent,
+    cancel: btn_confirm_no.textContent,
+};
 // Ở cấp con nhất (ScratchedPipeItemInspector, SlitItemInspector, ...): Khi !this.rectangle hoặc không có dữ liệu, phương thức toDict() trả về null
 // Ở cấp ItemsInspector: Loại bỏ các inspector bị null. Nếu cả item không còn inspector nào $\rightarrow$ ItemsInspector.toDict() trả về null.
 // Ở cấp Frame: Bỏ qua các Item trả về null. Nếu Frame không có Item nào $\rightarrow$ Frame.toDict() trả về null.
@@ -51,6 +62,8 @@ const master_tool_buttons = panner_adjust_master.querySelectorAll(".tool-btn");
 let current_frame_box = null;
 let has_clicked_tool = false; 
 let master_load_promise = null;
+let masterImageWidth = 0;
+let masterImageHeight = 0;
 let selected =  {
         product_id: -1,
         frame_id: -1,
@@ -75,26 +88,59 @@ close_adjust_master.addEventListener("click",()=>{
 
 
 btn_erase_all_draw.addEventListener("click",()=>{
-    confirm_overlay.style.display = "flex";
+    openConfirmOverlay(
+        () => {
+            console.log("Xác nhận xóa ARM cover");
+            let obj_product = get_obj_product();
+            obj_product.clearAllInspectors();
+            canvasManager.clearAllCanvas();
+            canvasManager.setTool(null);//đặt canvas bằng null
+            refesh_btn();
+            get_obj_product().clearHighlight(scroll_container);
+            setNameEventActivate(null);
+            refreshPanels();
+        },
+        "Bạn có chắc chắn muốn xóa dữ liệu?"
+    );
 });
 
 btn_confirm_no.addEventListener("click",()=>{
+    pendingConfirmAction = null;
     confirm_overlay.style.display = "none";
+    restoreConfirmLabels();
 
 });
 
 btn_confirm_yes.addEventListener("click",()=>{
-    console.log("Xác nhận xóa ARM cover");
-    let obj_product = get_obj_product();
-    let status_erase  = obj_product.clearAllInspectors();
-    canvasManager.clearAllCanvas();
-    canvasManager.setTool(null);//đặt canvas bằng null
-    refesh_btn();
-    get_obj_product().clearHighlight(scroll_container);
-    setNameEventActivate(null);
-    refreshPanels();
+    const confirmAction = pendingConfirmAction;
+    pendingConfirmAction = null;
     confirm_overlay.style.display = "none";
+    restoreConfirmLabels();
+    confirmAction?.();
 });
+
+document.addEventListener("open-confirm-overlay", event => {
+    openConfirmOverlay(
+        event.detail?.onConfirm,
+        event.detail?.message,
+        event.detail?.confirmLabel,
+        event.detail?.cancelLabel,
+    );
+});
+
+function openConfirmOverlay(confirmAction, message, confirmLabel, cancelLabel) {
+    pendingConfirmAction = typeof confirmAction === "function" ? confirmAction : null;
+    const confirmMessage = document.getElementById("confirm-message");
+    if (confirmMessage && message) confirmMessage.textContent = message;
+    btn_confirm_yes.textContent = confirmLabel || defaultConfirmLabels.confirm;
+    btn_confirm_no.textContent = cancelLabel || defaultConfirmLabels.cancel;
+    confirm_overlay.style.display = "flex";
+}
+
+function restoreConfirmLabels() {
+    btn_confirm_yes.textContent = defaultConfirmLabels.confirm;
+    btn_confirm_no.textContent = defaultConfirmLabels.cancel;
+}
 
 
 
@@ -108,6 +154,28 @@ btn_check_end_chipping.addEventListener("click",()=>{
     canvasManager.clearShapeCanvas();
     panner_region_end_chipping.classList.add("active");
     eventTransitionEndChipping();
+});
+
+btn_check_foreign_object.addEventListener("click",()=>{
+    has_clicked_tool = true;
+    refreshPanels();
+    changeToolEvent(btn_check_foreign_object, btn_check_foreign_object.dataset.tool);
+    canvasManager.setTool(obj_region_foreign_object_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_foreign_object.classList.add("active");
+    eventTransitionForeignObject();
+});
+
+btn_check_air_bubbles.addEventListener("click",()=>{
+    has_clicked_tool = true;
+    refreshPanels();
+    changeToolEvent(btn_check_air_bubbles, btn_check_air_bubbles.dataset.tool);
+    canvasManager.setTool(obj_region_air_bubbles_canvas);
+    canvasManager.clearPreviewCanvas();
+    canvasManager.clearShapeCanvas();
+    panner_region_air_bubbles.classList.add("active");
+    eventTransitionAirBubbles();
 });
 
 btn_check_scratched_pipe.addEventListener("click",()=>{
@@ -233,9 +301,38 @@ function changeToolEvent(button, tool) {
 
 btn_save_law_regulation.addEventListener("click",async ()=>{
     console.log("Bạn vừa click vào lưu dữ liệu luật phán định");
+    write_log_clear(log_regulations, "");
+    write_log_append(log_regulations, "💾 Bắt đầu lưu dữ liệu master...");
     let obj_product = get_obj_product();
+    if (!obj_product) {
+        write_log_append(log_regulations, "❌ Chưa có dữ liệu master để lưu.");
+        return;
+    }
+    write_log_append(log_regulations, "📦 Đang đóng gói dữ liệu master...");
     let data_all = obj_product.toDict();
-    let status_send =  await postData("/law_regulation/save",data_all);  // gui truc tiep khong can kiem tra
+    write_log_append(log_regulations, `📐 Tọa độ hiện tại theo canvas ${WIDTH_IMG_SHAPE} x ${HEIGH_IMG_SHAPE}.`);
+    let status_send;
+    try {
+        status_send = await postData("/law_regulation/save",{
+            data: data_all,
+            WidthCanvas: WIDTH_IMG_SHAPE,
+            HeightCanvas: HEIGH_IMG_SHAPE,
+        });
+    } catch (error) {
+        console.error("Lỗi API save master:", error);
+        write_log_append(log_regulations, "❌ Không thể kết nối API lưu master.");
+        return;
+    }
+    for (const message of status_send?.logs || []) {
+        if (!message.startsWith("Bắt đầu")) {
+            write_log_append(log_regulations, `ℹ️ ${message}`);
+        }
+    }
+    if (status_send?.ok) {
+        write_log_append(log_regulations, "✅ Lưu dữ liệu master thành công.");
+    } else {
+        write_log_append(log_regulations, `❌ Lưu dữ liệu master thất bại: ${status_send?.message || "Lỗi không xác định"}`);
+    }
     console.log("data all :",data_all);
  
 });
@@ -278,6 +375,8 @@ async function loadMasterDataOnce(openPanel = false){
 
     let actual_wid_img = head_data_master.data.wid_img;
     let actual_hei_img = head_data_master.data.hei_img;
+    masterImageWidth = Number(actual_wid_img) || 0;
+    masterImageHeight = Number(actual_hei_img) || 0;
     write_log_append(log_regulations, `📐 Kích thước ảnh master: ${actual_wid_img} x ${actual_hei_img}.`);
     write_log_append(log_regulations, "📋 Đang nạp cây luật phán định của master...");
     try {
@@ -317,13 +416,41 @@ header_adjust_master.addEventListener("click", async ()=>{
 loadMasterData();
 
 function create_object_need(tree){
-    // try {
-        console.log("tree",tree);
-        const product = Product.fromDict(tree);
-        console.log("tree ObJect",product);
-        // const product_json = JSON.stringify(tree);
-        // console.log("product_json",product_json);
-        set_obj_product(product);
+    console.log("tree",tree);
+    const product = Product.fromDict(convertStoredImageCoordinatesToCanvas(tree));
+    console.log("tree ObJect",product);
+    set_obj_product(product);
+}
+
+function convertStoredImageCoordinatesToCanvas(tree) {
+    const convertedTree = structuredClone(tree);
+    if (!masterImageWidth || !masterImageHeight) return convertedTree;
+    const scaleX = WIDTH_IMG_SHAPE / masterImageWidth;
+    const scaleY = HEIGH_IMG_SHAPE / masterImageHeight;
+
+    for (const product of Object.values(convertedTree || {})) {
+        for (const frame of Object.values(product || {})) {
+            for (const item of Object.values(frame || {})) {
+                for (const inspector of Object.values(item || {})) {
+                    if (!inspector || typeof inspector !== "object") continue;
+                    const coordinateKeys = ["xStart", "yStart", "xEnd", "yEnd"];
+                    const entries = coordinateKeys.every(key => key in inspector)
+                        ? [inspector]
+                        : Object.values(inspector);
+                    for (const coordinateItem of entries) {
+                        if (!coordinateItem || typeof coordinateItem !== "object") continue;
+                        if (coordinateItem.coordinateSpace !== "image") continue;
+                        coordinateItem.xStart = Math.round(Number(coordinateItem.xStart) * scaleX);
+                        coordinateItem.yStart = Math.round(Number(coordinateItem.yStart) * scaleY);
+                        coordinateItem.xEnd = Math.round(Number(coordinateItem.xEnd) * scaleX);
+                        coordinateItem.yEnd = Math.round(Number(coordinateItem.yEnd) * scaleY);
+                        delete coordinateItem.coordinateSpace;
+                    }
+                }
+            }
+        }
+    }
+    return convertedTree;
 }
 
 
@@ -377,12 +504,19 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
                 });
             });  
               
-            // let x = getValue(data_point?.x);
-            // let y = getValue(data_point?.y);
-            // let z = getValue(data_point?.z);
-            // coordinate_items_now.x = x;
-            // coordinate_items_now.y = y;
-            // coordinate_items_now.z = z;
+            const coordinates = {
+                x: Number(data_point?.x),
+                y: Number(data_point?.y),
+                z: Number(data_point?.z),
+            };
+            window.dispatchEvent(new CustomEvent("iai-point-selected", {
+                detail: {
+                    ...coordinates,
+                    valid: Object.values(coordinates).every(Number.isFinite),
+                    frameId: Number(frame_id),
+                    pointId: Number(img_item.dataset.id),
+                }
+            }));
 
             // console.log("coordinate x",x);
             // console.log("coordinate y",y);

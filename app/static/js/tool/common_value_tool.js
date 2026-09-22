@@ -10,6 +10,8 @@ export const panner_permeable_membrane = document.getElementById("panner-permeab
 export const panner_region_hole = document.getElementById("panner-region-hole");
 export const panner_region_scratched_pipe = document.getElementById("panner-region-scratched-pipe");
 export const panner_region_end_chipping = document.getElementById("panner-region-end-chipping");
+export const panner_region_foreign_object = document.getElementById("panner-region-foreign-object");
+export const panner_region_air_bubbles = document.getElementById("panner-region-air-bubbles");
 
 
 export const COLOR_RECT_SHAPE_REGION_DETECT = "#0000FF";
@@ -26,6 +28,8 @@ export let obj_region_permeable_membrane_canvas = new  RectangleDrawer();
 export let obj_region_hole_canvas = new RectangleDrawer();
 export let obj_region_scratched_pipe_canvas = new RectangleDrawer();
 export let obj_region_end_chipping_canvas = new RectangleDrawer();
+export let obj_region_foreign_object_canvas = new RectangleDrawer();
+export let obj_region_air_bubbles_canvas = new RectangleDrawer();
 
 let name_event_activate = null; //event khi nhấn vào các Items set thành loại tương
 export let obj_product = null;  // cau hinh cai nay se su dung chung
@@ -39,6 +43,8 @@ export const  boxContentPermeableMembrane =  document.getElementById("table-cof-
 export const  boxContentHole = document.getElementById("table-cof-hole");
 export const  boxContentScratchedPipe = document.getElementById("table-cof-scratched-pipe");
 export const  boxContentEndChipping  = document.getElementById("table-cof-end-chipping");
+export const boxContentForeignObject = document.getElementById("table-cof-foreign-object");
+export const boxContentAirBubbles = document.getElementById("table-cof-air-bubbles");
 
 
 export const getNameEventActivate = () => {

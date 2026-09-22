@@ -7,5 +7,14 @@
     "limit_z_max": 49,
     "home_x": 0,
     "home_y": 0,
-    "home_z": 0
+    "home_z": 0,
+    "command_status": "status_all:",
+    "command_move_to_origin": "move_to_org:",
+    "command_stop": "stop:",
+    "command_reset_stop": "refesh_stop:",
+    "command_pause": "pause:",
+    "command_resume": "refesh_pause:",
+    "status_returned_origin": "has_returned_org:",
+    "input_poll_interval": 0.05,
+    "queue_timeout": 0.01
 }

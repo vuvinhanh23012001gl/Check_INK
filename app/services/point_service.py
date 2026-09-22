@@ -6,14 +6,14 @@ from app.core import Result, ErrorCode
 from app.utils import Folder
 from app.utils import Tool_OpenCv2
 import numpy as np
-from app.config import (BASE_DIR,PATH_FOLDER_IMG_COORDINATE_PRODUCT,PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN,PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
+from app.config import (BASE_DIR,PATH_FOLDER_IMG_COORDINATE_PRODUCT,PATH_FOLDER_IMG_COORDINATE_OUTPUT,PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
     
 class PointService:
     def __init__(self, repository: PointRepository):
         self.repository = repository
         self.path_base_patch_core = PATH_FOLDER_MODEL_DETECT_PATCH_CORE
         self.path_base_img_coordinates = PATH_FOLDER_IMG_COORDINATE_PRODUCT
-        self.path_base_img_coordinates_retrain = PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN
+        self.path_base_img_coordinates_output = PATH_FOLDER_IMG_COORDINATE_OUTPUT
         self.path_base_storage = BASE_DIR
         self.points = self._load_points()
 
@@ -209,7 +209,7 @@ class PointService:
         product_id_str, frame_id_str, point_id_str = str(product_id), str(frame_id), str(point.point_id)
         path_model_folder = Path(self.path_base_patch_core) / product_id_str / frame_id_str / point_id_str
         path_img_coordinate = Path(self.path_base_img_coordinates) / product_id_str / frame_id_str / f"{point_id_str}.jpg"
-        path_img_retrain_folder = Path(self.path_base_img_coordinates_retrain) / product_id_str / frame_id_str / point_id_str
+        path_img_retrain_folder = Path(self.path_base_img_coordinates_output) / product_id_str / frame_id_str / point_id_str
         
         Folder.create_folder(path_model_folder)
         Folder.create_folder(path_img_retrain_folder)
@@ -308,7 +308,7 @@ class PointService:
         path_img_folder = Path(self.path_base_img_coordinates) / product_id_str / frame_id_str
         if path_img_folder.exists(): Folder.delete_folder(path_img_folder)
         
-        path_retrain_folder = Path(self.path_base_img_coordinates_retrain) / product_id_str / frame_id_str
+        path_retrain_folder = Path(self.path_base_img_coordinates_output) / product_id_str / frame_id_str
         if path_retrain_folder.exists(): Folder.delete_folder(path_retrain_folder)
         
         del self.points[product_id][frame_id]

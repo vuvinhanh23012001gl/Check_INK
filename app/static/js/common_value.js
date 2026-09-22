@@ -18,32 +18,12 @@ export const HEIGH_IMG_SHAPE = 768;
 
 
 
-
-
 export const scroll_container = document.querySelector(".scroll-container");
 export const video_product = document.getElementById("video-product");
 
 export const videoManager = new VideoManager(video_product);
 export const canvasManager = new CanvasManager("coordinate","wrap-canvas",video_product,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE);
 canvasManager.initEvent();
-
-
-
-    
-       
-      
-        
-    
-
-
-
-
-
-
-
-
-
-
 
 
 

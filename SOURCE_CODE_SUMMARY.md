@@ -99,8 +99,8 @@ Pipeline chay trong daemon thread, lap moi 1 giay:
 
 Cac stage hien tai:
 
-- `stage_1_preprocess.py`: xoa RX/TX queue, gui `move_to_org:`, cho `has_returned_org:`; neu thanh cong dat handshake va chuyen sang transform.
-- `stage_2_transform.py`: lay cac diem XYZ va duong dan retrain, gui lenh dang `cmd:x,y,z,80`, cho phan hoi, sau do chup anh.
+- `stage_1_preprocess.py`: xoa RX/TX queue, gui `move_to_org:`, cho `has_returned_org:`; neu thanh cong dat handshake va chuyen sang `MODE_TRANSFORM`.
+- `stage_2_transform.py`: lay cac diem XYZ va duong dan retrain cua frame 0, gui lenh dang `cmd:x,y,z,80`, cho phan hoi, sau do chup anh. Khi ARM khong phan hoi, code hien goi mode `MODE_DEAFAULT` khong ton tai.
 - `stage_3_export.py`: moi chi co constructor.
 
 ### 4.4. `app/config/`
@@ -377,9 +377,9 @@ Du an kem mot thu muc `venv-project-width-line`; khong nen coi virtualenv nay la
 10. Ten file va ten symbol co nhieu typo/khong dong nhat (`dimesional`, `reponsitory`, `judment`, `MODE_PREPOCESS`). Chua can doi ten neu khong co ke hoach migration vi co the pha import.
 11. Quan ly queue, camera, COM va browser thread co nhieu side effect khi import/khoi tao; test don vi nen mock hardware va model.
 12. Quy trinh shutdown moi chi in log, chua dong camera, serial, worker, thread pipeline va task Socket.IO mot cach tuong minh.
-13. `api_captureproduct.py` dung `EnumMode.MODE_RUN_ONE_FRAME`, nhung enum hien tai khong khai bao mode nay; endpoint `/captureproduct/run_frame` co the loi khi duoc goi.
-14. `api_calibration.py` tham chieu `services.obj_cv2`, `services.obj_logic` va `services.obj_calibration`, nhung cac thuoc tinh nay khong thay duoc khoi tao trong `ServiceContainer` hien tai.
-15. `api_draw_regulations.py` tham chieu `services.obj_logic`, `services.obj_products_service` va mot so method/property khong thay dong bo voi container/service hien tai.
+13. `api_captureproduct.py` dung `EnumMode.MODE_RUN_ONE_FRAME`, nhung enum hien tai khong khai bao mode nay; endpoint `/captureproduct/run_frame` co the loi truoc khi tra ve response placeholder.
+14. `api_calibration.py` tham chieu `services.obj_cv2`, `services.obj_logic` va `services.obj_calibration`, nhung `ServiceContainer` hien tai khong khoi tao cac thuoc tinh nay. Container chi co `obj_service_calibration` va `obj_unet_calib_search_coordinator`; endpoint calibration co the loi khi duoc goi.
+15. `api_draw_regulations.py` tham chieu `services.obj_logic`, trong khi container khong khoi tao `Logic`; endpoint `accept_data` co the loi khi duoc goi. Cac method ProductService ma router su dung can duoc kiem tra them khi chay endpoint.
 16. `StageTransform` lay `result_path` tu frame 0 nhung dung trong vong lap cho nhieu frame, co nguy co dung sai duong dan retrain.
 17. Calibration coordinator va mot so handler/test con hard-code duong dan nhu `C:\Users\anhuv\Desktop\test_tool\...` va `C:\Users\anhuv\Desktop\train\...`.
 18. Trong calibration coordinator, mot so trang thai camera/COM bi gan cung thanh `True`, co the che mat loi phan cung thuc te. Thread calibration duoc tao non-daemon co the giu process chua thoat khi shutdown.
@@ -388,23 +388,9 @@ Du an kem mot thu muc `venv-project-width-line`; khong nen coi virtualenv nay la
 
 ### Da co khung va dang duoc su dung
 
-- FastAPI app + Uvicorn entrypoint.
-- Service container va dependency injection.
-- Product/point/calibration repository-service.
-- Camera, serial/COM, queue worker.
-- YOLO object/segment, UNet va PatchCore wrapper.
-- API cho product, capture, calibration, regulation va software config.
-- Storage JSON/anh va giao dien template/static.
-- Bo test tuong doi rong cho service, model va judgment.
 
 ### Dang phat trien/chua hoan tat
 
-- Pipeline export.
-- Mot so endpoint COM va luong hardware.
-- Shutdown lifecycle.
-- Mot so handler tinh kich thuoc cu/legacy.
-- Kiem thu end-to-end tren hardware that.
-- Chuan hoa ten, duong dan va cau hinh moi truong.
 
 ## 12. Thu tu nen doc khi tiep tuc phat trien
 
@@ -498,6 +484,89 @@ Trang thai da xac nhan:
 Rui ro con lai:
 
 - Chua co integration test voi camera/COM that.
+
+## 18. Cap nhat ngay 2026-08-28
+
+### 18.1. Tach output runtime
+
+- Da tach thu muc runtime `app/storage/retrain` thanh `app/output/patch_core`, nam cung cap voi `app/core` va `app/storage`.
+- `app/config/path_config.py` co `BASE_PATH_OUTPUT` va `PATH_FOLDER_IMG_COORDINATE_OUTPUT`.
+- `PointService` da dung path output moi cho anh PatchCore runtime.
+- `app/storage/points.json` da cap nhat `path_img_retrain` sang `output\\patch_core`.
+- `output/` da duoc them vao `.gitignore`.
+
+### 18.2. Sua loi startup va WebSocket
+
+- `PointRepository.load_points()` da doc JSON bang `utf-8-sig`, xu ly duoc `points.json` co UTF-8 BOM.
+- Da kiem tra `PointRepository`, `PointService` va import `app.main` thanh cong.
+- Camera WebSocket trong `app/routers/api_captureproduct.py` da bat `WebSocketDisconnect`, `ConnectionResetError` va `BrokenPipeError` dung cach.
+- Da sua loi dung bien exception `e` chua duoc bind trong handler WebSocket.
+- `app/main.py` co exception handler loc rieng `WinError 10054` cua Windows Proactor, khong anh huong cac loi khac.
+
+### 18.3. BorderDetector va phan dinh theo mm
+
+- `BorderDetector` da goi UNet mot lan cho moi anh, sau do tai su dung polygon cho tat ca line.
+- Giao diem `p1`, `p2` duoc lay bang Shapely `LineString.intersection()` thay vi lay pixel dau/cuoi tu mask.
+- `compare()` nhan `scale_mm_per_pixel` tu caller.
+- Khoang cach duoc tinh bang `distance_mm = distance_pixel * scale_mm_per_pixel`.
+- Luat phan dinh la `widthMin <= distance_mm <= widthMax` thi `OK`, nguoc lai `NG`.
+- `widthMin` va `widthMax` duoc xem la don vi mm, khong nhan scale khi luu master.
+- API border da duoc noi vao luong `define -> compare -> judge`, lay calibration theo frame va tra ket qua tung line.
+- Ket qua API border gom `distance_pixel`, `distance_mm`, gioi han min/max va `is_valid`.
+- Test runtime border da ve polygon, line, doan giao, p1/p2, khoang cach va nhan `OK/NG` tung line.
+
+### 18.4. Luu master va quy doi toa do
+
+- Client luu master gui them `WidthCanvas` va `HeightCanvas` trong `summary_tool.js`.
+- API luu master lay kich thuoc anh master that theo tung point.
+- Toa do line duoc chuyen tu canvas web sang pixel anh master truoc khi luu.
+- `widthMin` va `widthMax` duoc giu nguyen theo mm.
+- Du lieu da chuyen duoc danh dau bang `coordinateSpace: image`.
+- API bo qua quy doi neu line da o he toa do `image`, tranh bi nhan scale nhieu lan khi Save.
+- Client chuyen nguoc toa do image ve canvas khi nap lai master de hien thi dung tren giao dien.
+- Log Save master da hien thi ca qua trinh thanh cong, that bai, quy doi toa do va loi ket noi.
+
+### 18.5. Chuan hoa judger va inspector name
+
+- `BaseJudgerAI` da co contract `INSPECTOR_NAME` va kiem tra moi class con phai khai bao ten rieng.
+- Mapping hien tai:
+    - `ArmSensorInspector` -> `ArmSensorDetector`.
+    - `ArmCoverInspector` -> `ArmCoverDetector`.
+    - `BorderFilmInspector` -> `BorderDetector`.
+    - `HoleItemInspector` -> `HoleDetector`.
+    - `MembraneInspector` -> `SemiPermeableMembrane`.
+    - `ScratchedPipeItemInspector` -> `ScratchThePipeDetector`.
+    - `AirBubblesItemInspector` -> `WeldSeamAirBubbles`.
+- `InspectorName` duoc tach rieng khoi label model AI; khong dung ten inspector lam label model.
+- JavaScript `ArmCoverItemInspector.NAME` da duoc doi tu `CoverSensorInspector` thanh `ArmCoverInspector` va dong bo voi JSON.
+
+### 18.6. Scratch va Air Bubble
+
+- `ScratchThePipeDetector` su dung luat phu dinh: co Scratch -> `NG`, khong co Scratch -> `OK`.
+- `WeldSeamAirBubbles` da hoan thien: co `air_bubble` -> `NG`, khong co -> `OK`.
+- Hai detector deu co `define`, `compare`, `judge` va tra `JudgmentResult`.
+- Da tao test logic va runtime cho Scratch, Air Bubble; test runtime Air Bubble da phat hien 6 object tren anh kiem tra va tra `NG` dung luat.
+
+### 18.7. Cau truc test moi
+
+- Test duoc sap xep lai thanh:
+    - `app/tests/test_judment/logic/`
+    - `app/tests/test_judment/runtime/`
+- `logic/` chua test Mock cho Cover, Sensor, Hole, Border, Scratch, Semi-permeable membrane va Air Bubble.
+- `runtime/` chua test model that cho Cover, Sensor, Hole, Border, Scratch, Semi-permeable membrane va Air Bubble.
+- Da sua `PROJECT_ROOT`, import package va duong dan anh/model sau khi them hai tang `logic` va `runtime`.
+- Toan bo test logic hien tai da chay PASS; cac test runtime da duoc chuan hoa de dung model/path trong workspace.
+
+### 18.8. Kiem tra da thuc hien
+
+- `py_compile` cho cac file backend, judger va test lien quan: PASS.
+- Test logic BorderDetector: PASS 5 test.
+- Test logic WeldSeamAirBubbles: PASS 5 test.
+- Test logic cac judger khac: PASS.
+- Test runtime BorderDetector voi UNet that: PASS, co giao diem chinh xac va phan dinh theo mm.
+- Test runtime WeldSeamAirBubbles voi model that: PASS, phat hien bot khi va tra `NG`.
+- Kiem tra mapping `InspectorName`: PASS.
+- Kiem tra quy doi toa do va Save lap lai: PASS.
 - Ten node GenApi phu thuoc model camera Sentech.
 - Khong nen sua thu cong `features.cfg` trong production; nen luu qua SDK.
 - Full app startup khoi tao model, camera, COM va thread; test router nen dung service fake.
@@ -506,11 +575,11 @@ Rui ro con lai:
 
 ### 15.1. Pipeline va startup
 
-- `EnumMode` da co `MODE_IDLE` trong `app/container.py`.
-- Sau khi `StagePreprocess` gui `move_to_org:` va nhan `has_returned_org:`, pipeline dat mode `MODE_IDLE` thay vi tu dong chuyen sang `MODE_TRANSFORM`.
-- Muc dich la khi mo phan mem chi homing ARM, khong tu dong chay qua toan bo danh sach point.
-- `StageTransform` xu ly mot luot, dung `ComService.send_and_wait()`, lay duong dan theo tung frame va dat `MODE_EXPORT` sau khi ket thuc de tranh gui lap lai.
-- Van con cac rui ro cu can xu ly tiep: `MODE_RUN_ONE_FRAME` va `MODE_DEAFAULT` tung duoc tham chieu o mot so nhanh code cu; shutdown Pipeline/hardware chua day du.
+- `EnumMode` hien chi co `MODE_PREPOCESS`, `MODE_TRANSFORM` va `MODE_EXPORT`; chua co `MODE_IDLE` hay `MODE_RUN_ONE_FRAME`.
+- Sau khi `StagePreprocess` gui `move_to_org:` va nhan `has_returned_org:`, pipeline dat mode `MODE_TRANSFORM`, vi vay co the tu dong chay qua cac point sau khi homing.
+- `StageTransform` hien dung `Logic.wait_for_specific_data()`, lay duong dan retrain mot lan cho frame 0, xu ly cac point va khong dat `MODE_EXPORT` sau khi ket thuc.
+- Nhanh loi khi ARM khong phan hoi van goi `MODE_DEAFAULT`, la ten mode khong ton tai; endpoint `/captureproduct/run_frame` cung goi mode khong ton tai va hien tra response placeholder.
+- Shutdown Pipeline/hardware chua day du.
 
 ### 15.2. COM
 
@@ -521,7 +590,13 @@ Rui ro con lai:
 - `ComService.configure_connection()` rollback cau hinh JSON neu mo cong moi that bai.
 - `shake_hands_compelete` la trang thai handshake ARM, khac voi trang thai cong serial vat ly dang mo. Can tach hai trang thai neu muon hien thi chinh xac hon.
 
-### 15.3. Frontend va canvas
+### 15.3. Calibration va Draw Regulations
+
+- `ServiceContainer` hien tao `obj_service_calibration` (`CalibrationService`) va `obj_unet_calib_search_coordinator` (`CalibSearchCoordinator`), khong tao `obj_calibration`.
+- `api_calibration.py` dang dung them `services.obj_cv2` va `services.obj_logic`, nhung hai dependency nay chua duoc gan trong container. Router cung con doc anh test tu duong dan tuyet doi tren may phat trien thay vi dung frame vua chup.
+- `api_draw_regulations.py` dang dung `services.obj_logic`, nhung dependency nay chua duoc gan trong container. Day la endpoint chua dong bo voi composition root hien tai.
+
+### 15.4. Frontend va canvas
 
 - `controler.js` import cac module frontend; `home.js` phu trach man hinh chinh, `capture_frame.js` phu trach Lay anh mau, `dimetional_calibration.js` phu trach hieu chuan kich thuoc, `tool/summary_tool.js` phu trach Dieu chinh Master.
 - Cac man hinh dung chung `.scroll-container`, nen item cu co the con ton tai khi doi panel. Handler item trong `summary_tool.js` chi `stopPropagation()` khi panel Dieu chinh Master dang active; khi o man hinh chinh, click duoc xu ly boi `home.js` va hien anh tren canvas.
@@ -529,7 +604,7 @@ Rui ro con lai:
 - `video-product` duoc an ban dau de khong hien alt text `Video feed`; chi nut `Stream Video` moi bat video.
 - Loi `coordinate_items_now` giu `-1` tung do click nham item do `summary_tool.js` tao hoac dung bien `coordinates` truoc khi khai bao; handler dimensional da duoc sua de cap nhat toa do theo item.
 
-### 15.4. AI va detector trong judger
+### 15.5. AI va detector trong judger
 
 - `object_structure_detect.pt` dung chung cho `hole`, `cover_arm`, `sensor_arm`.
 - `object_surface_detect.pt` dung cho `scratch`.
@@ -541,7 +616,7 @@ Rui ro con lai:
 - Script model that `app/tests/test_run_armcoverdetector.py` khong dung Mock; script load weights that, doc anh, chay `define`, `compare`, `judge` va in log. Anh da kiem tra `app/storage/img_points/1/0/4.jpg`, ROI `0,0,2016,619` phat hien `sensor_arm` confidence khoang `0.983`, khong phat hien `cover_arm`, nen `standard_data=True` cho ket qua `NG` la dung.
 - Script test thuong `test_armcoverdetector.py` dung Mock de test orchestration, khong phai test model accuracy. Pytest chua duoc cai trong virtualenv.
 
-### 15.5. Quy uoc tiep tuc phat trien
+### 15.6. Quy uoc tiep tuc phat trien
 
 1. Khi test logic detector, dung script thuong voi Mock neu khong can model that.
 2. Khi kiem tra model, dung `test_run_armcoverdetector.py`, sua cac hang `MODEL_PATH`, `IMAGE_PATH`, `STANDARD_DATA`, `X1`, `Y1`, `X2`, `Y2` o dau file.
@@ -607,3 +682,66 @@ Rui ro con lai:
 - Test runtime Semi-permeable membrane: model load thanh cong; ket qua `OK` hoac `NG` tuy polygon model phat hien duoc.
 - Test logic Scratch: PASS.
 - Test runtime Scratch voi model that: PASS, phat hien 1 Scratch va tra `NG`.
+
+## 19. Kiem tra doi chieu source - 2026-09-03
+
+- Da doi chieu truc tiep `app/container.py`, `app/pipeline.py`, cac stage pipeline va cac router calibration, capture product, draw regulations voi noi dung tai lieu.
+- Trang thai mode thuc te chi gom `MODE_PREPOCESS`, `MODE_TRANSFORM` va `MODE_EXPORT`; `MODE_IDLE` va `MODE_RUN_ONE_FRAME` chua ton tai.
+- `StagePreprocess` hien chuyen sang `MODE_TRANSFORM` sau khi ARM bao da ve goc, khong chuyen sang `MODE_IDLE`.
+- `StageTransform` van lay path retrain cho frame 0, dung `Logic.wait_for_specific_data()` va chua chuyen mode sang export sau khi ket thuc.
+- `StageTransform` con loi tham chieu `MODE_DEAFAULT`; `/captureproduct/run_frame` con loi tham chieu `MODE_RUN_ONE_FRAME` va tra response mau.
+- `ServiceContainer` chua gan `obj_cv2`, `obj_logic` va `obj_calibration`; cac router calibration/draw regulations su dung cac thuoc tinh nay nen chua dong bo voi composition root.
+- `api_calibration.py` con doc anh tu duong dan tuyet doi tren may phat trien; day la code test/placeholder, khong phai luong production hoan chinh.
+- Chua sua code Python trong dot doi chieu nay; cac diem tren duoc ghi ro de lam co so cho lan sua tiep theo.
+
+## 17. Tach output runtime khoi storage - 2026-08-28
+
+- Thu muc runtime truoc day `app/storage/retrain` da duoc di chuyen thanh `app/output/patch_core`.
+- `app/output` nam cung cap voi `app/core` va `app/storage`, dung de tach anh/output runtime khoi du lieu cau hinh, master va anh diem trong storage.
+- `app/config/path_config.py` co `BASE_PATH_OUTPUT` va `PATH_FOLDER_IMG_COORDINATE_OUTPUT` tro den `app/output/patch_core`.
+- `PointService` da dung path output moi khi tao, doc va xoa thu muc anh PatchCore runtime.
+- Alias `PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN` van duoc giu tam thoi de tuong thich voi test/module cu; gia tri alias da tro den output moi, khong con tro vao storage.
+- Cac path `path_img_retrain` da luu trong `app/storage/points.json` duoc cap nhat tu `storage\\retrain\\patch_core` sang `output\\patch_core`.
+- `app/output/` da duoc them vao `.gitignore` vi day la du lieu runtime, khong nen commit cung source.
+
+## 20. Ghi chu ban giao phien lam viec - 2026-09-03
+
+### 20.1. Judment va registry detector
+
+- `app/judger/judment.py` co `Judment.run()` va `Judment.run_summary()`; cac inspector duoc chay tuan tu theo thu tu `define -> compare -> judge`.
+- `run_summary()` tiep tuc chay tool sau neu mot tool bi exception, ghi tool loi thanh `NG`, va tra output tong gom `overall`, `status`, `message`, `image`, `processed_at`, `inspectors`, `errors`.
+- Log bat dau/ket thuc tung inspector duoc in trong `Judment`; mang NumPy duoc rut gon thanh shape/dtype khi log.
+- `app/container.py` da co registry: `MeasurementWeldInspector`, `SlitWeldInspector`, `ArmSensorInspector`, `ArmCoverInspector`, `BorderFilmInspector`, `MembraneInspector`, `HoleItemInspector`, `ScratchedPipeItemInspector`, `AirBubblesItemInspector`.
+- `EndChippingInspector` chua co detector Python ke thua `BaseJudgerAI`, nen test runtime hien bo qua va in thong bao skipped.
+- Alias `Judgment = Judment` da bi xoa khoi `judment.py`; `app/judger/__init__.py` cung da xoa import alias nay. Ten chinh thuc hien tai la `Judment`.
+
+### 20.2. Toa do canvas va anh output
+
+- API `/law_regulation/save` goi `convert_canvas_coordinates()` trong `app/services/judment_law_product_service.py` de chuyen toa do canvas sang toa do anh that truoc khi luu.
+- Conversion ap dung cho moi inspector co `xStart`, `yStart`, `xEnd`, `yEnd`; du lieu da co `coordinateSpace: image` duoc bo qua de tranh scale hai lan.
+- `summary_tool.js` chuyen nguoc image coordinates ve canvas khi load master; `widthMin`/`widthMax` giu nguyen vi la don vi mm.
+- `BorderDetector`, `MeasurementWeldingDetector` va `SlitDetector` tra anh output co polygon, line va giao diem.
+- `FrameModelYoloObject.search()` va `search_negative()` tra anh co ROI; da comment lệnh hien thi anh trong model.
+- Hien thi anh sau phan dinh nam o test runtime, khong nam trong detector. Test `test_run_judment_config_item_1_0_4.py` luu anh theo tung inspector trong `app/output/judgment_item_1_0_4/` va hien thi tuan tu; dong cua so/nhan `Esc`/`q` de sang anh tiep theo.
+
+### 20.3. API chay model va Air Bubble
+
+- Endpoint chay model duoc chuan hoa thanh `/law_regulation/<tool>/run_model`; Border Film dung `/law_regulation/border_film/run_model` va handler `run_model_border_film()` chi lay polygon model, khong doc config judgment hay phan dinh OK/NG.
+- `WeldSeamAirBubbles` dung luat phu dinh: co `air_bubble` trong bat ky vung nao la `NG`, khong co trong tat ca vung la `OK`.
+- Air Bubble service logic da duoc gop vao `SurfaceFrameYoloService.judge_regions()`; file service rieng trung lap da xoa.
+- Cac inspector Arm Cover, Arm Sensor, Permeable Membrane duoc khoi tao danh sach ket qua bang mang rong, tranh loi `Cannot read properties of null (reading 'push')`.
+
+### 20.4. Test da chay
+
+- Test logic Air Bubble: 6 test `PASS`.
+- Test logic Judment: 7 test `PASS` tai thoi diem file con ton tai.
+- Test runtime `1/0/4` voi anh `app/storage/img_points/1/0/4.jpg` va model that: `PASS`; ket qua anh phu thuoc model, co the la `OK` hoac `NG`.
+- Test logic Arm Cover, Arm Sensor, Hole, Measurement Weld va Slit: deu `PASS` sau khi bo sung anh output.
+- `py_compile`, Pylance diagnostics va `git diff --check` da duoc kiem tra cho cac file lien quan.
+
+### 20.5. Canh bao khi tiep tuc
+
+- Khong chay `app.tests.services.test_judment_law_product_service` truc tiep neu khong can thiet: test cu co side effect ghi de `app/storage/config_judgment_law.json` bang du lieu test.
+- File cau hinh judgment phai duoc luu dung tren dia truoc khi chay runtime; kiem tra nhanh bang `json.load(..., encoding='utf-8-sig')`.
+- Moi truong hien tai dung PyTorch `2.2.2+cpu`, `torch.cuda.is_available()` la `False`; runtime dang chay CPU.
+- Chua co detector Python cho `EndChippingInspector` va chua co integration test full app voi camera/COM.

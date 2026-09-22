@@ -5,6 +5,8 @@ from app.config import ClassNameObjectStructureDetectConfig
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 class HoleDetector(BaseJudgerAI):
+    INSPECTOR_NAME = "HoleItemInspector"
+
     def __init__(self,hole_model:FrameModelYoloObject):
         super().__init__()
         self.hole_model = hole_model
@@ -61,6 +63,7 @@ class HoleDetector(BaseJudgerAI):
             "runtime_count": len(objects),
             "runtime_status": runtime_status,
             "messages": messages,
+            "image": image,
             "objects": objects,
         }
 
@@ -86,6 +89,7 @@ class HoleDetector(BaseJudgerAI):
             runtime_data={
                 "exists": comparison_data["runtime_exists"],
                 "count": comparison_data["runtime_count"],
+                "image": comparison_data.get("image"),
                 "objects": comparison_data.get("objects", []),
             },
             comparison_data=comparison_data,

@@ -265,7 +265,7 @@ btn_judment_slit.addEventListener("click",async()=>{
     let status_selected =  checkSelected(selected);
     if (status_selected){
         write_log_clear(log_slit_measure,"");
-        let result_judment = await postData("/law_regulation/measurement/judment_item",selected);
+        let result_judment = await postData("/law_regulation/slit/run_model",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;

@@ -1,3 +1,4 @@
+import serial
 import serial.tools.list_ports
 from app.model import SerialConfig
 from app.repository import ComRepository
@@ -44,6 +45,12 @@ class SerialConnect:
     def open_port(
         self
     ) -> bool:
+        """Mở cổng COM và chỉ thành công khi handle thực sự đang mở.
+
+        Input: không có; sử dụng cấu hình COM hiện tại.
+        Output: ``True`` nếu pyserial tạo được handle đang mở, ngược lại ``False``.
+        Errors: lỗi pyserial hoặc lỗi hệ điều hành được ghi log và không lan ra ngoài.
+        """
 
         if not self.config.is_valid():
             print({
@@ -61,7 +68,7 @@ class SerialConnect:
             return True
         try:
 
-            self.ser = serial.Serial(
+            opened_serial = serial.Serial(
                 port=self.config.device_port,
                 baudrate=self.config.baudrate,
                 bytesize=self.config.bytesize,
@@ -69,6 +76,12 @@ class SerialConnect:
                 stopbits=self.config.stopbits,
                 timeout=self.config.timeout
             )
+            if not opened_serial.is_open:
+                opened_serial.close()
+                self.ser = None
+                print(f"Mở COM {self.config.device_port} thất bại: handle đã đóng")
+                return False
+            self.ser = opened_serial
             print(
                 f"Mở COM {self.config.device_port} thành công"
             )
@@ -85,7 +98,9 @@ class SerialConnect:
 
             return True
 
-        except Exception as e:
+        except (serial.SerialException, OSError) as e:
+
+            self.ser = None
 
             print(e)
 
@@ -122,42 +137,43 @@ class SerialConnect:
     def close_port(
         self
     ):
+        """Đóng handle COM hiện tại và xóa trạng thái kết nối.
+
+        Input: không có.
+        Output: không trả về giá trị.
+        Errors: lỗi khi đóng được ghi log; trạng thái handle vẫn được xóa.
+        """
         if not self.ser:
             return
+        port_name = self.config.device_port
         try:
-
-            port_name = (
-                self.config.device_port
-            )
-
             self.ser.close()
-
+        except Exception as e:
+            print(e)
+        finally:
             self.ser = None
-
-            print(
-                f"Đóng COM {port_name}"
-            )
-
+            print(f"Đóng COM {port_name}")
             print({
                 "type": "software",
                 "level": "info",
-                "data": (
-                    f"Đóng COM "
-                    f"{port_name}"
-                )
+                "data": f"Đóng COM {port_name}"
             })
-        except Exception as e:
-            print(e)
 
     def send_data(
         self,
         data
-    ):
-        if not self.ser:
+    ) -> bool:
+        """Ghi một lệnh xuống COM đang mở.
+
+        Input: ``data`` là chuỗi lệnh không kèm newline cuối.
+        Output: ``True`` nếu ghi thành công, ngược lại ``False``.
+        Errors: lỗi Serial được ghi log, đóng handle hỏng và trả về ``False``.
+        """
+        if not self.ser or not self.ser.is_open:
             print(
                 "COM chưa mở"
             )
-            return
+            return False
 
         try:
             data_send = (
@@ -170,15 +186,18 @@ class SerialConnect:
             print(
                 f"PC Send: {data}"
             )
+            return True
         except Exception as e:
 
             print(e)
+            self.close_port()
+            return False
 
 
     def receive_data(
         self
     ):
-        if not self.ser:
+        if not self.ser or not self.ser.is_open:
 
             return None
         try:
@@ -197,6 +216,7 @@ class SerialConnect:
                 return data
         except Exception as e:
             print(e)
+            self.close_port()
         return None
 
 

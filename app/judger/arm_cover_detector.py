@@ -5,6 +5,8 @@ from app.config import ClassNameObjectStructureDetectConfig
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 class ArmCoverDetector(BaseJudgerAI):
+    INSPECTOR_NAME = "ArmCoverInspector"
+
     def __init__(self,arm_cover_model:FrameModelYoloObject):
         super().__init__()
         self.arm_cover_model = arm_cover_model
@@ -53,6 +55,7 @@ class ArmCoverDetector(BaseJudgerAI):
             "runtime_count": len(objects),
             "runtime_status": runtime_status,
             "messages": messages,
+            "image": image,
             "objects": objects,
         }
 
@@ -78,6 +81,7 @@ class ArmCoverDetector(BaseJudgerAI):
             runtime_data={
                 "exists": comparison_data["runtime_exists"],
                 "count": comparison_data["runtime_count"],
+                "image": comparison_data.get("image"),
                 "objects": comparison_data.get("objects", []),
             },
             comparison_data=comparison_data,

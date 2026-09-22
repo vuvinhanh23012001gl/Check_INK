@@ -5,6 +5,8 @@ from app.config import ClassNameObjectStructureDetectConfig
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 class ArmSensorDetector(BaseJudgerAI):
+    INSPECTOR_NAME = "ArmSensorInspector"
+
     def __init__(self,arm_sensor_model:FrameModelYoloObject):
         super().__init__()
         self.arm_sensor_model = arm_sensor_model
@@ -61,6 +63,7 @@ class ArmSensorDetector(BaseJudgerAI):
             "runtime_count": len(objects),
             "runtime_status": runtime_status,
             "messages": messages,
+            "image": image,
             "objects": objects,
         }
 
@@ -86,6 +89,7 @@ class ArmSensorDetector(BaseJudgerAI):
             runtime_data={
                 "exists": comparison_data["runtime_exists"],
                 "count": comparison_data["runtime_count"],
+                "image": comparison_data.get("image"),
                 "objects": comparison_data.get("objects", []),
             },
             comparison_data=comparison_data,

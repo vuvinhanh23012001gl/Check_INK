@@ -3,7 +3,7 @@
 # sys.path.append(str(Path(__file__).resolve().parents[3]))
 # from app.utils import obj_queue,type_capture,name_queue_log_client
 from app.model import Point
-from fastapi import APIRouter, WebSocket, Body, Depends
+from fastapi import APIRouter, WebSocket, Body, Depends, WebSocketDisconnect
 from app.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
 from app.config import TypeSend
@@ -25,40 +25,61 @@ router = APIRouter(
 
 @router.post("/run_frame")
 async def run_frame(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
-    print("vao run frame")
-    services.set_mode(EnumMode.MODE_RUN_ONE_FRAME)
-    
-    # print("Người dùng nhấn Run Frame")
-    # frame_id_run =  payload.get("FrameID")
-    # product_id =  payload.get("ProductID")
-    # print(f"Frame ID RunFrame ProductID:{product_id},FrameID:{frame_id_run}")
-    # try:
-    #     product_id = int(product_id)
-    #     frame_id_run = int(frame_id_run)
-    # except Exception:
-    #     Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
-    # result_run_frame = services.obj_point_service.get_xyz_by_product_frame(product_id,frame_id_run).data
-    # print(result_run_frame)
-    return {
-        "name": "Ánh",
-        "age": 25
-    }
+    """Chạy lần lượt các điểm đã lưu trong một frame qua IAIControl."""
+    try:
+        product_id = int(payload.get("ProductID"))
+        frame_id = int(payload.get("FrameID"))
+    except (TypeError, ValueError):
+        return {"ok": False, "message": "ProductID hoặc FrameID không hợp lệ."}
+    points_result = services.obj_point_service.get_xyz_by_product_frame(
+        product_id, frame_id
+    )
+    if not points_result.ok:
+        return {"ok": False, "message": "Không tìm thấy frame cần chạy."}
+    if not services.obj_iai_control.can_move_iai("Chạy Frame"):
+        return {
+            "ok": False,
+            "message": "❌ Không cho phép chạy Frame: IAI chưa về gốc. Hãy nhấn nút xanh để về gốc trước.",
+        }
+    if not services.obj_manager_serial.is_running():
+        return {"ok": False, "message": "Cổng COM chưa sẵn sàng."}
+    for point_id, point in points_result.data.items():
+        if not services.obj_iai_control.move_to_point(
+            point["x"], point["y"], point["z"]
+        ):
+            return {"ok": False, "message": f"Chạy thất bại tại point {point_id}."}
+    return {"ok": True, "message": f"Đã chạy xong frame {frame_id}."}
 
 @router.post("/run_product")
-async def run_frame(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
-    print("Người dùng nhấn Run Product")
-    product_id =  payload.get("ProductID")
-    print(f"Frame ID RunProduct ProductID:{product_id}")
+async def run_product(services: ServiceContainer = Depends(get_services),payload: dict = Body(...)):
+    """Chạy lần lượt toàn bộ điểm đã lưu của một sản phẩm qua IAIControl."""
     try:
-        product_id = int(product_id)
-    except Exception:
-        Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
-    result_run_product = services.obj_point_service.get_all_xyz_by_product_id(product_id).data
-    print(result_run_product)
-    return {
-        "name": "Ánh",
-        "age": 25
-    }
+        product_id = int(payload.get("ProductID"))
+    except (TypeError, ValueError):
+        return {"ok": False, "message": "ProductID không hợp lệ."}
+    points_result = services.obj_point_service.get_all_xyz_by_product_id(product_id)
+    if not points_result.ok:
+        return {"ok": False, "message": "Không tìm thấy sản phẩm cần chạy."}
+    if not services.obj_iai_control.can_move_iai("Chạy sản phẩm"):
+        return {
+            "ok": False,
+            "message": "❌ Không cho phép chạy sản phẩm: IAI chưa về gốc. Hãy nhấn nút xanh để về gốc trước.",
+        }
+    if not services.obj_manager_serial.is_running():
+        return {"ok": False, "message": "Cổng COM chưa sẵn sàng."}
+    for frame_id, points in points_result.data.items():
+        for point in points:
+            if not services.obj_iai_control.move_to_point(
+                point["x"], point["y"], point["z"]
+            ):
+                return {
+                    "ok": False,
+                    "message": (
+                        f"Chạy thất bại tại frame {frame_id}, "
+                        f"point {point['point_id']}."
+                    )
+                }
+    return {"ok": True, "message": f"Đã chạy xong sản phẩm {product_id}."}
 
 
 
@@ -196,7 +217,12 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
 
 
 @router.get("/exit")
-async def exit():
+async def exit(services: ServiceContainer = Depends(get_services)):
+    try:
+        if services.obj_manager_serial.is_running():
+            services.obj_iai_control.move_to_origin()
+    except Exception as error:
+        print(f"[CAPTUREPRODUCT_EXIT] Lỗi khi gửi lệnh về gốc IAI: {error}")
     return {
         "status": "ok",
         "redirect_url": "/"
@@ -214,23 +240,23 @@ async def run_point(data: PointData,services: ServiceContainer = Depends(get_ser
     y = data.y
     z = data.z
     print(f"Nhận tọa độ: X={x}, Y={y}, Z={z}")
-    if services.obj_com_service.get_shake_hands_complete():
+    if not services.obj_iai_control.can_move_iai("Chạy điểm"):
+        return {
+            "ok": False,
+            "message": "❌ Không cho phép Chạy điểm: IAI chưa về gốc. Hãy nhấn nút xanh để về gốc trước.",
+        }
+    if services.obj_manager_serial.is_running():
         if services.obj_iai_service.is_valid_position(x,y,z):
-            if  services.obj_com_service.get_shake_hands_complete():
-                status_resquest_control_services_arm_move = services.obj_com_service.send_and_wait(x,y,z)
-                if status_resquest_control_services_arm_move:
-                    return {
-                        "ok": True,
-                        "message": f"✅ Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
-                    }
+            status_resquest_control_services_arm_move = services.obj_iai_control.move_to_point(x, y, z)
+            if status_resquest_control_services_arm_move:
                 return {
-                    "ok": False,
-                    "message": f"❌ Gửi điểm X:{x}, Y:{y}, Z:{z} thất bại."
+                    "ok": True,
+                    "message": f"✅ Gửi điểm X:{x}, Y:{y}, Z:{z} thành công."
                 }
             return {
-                    "ok": False,
-                    "message": f"❌ Quá trình bắt tay chưa thành công."
-                }
+                "ok": False,
+                "message": f"❌ Gửi điểm X:{x}, Y:{y}, Z:{z} thất bại."
+            }
         return {
             "ok": False,
             "message": f"⚠️Nhận điểm X:{x}, Y:{y}, Z:{z} nằm ngoài giới hạn trục."
@@ -247,29 +273,32 @@ async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_servi
     # obj_queue.put(name_queue_log_client,{"type":TypeSend.type_capture,"message":"✅ Cammera đã được kết nối."})
     print("✅ Chuẩn bị mở luồng camera")
     await ws.accept()
-    try: 
+    try:
         while True:
-            try:
-                if services.obj_camera.image is not None:
-                    # print("vao ham nay roi ne2")
-                    _, buf = cv2.imencode(
-                        ".jpg",
-                        services.obj_camera.image,
-                        [int(cv2.IMWRITE_JPEG_QUALITY), 70]
-                    )
-                    await ws.send_bytes(buf.tobytes())
-                if services.obj_camera.camera_lost:
-                            print("Main: reconnect camera")
-                            services.obj_camera.release()
-                            await asyncio.sleep(1)
-                            services.obj_camera.refesh_data()
-                            services.obj_camera.init()
-                            # services.queue_log_send_client.put({"type":TypeSend.type_log_capture,"message":"✅ Cammera Không được kết nối."}) #Gui duoc binh thuong
-                else:
-                    await asyncio.sleep(0.01)
-            except:
-                print("Client disconnected:", e)
-                await asyncio.sleep(0.1)
-    except Exception as e:
-        print("WebSocket error:", e)
+            if services.obj_camera.image is not None:
+                _, buf = cv2.imencode(
+                    ".jpg",
+                    services.obj_camera.image,
+                    [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+                )
+                await ws.send_bytes(buf.tobytes())
+            if services.obj_camera.camera_lost:
+                print("Main: reconnect camera")
+                services.obj_camera.release()
+                await asyncio.sleep(1)
+                services.obj_camera.refesh_data()
+                services.obj_camera.init()
+            else:
+                await asyncio.sleep(0.01)
+    except WebSocketDisconnect:
+        print("Client đã ngắt kết nối camera WebSocket")
+    except (ConnectionResetError, BrokenPipeError):
+        print("Client đã đóng kết nối camera WebSocket")
+    except Exception as error:
+        print(f"WebSocket error: {error}")
+    finally:
+        try:
+            await ws.close()
+        except (RuntimeError, ConnectionResetError):
+            pass
 

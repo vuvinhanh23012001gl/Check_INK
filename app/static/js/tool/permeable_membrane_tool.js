@@ -43,7 +43,7 @@ btn_judment_permeable_membrane.addEventListener("click", async () => {
     console.log("data_send:", dataSend);
     write_log_clear(log_permeable_membrane,"⏳ Đang xử lý phán định Permeable Membrane...");
     try {
-        const result = await postData("/law_regulation/permemble_membrane/judment_item", dataSend);
+        const result = await postData("/law_regulation/permeable_membrane/run_model", dataSend);
         console.log(result);
         if (!result?.ok) {
             write_log_clear(log_permeable_membrane,`❌ ${result?.message || "Lỗi không xác định."}`);

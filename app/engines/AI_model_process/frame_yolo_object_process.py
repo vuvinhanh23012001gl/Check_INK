@@ -129,10 +129,10 @@ class FrameModelYoloObject:
         filtered_objects, _ = self.filter_objects_by_class_name(objects, target_class_value)
         img_result = self.draw_rectangle(img, x1, y1, x2, y2)
         img_result = self.draw(img_result, filtered_objects)
-        self.show(img_result, filtered_objects, window_name="Detection Result")
+        # self.show(img_result, filtered_objects, window_name="Detection Result")
         if not filtered_objects:
             messages.append(f"LỖI: Không tìm thấy đối tượng '{target_class_value}'.")
-            return False, messages, img_crop, []
+            return False, messages, img_result, []
         if isinstance(self.limit_number_object, int) and len(filtered_objects) > self.limit_number_object:
             messages.append(f"LỖI: Phát hiện {len(filtered_objects)} đối tượng '{target_class_value}', vượt giới hạn {self.limit_number_object}.")
         for index, obj in enumerate(filtered_objects, start=1):
@@ -169,6 +169,13 @@ class FrameModelYoloObject:
         filtered_objects, is_exist = self.filter_objects_by_class_name(all_objects, target_class_value)
         # 3. Tiến hành vẽ các đối tượng vi phạm lên ảnh (nếu có)
         img_visualized = self.draw(img, filtered_objects)
+        cv2.rectangle(
+            img_visualized,
+            (int(x1), int(y1)),
+            (int(x2), int(y2)),
+            (255, 0, 0),
+            2,
+        )
         # --- Logic kiểm tra ngược (Negative Check) ---
         # Nếu tìm thấy bất kỳ đối tượng nào thuộc class cấm -> BÁO LỖI
         if is_exist:
@@ -180,7 +187,7 @@ class FrameModelYoloObject:
             return False, messages, img_visualized
         # Nếu không tìm thấy đối tượng nào -> ĐẠT CHUẨN
         success_msg = f"OK: Vùng kiểm tra đạt chuẩn. Không phát hiện đối tượng '{target_class_value}' nào."
-        return True, [success_msg], img
+        return True, [success_msg], img_visualized
     
     def search_all_negative(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int, color=(255, 0, 0)) -> Tuple[bool, list[str], np.ndarray]:
             """Kiểm tra xem vùng chỉ định có HOÀN TOÀN TRỐNG (không chứa bất kỳ vật thể nào) hay không.

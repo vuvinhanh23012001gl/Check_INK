@@ -6,6 +6,8 @@ from typing import Optional, List, Tuple, Dict
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 class SemiPermeableMembrane(BaseJudgerAI):
+    INSPECTOR_NAME = "MembraneInspector"
+
     # Lớp này lấy dữ liệu 
     #Lớp này nhận
     def __init__(self, border_semi_permeable_membrane: FrameModelYoloSegment, inner_semi_permeable_membrane: FrameModelYoloSegment):
@@ -58,7 +60,7 @@ class SemiPermeableMembrane(BaseJudgerAI):
             img_visualized = self.draw_intersection_points(img_visualized, data)
         print(f"Trạng thái (Nằm hoàn toàn trong): {status}")
         print(f"Các điểm cắt lỗi: {data}")
-        self.show_image(img_visualized, window_name="Membrane Judgment Result")
+        # self.show_image(img_visualized, window_name="Membrane Judgment Result")
         return status, data,img_visualized
 
     def compare(self, standard_data, runtime_data):

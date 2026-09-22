@@ -24,7 +24,7 @@ class PointRepository:
         with open(
             self.path_file,
             "r",
-            encoding="utf-8"
+            encoding="utf-8-sig"
         ) as file:
             return json.load(file)
 

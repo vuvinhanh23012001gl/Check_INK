@@ -56,7 +56,7 @@ btn_judment_arm_sensor.addEventListener("click",async ()=>{
        console.log("data_send gửi đi:", data_send);
        write_log_clear(log_arm_cover,"⏳ Đang xử lý phán định ARM Sensor...");
        try {
-           const result_judment = await postData("/law_regulation/arm_cover/judment_item", data_send);
+           const result_judment = await postData("/law_regulation/arm_cover/run_model", data_send);
            console.log("result_judment nhận được:", result_judment);
            if (result_judment && result_judment.ok) {
                const data_res = result_judment.data;

@@ -7,7 +7,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\0",
                 "path_img_point": "storage\\img_points\\1\\0\\0.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\0",
+                "path_img_retrain": "output\\patch_core\\1\\0\\0",
                 "arr_polygon": []
             },
             "1": {
@@ -16,7 +16,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\1",
                 "path_img_point": "storage\\img_points\\1\\0\\1.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\1",
+                "path_img_retrain": "output\\patch_core\\1\\0\\1",
                 "arr_polygon": []
             },
             "2": {
@@ -25,7 +25,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\2",
                 "path_img_point": "storage\\img_points\\1\\0\\2.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\2",
+                "path_img_retrain": "output\\patch_core\\1\\0\\2",
                 "arr_polygon": []
             },
             "3": {
@@ -34,7 +34,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\3",
                 "path_img_point": "storage\\img_points\\1\\0\\3.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\3",
+                "path_img_retrain": "output\\patch_core\\1\\0\\3",
                 "arr_polygon": []
             },
             "4": {
@@ -43,7 +43,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\4",
                 "path_img_point": "storage\\img_points\\1\\0\\4.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\4",
+                "path_img_retrain": "output\\patch_core\\1\\0\\4",
                 "arr_polygon": []
             },
             "5": {
@@ -52,7 +52,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\5",
                 "path_img_point": "storage\\img_points\\1\\0\\5.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\5",
+                "path_img_retrain": "output\\patch_core\\1\\0\\5",
                 "arr_polygon": []
             },
             "6": {
@@ -61,7 +61,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\6",
                 "path_img_point": "storage\\img_points\\1\\0\\6.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\6",
+                "path_img_retrain": "output\\patch_core\\1\\0\\6",
                 "arr_polygon": []
             },
             "7": {
@@ -70,7 +70,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\7",
                 "path_img_point": "storage\\img_points\\1\\0\\7.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\7",
+                "path_img_retrain": "output\\patch_core\\1\\0\\7",
                 "arr_polygon": []
             },
             "8": {
@@ -79,7 +79,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\8",
                 "path_img_point": "storage\\img_points\\1\\0\\8.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\8",
+                "path_img_retrain": "output\\patch_core\\1\\0\\8",
                 "arr_polygon": []
             },
             "9": {
@@ -88,7 +88,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\9",
                 "path_img_point": "storage\\img_points\\1\\0\\9.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\9",
+                "path_img_retrain": "output\\patch_core\\1\\0\\9",
                 "arr_polygon": []
             },
             "10": {
@@ -97,7 +97,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\10",
                 "path_img_point": "storage\\img_points\\1\\0\\10.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\10",
+                "path_img_retrain": "output\\patch_core\\1\\0\\10",
                 "arr_polygon": []
             },
             "11": {
@@ -106,7 +106,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\11",
                 "path_img_point": "storage\\img_points\\1\\0\\11.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\11",
+                "path_img_retrain": "output\\patch_core\\1\\0\\11",
                 "arr_polygon": []
             },
             "12": {
@@ -115,7 +115,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\12",
                 "path_img_point": "storage\\img_points\\1\\0\\12.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\12",
+                "path_img_retrain": "output\\patch_core\\1\\0\\12",
                 "arr_polygon": []
             },
             "13": {
@@ -124,7 +124,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\13",
                 "path_img_point": "storage\\img_points\\1\\0\\13.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\13",
+                "path_img_retrain": "output\\patch_core\\1\\0\\13",
                 "arr_polygon": []
             },
             "14": {
@@ -133,7 +133,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\14",
                 "path_img_point": "storage\\img_points\\1\\0\\14.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\14",
+                "path_img_retrain": "output\\patch_core\\1\\0\\14",
                 "arr_polygon": []
             },
             "15": {
@@ -142,7 +142,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\15",
                 "path_img_point": "storage\\img_points\\1\\0\\15.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\15",
+                "path_img_retrain": "output\\patch_core\\1\\0\\15",
                 "arr_polygon": []
             },
             "16": {
@@ -151,7 +151,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\16",
                 "path_img_point": "storage\\img_points\\1\\0\\16.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\16",
+                "path_img_retrain": "output\\patch_core\\1\\0\\16",
                 "arr_polygon": []
             },
             "17": {
@@ -160,7 +160,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\17",
                 "path_img_point": "storage\\img_points\\1\\0\\17.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\17",
+                "path_img_retrain": "output\\patch_core\\1\\0\\17",
                 "arr_polygon": []
             },
             "18": {
@@ -169,7 +169,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\18",
                 "path_img_point": "storage\\img_points\\1\\0\\18.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\18",
+                "path_img_retrain": "output\\patch_core\\1\\0\\18",
                 "arr_polygon": []
             },
             "19": {
@@ -178,7 +178,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\19",
                 "path_img_point": "storage\\img_points\\1\\0\\19.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\19",
+                "path_img_retrain": "output\\patch_core\\1\\0\\19",
                 "arr_polygon": []
             },
             "20": {
@@ -187,7 +187,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\20",
                 "path_img_point": "storage\\img_points\\1\\0\\20.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\20",
+                "path_img_retrain": "output\\patch_core\\1\\0\\20",
                 "arr_polygon": []
             },
             "21": {
@@ -196,7 +196,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\21",
                 "path_img_point": "storage\\img_points\\1\\0\\21.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\21",
+                "path_img_retrain": "output\\patch_core\\1\\0\\21",
                 "arr_polygon": []
             },
             "22": {
@@ -205,7 +205,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\22",
                 "path_img_point": "storage\\img_points\\1\\0\\22.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\22",
+                "path_img_retrain": "output\\patch_core\\1\\0\\22",
                 "arr_polygon": []
             },
             "23": {
@@ -214,7 +214,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\23",
                 "path_img_point": "storage\\img_points\\1\\0\\23.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\23",
+                "path_img_retrain": "output\\patch_core\\1\\0\\23",
                 "arr_polygon": []
             },
             "24": {
@@ -223,7 +223,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\24",
                 "path_img_point": "storage\\img_points\\1\\0\\24.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\24",
+                "path_img_retrain": "output\\patch_core\\1\\0\\24",
                 "arr_polygon": []
             },
             "25": {
@@ -232,7 +232,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\0\\25",
                 "path_img_point": "storage\\img_points\\1\\0\\25.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\0\\25",
+                "path_img_retrain": "output\\patch_core\\1\\0\\25",
                 "arr_polygon": []
             }
         },
@@ -243,7 +243,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\0",
                 "path_img_point": "storage\\img_points\\1\\1\\0.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\0",
+                "path_img_retrain": "output\\patch_core\\1\\1\\0",
                 "arr_polygon": []
             },
             "1": {
@@ -252,7 +252,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\1",
                 "path_img_point": "storage\\img_points\\1\\1\\1.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\1",
+                "path_img_retrain": "output\\patch_core\\1\\1\\1",
                 "arr_polygon": []
             },
             "2": {
@@ -261,7 +261,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\2",
                 "path_img_point": "storage\\img_points\\1\\1\\2.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\2",
+                "path_img_retrain": "output\\patch_core\\1\\1\\2",
                 "arr_polygon": []
             },
             "3": {
@@ -270,7 +270,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\3",
                 "path_img_point": "storage\\img_points\\1\\1\\3.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\3",
+                "path_img_retrain": "output\\patch_core\\1\\1\\3",
                 "arr_polygon": []
             },
             "4": {
@@ -279,7 +279,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\4",
                 "path_img_point": "storage\\img_points\\1\\1\\4.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\4",
+                "path_img_retrain": "output\\patch_core\\1\\1\\4",
                 "arr_polygon": []
             },
             "5": {
@@ -288,7 +288,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\5",
                 "path_img_point": "storage\\img_points\\1\\1\\5.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\5",
+                "path_img_retrain": "output\\patch_core\\1\\1\\5",
                 "arr_polygon": []
             },
             "6": {
@@ -297,7 +297,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\6",
                 "path_img_point": "storage\\img_points\\1\\1\\6.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\6",
+                "path_img_retrain": "output\\patch_core\\1\\1\\6",
                 "arr_polygon": []
             },
             "7": {
@@ -306,7 +306,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\7",
                 "path_img_point": "storage\\img_points\\1\\1\\7.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\7",
+                "path_img_retrain": "output\\patch_core\\1\\1\\7",
                 "arr_polygon": []
             },
             "8": {
@@ -315,7 +315,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\8",
                 "path_img_point": "storage\\img_points\\1\\1\\8.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\8",
+                "path_img_retrain": "output\\patch_core\\1\\1\\8",
                 "arr_polygon": []
             },
             "9": {
@@ -324,7 +324,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\9",
                 "path_img_point": "storage\\img_points\\1\\1\\9.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\9",
+                "path_img_retrain": "output\\patch_core\\1\\1\\9",
                 "arr_polygon": []
             },
             "10": {
@@ -333,7 +333,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\10",
                 "path_img_point": "storage\\img_points\\1\\1\\10.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\10",
+                "path_img_retrain": "output\\patch_core\\1\\1\\10",
                 "arr_polygon": []
             },
             "11": {
@@ -342,7 +342,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\11",
                 "path_img_point": "storage\\img_points\\1\\1\\11.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\11",
+                "path_img_retrain": "output\\patch_core\\1\\1\\11",
                 "arr_polygon": []
             },
             "12": {
@@ -351,7 +351,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\12",
                 "path_img_point": "storage\\img_points\\1\\1\\12.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\12",
+                "path_img_retrain": "output\\patch_core\\1\\1\\12",
                 "arr_polygon": []
             },
             "13": {
@@ -360,7 +360,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\13",
                 "path_img_point": "storage\\img_points\\1\\1\\13.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\13",
+                "path_img_retrain": "output\\patch_core\\1\\1\\13",
                 "arr_polygon": []
             },
             "14": {
@@ -369,7 +369,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\14",
                 "path_img_point": "storage\\img_points\\1\\1\\14.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\14",
+                "path_img_retrain": "output\\patch_core\\1\\1\\14",
                 "arr_polygon": []
             },
             "15": {
@@ -378,7 +378,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\15",
                 "path_img_point": "storage\\img_points\\1\\1\\15.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\15",
+                "path_img_retrain": "output\\patch_core\\1\\1\\15",
                 "arr_polygon": []
             },
             "16": {
@@ -387,7 +387,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\16",
                 "path_img_point": "storage\\img_points\\1\\1\\16.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\16",
+                "path_img_retrain": "output\\patch_core\\1\\1\\16",
                 "arr_polygon": []
             },
             "17": {
@@ -396,7 +396,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\17",
                 "path_img_point": "storage\\img_points\\1\\1\\17.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\17",
+                "path_img_retrain": "output\\patch_core\\1\\1\\17",
                 "arr_polygon": []
             },
             "18": {
@@ -405,7 +405,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\18",
                 "path_img_point": "storage\\img_points\\1\\1\\18.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\18",
+                "path_img_retrain": "output\\patch_core\\1\\1\\18",
                 "arr_polygon": []
             },
             "19": {
@@ -414,7 +414,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\19",
                 "path_img_point": "storage\\img_points\\1\\1\\19.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\19",
+                "path_img_retrain": "output\\patch_core\\1\\1\\19",
                 "arr_polygon": []
             },
             "20": {
@@ -423,7 +423,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\20",
                 "path_img_point": "storage\\img_points\\1\\1\\20.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\20",
+                "path_img_retrain": "output\\patch_core\\1\\1\\20",
                 "arr_polygon": []
             },
             "21": {
@@ -432,7 +432,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\21",
                 "path_img_point": "storage\\img_points\\1\\1\\21.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\21",
+                "path_img_retrain": "output\\patch_core\\1\\1\\21",
                 "arr_polygon": []
             },
             "22": {
@@ -441,7 +441,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\22",
                 "path_img_point": "storage\\img_points\\1\\1\\22.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\22",
+                "path_img_retrain": "output\\patch_core\\1\\1\\22",
                 "arr_polygon": []
             },
             "23": {
@@ -450,7 +450,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\23",
                 "path_img_point": "storage\\img_points\\1\\1\\23.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\23",
+                "path_img_retrain": "output\\patch_core\\1\\1\\23",
                 "arr_polygon": []
             },
             "24": {
@@ -459,7 +459,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\24",
                 "path_img_point": "storage\\img_points\\1\\1\\24.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\24",
+                "path_img_retrain": "output\\patch_core\\1\\1\\24",
                 "arr_polygon": []
             },
             "25": {
@@ -468,7 +468,7 @@
                 "z": 30,
                 "path_model_patch_core": "storage\\model\\patch_core\\1\\1\\25",
                 "path_img_point": "storage\\img_points\\1\\1\\25.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\1\\1\\25",
+                "path_img_retrain": "output\\patch_core\\1\\1\\25",
                 "arr_polygon": []
             }
         }
@@ -481,7 +481,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\0",
                 "path_img_point": "storage\\img_points\\2\\0\\0.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\0",
+                "path_img_retrain": "output\\patch_core\\2\\0\\0",
                 "arr_polygon": []
             },
             "1": {
@@ -490,7 +490,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\1",
                 "path_img_point": "storage\\img_points\\2\\0\\1.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\1",
+                "path_img_retrain": "output\\patch_core\\2\\0\\1",
                 "arr_polygon": []
             },
             "2": {
@@ -499,7 +499,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\2",
                 "path_img_point": "storage\\img_points\\2\\0\\2.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\2",
+                "path_img_retrain": "output\\patch_core\\2\\0\\2",
                 "arr_polygon": []
             },
             "3": {
@@ -508,7 +508,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\3",
                 "path_img_point": "storage\\img_points\\2\\0\\3.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\3",
+                "path_img_retrain": "output\\patch_core\\2\\0\\3",
                 "arr_polygon": []
             },
             "4": {
@@ -517,7 +517,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\4",
                 "path_img_point": "storage\\img_points\\2\\0\\4.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\4",
+                "path_img_retrain": "output\\patch_core\\2\\0\\4",
                 "arr_polygon": []
             },
             "5": {
@@ -526,7 +526,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\5",
                 "path_img_point": "storage\\img_points\\2\\0\\5.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\5",
+                "path_img_retrain": "output\\patch_core\\2\\0\\5",
                 "arr_polygon": []
             },
             "6": {
@@ -535,7 +535,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\6",
                 "path_img_point": "storage\\img_points\\2\\0\\6.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\6",
+                "path_img_retrain": "output\\patch_core\\2\\0\\6",
                 "arr_polygon": []
             },
             "7": {
@@ -544,7 +544,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\7",
                 "path_img_point": "storage\\img_points\\2\\0\\7.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\7",
+                "path_img_retrain": "output\\patch_core\\2\\0\\7",
                 "arr_polygon": []
             },
             "8": {
@@ -553,7 +553,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\8",
                 "path_img_point": "storage\\img_points\\2\\0\\8.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\8",
+                "path_img_retrain": "output\\patch_core\\2\\0\\8",
                 "arr_polygon": []
             },
             "9": {
@@ -562,7 +562,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\9",
                 "path_img_point": "storage\\img_points\\2\\0\\9.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\9",
+                "path_img_retrain": "output\\patch_core\\2\\0\\9",
                 "arr_polygon": []
             },
             "10": {
@@ -571,7 +571,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\10",
                 "path_img_point": "storage\\img_points\\2\\0\\10.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\10",
+                "path_img_retrain": "output\\patch_core\\2\\0\\10",
                 "arr_polygon": []
             },
             "11": {
@@ -580,7 +580,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\11",
                 "path_img_point": "storage\\img_points\\2\\0\\11.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\11",
+                "path_img_retrain": "output\\patch_core\\2\\0\\11",
                 "arr_polygon": []
             },
             "12": {
@@ -589,7 +589,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\12",
                 "path_img_point": "storage\\img_points\\2\\0\\12.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\12",
+                "path_img_retrain": "output\\patch_core\\2\\0\\12",
                 "arr_polygon": []
             },
             "13": {
@@ -598,7 +598,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\13",
                 "path_img_point": "storage\\img_points\\2\\0\\13.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\13",
+                "path_img_retrain": "output\\patch_core\\2\\0\\13",
                 "arr_polygon": []
             },
             "14": {
@@ -607,7 +607,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\14",
                 "path_img_point": "storage\\img_points\\2\\0\\14.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\14",
+                "path_img_retrain": "output\\patch_core\\2\\0\\14",
                 "arr_polygon": []
             },
             "15": {
@@ -616,7 +616,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\15",
                 "path_img_point": "storage\\img_points\\2\\0\\15.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\15",
+                "path_img_retrain": "output\\patch_core\\2\\0\\15",
                 "arr_polygon": []
             },
             "16": {
@@ -625,7 +625,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\16",
                 "path_img_point": "storage\\img_points\\2\\0\\16.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\16",
+                "path_img_retrain": "output\\patch_core\\2\\0\\16",
                 "arr_polygon": []
             },
             "17": {
@@ -634,7 +634,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\17",
                 "path_img_point": "storage\\img_points\\2\\0\\17.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\17",
+                "path_img_retrain": "output\\patch_core\\2\\0\\17",
                 "arr_polygon": []
             },
             "18": {
@@ -643,7 +643,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\18",
                 "path_img_point": "storage\\img_points\\2\\0\\18.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\18",
+                "path_img_retrain": "output\\patch_core\\2\\0\\18",
                 "arr_polygon": []
             },
             "19": {
@@ -652,7 +652,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\19",
                 "path_img_point": "storage\\img_points\\2\\0\\19.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\19",
+                "path_img_retrain": "output\\patch_core\\2\\0\\19",
                 "arr_polygon": []
             },
             "20": {
@@ -661,7 +661,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\20",
                 "path_img_point": "storage\\img_points\\2\\0\\20.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\20",
+                "path_img_retrain": "output\\patch_core\\2\\0\\20",
                 "arr_polygon": []
             },
             "21": {
@@ -670,7 +670,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\21",
                 "path_img_point": "storage\\img_points\\2\\0\\21.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\21",
+                "path_img_retrain": "output\\patch_core\\2\\0\\21",
                 "arr_polygon": []
             },
             "22": {
@@ -679,7 +679,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\22",
                 "path_img_point": "storage\\img_points\\2\\0\\22.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\22",
+                "path_img_retrain": "output\\patch_core\\2\\0\\22",
                 "arr_polygon": []
             },
             "23": {
@@ -688,7 +688,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\23",
                 "path_img_point": "storage\\img_points\\2\\0\\23.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\23",
+                "path_img_retrain": "output\\patch_core\\2\\0\\23",
                 "arr_polygon": []
             },
             "24": {
@@ -697,7 +697,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\24",
                 "path_img_point": "storage\\img_points\\2\\0\\24.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\24",
+                "path_img_retrain": "output\\patch_core\\2\\0\\24",
                 "arr_polygon": []
             },
             "25": {
@@ -706,7 +706,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\25",
                 "path_img_point": "storage\\img_points\\2\\0\\25.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\25",
+                "path_img_retrain": "output\\patch_core\\2\\0\\25",
                 "arr_polygon": []
             },
             "26": {
@@ -715,7 +715,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\26",
                 "path_img_point": "storage\\img_points\\2\\0\\26.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\26",
+                "path_img_retrain": "output\\patch_core\\2\\0\\26",
                 "arr_polygon": []
             },
             "27": {
@@ -724,7 +724,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\27",
                 "path_img_point": "storage\\img_points\\2\\0\\27.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\27",
+                "path_img_retrain": "output\\patch_core\\2\\0\\27",
                 "arr_polygon": []
             },
             "28": {
@@ -733,7 +733,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\28",
                 "path_img_point": "storage\\img_points\\2\\0\\28.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\28",
+                "path_img_retrain": "output\\patch_core\\2\\0\\28",
                 "arr_polygon": []
             },
             "29": {
@@ -742,7 +742,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\29",
                 "path_img_point": "storage\\img_points\\2\\0\\29.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\29",
+                "path_img_retrain": "output\\patch_core\\2\\0\\29",
                 "arr_polygon": []
             },
             "30": {
@@ -751,7 +751,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\30",
                 "path_img_point": "storage\\img_points\\2\\0\\30.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\30",
+                "path_img_retrain": "output\\patch_core\\2\\0\\30",
                 "arr_polygon": []
             },
             "31": {
@@ -760,7 +760,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\31",
                 "path_img_point": "storage\\img_points\\2\\0\\31.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\31",
+                "path_img_retrain": "output\\patch_core\\2\\0\\31",
                 "arr_polygon": []
             },
             "32": {
@@ -769,7 +769,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\32",
                 "path_img_point": "storage\\img_points\\2\\0\\32.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\32",
+                "path_img_retrain": "output\\patch_core\\2\\0\\32",
                 "arr_polygon": []
             },
             "33": {
@@ -778,7 +778,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\33",
                 "path_img_point": "storage\\img_points\\2\\0\\33.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\33",
+                "path_img_retrain": "output\\patch_core\\2\\0\\33",
                 "arr_polygon": []
             },
             "34": {
@@ -787,7 +787,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\34",
                 "path_img_point": "storage\\img_points\\2\\0\\34.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\34",
+                "path_img_retrain": "output\\patch_core\\2\\0\\34",
                 "arr_polygon": []
             },
             "35": {
@@ -796,7 +796,7 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\0\\35",
                 "path_img_point": "storage\\img_points\\2\\0\\35.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\0\\35",
+                "path_img_retrain": "output\\patch_core\\2\\0\\35",
                 "arr_polygon": []
             }
         },
@@ -807,7 +807,49 @@
                 "z": 0,
                 "path_model_patch_core": "storage\\model\\patch_core\\2\\1\\0",
                 "path_img_point": "storage\\img_points\\2\\1\\0.jpg",
-                "path_img_retrain": "storage\\retrain\\patch_core\\2\\1\\0",
+                "path_img_retrain": "output\\patch_core\\2\\1\\0",
+                "arr_polygon": []
+            }
+        }
+    },
+    "3": {
+        "0": {
+            "0": {
+                "x": 130,
+                "y": 0,
+                "z": 49,
+                "path_model_patch_core": "input\\model\\patch_core\\3\\0\\0",
+                "path_img_point": "storage\\img_points\\3\\0\\0.jpg",
+                "path_img_retrain": "app\\output\\patch_core\\3\\0\\0",
+                "arr_polygon": []
+            },
+            "1": {
+                "x": 135,
+                "y": 0,
+                "z": 49,
+                "path_model_patch_core": "input\\model\\patch_core\\3\\0\\1",
+                "path_img_point": "storage\\img_points\\3\\0\\1.jpg",
+                "path_img_retrain": "app\\output\\patch_core\\3\\0\\1",
+                "arr_polygon": []
+            }
+        },
+        "1": {
+            "0": {
+                "x": 140,
+                "y": 0,
+                "z": 49,
+                "path_model_patch_core": "input\\model\\patch_core\\3\\1\\0",
+                "path_img_point": "storage\\img_points\\3\\1\\0.jpg",
+                "path_img_retrain": "app\\output\\patch_core\\3\\1\\0",
+                "arr_polygon": []
+            },
+            "1": {
+                "x": 129,
+                "y": 0,
+                "z": 49,
+                "path_model_patch_core": "input\\model\\patch_core\\3\\1\\1",
+                "path_img_point": "storage\\img_points\\3\\1\\1.jpg",
+                "path_img_retrain": "app\\output\\patch_core\\3\\1\\1",
                 "arr_polygon": []
             }
         }

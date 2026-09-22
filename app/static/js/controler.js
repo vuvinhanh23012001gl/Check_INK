@@ -17,6 +17,8 @@ import "./tool/permeable_membrane_tool.js";
 import "./tool/hole_tool.js";
 import "./tool/scratched_pipe_tool.js";
 import "./tool/end_chipping_tool.js";
+import "./tool/foreign_object_tool.js";
+import "./tool/air_bubbles_tool.js";
 
 
 

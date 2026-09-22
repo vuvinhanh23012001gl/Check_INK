@@ -8,6 +8,8 @@ import { PermeableMembraneInspector } from "./permeable_membrane_inspector.js";
 import { HoleItemInspector } from "./hole_item_inspector.js";
 import { ScratchedPipeItemInspector } from "./scratched_pipe_inspector.js";
 import { EndChippingInspector } from "./end_chipping_item_inspector.js";
+import { ForeignObjectInspector } from "./foreign_object_item_inspector.js";
+import { AirBubblesItemInspector } from "./air_bubbles_item_inspector.js";
 
 
 export class ItemsInspector {
@@ -20,6 +22,8 @@ export class ItemsInspector {
     static TYPE_HOLE = HoleItemInspector.NAME;
     static TYPE_SCRATCHED_PIPE = ScratchedPipeItemInspector.NAME;
     static TYPE_END_CHIPPING = EndChippingInspector.NAME;
+    static TYPE_FOREIGN_OBJECT = ForeignObjectInspector.NAME;
+    static TYPE_AIR_BUBBLES = AirBubblesItemInspector.NAME;
     
     constructor(
         items_id,
@@ -31,7 +35,9 @@ export class ItemsInspector {
         permeable_membrane_item,
         hole_item,
         scratched_pipe_item,
-        end_chipping_item // Bổ sung tham số thứ 10 cho EndChipping
+        end_chipping_item,
+        foreign_object_item = null,
+        air_bubbles_item = null
     ) {
         this.items_id = items_id;
 
@@ -45,6 +51,8 @@ export class ItemsInspector {
             [ItemsInspector.TYPE_HOLE]: hole_item || null,
             [ItemsInspector.TYPE_SCRATCHED_PIPE]: scratched_pipe_item || null,
             [ItemsInspector.TYPE_END_CHIPPING]: end_chipping_item || null, // Tích hợp EndChipping vào danh sách inspectors
+            [ItemsInspector.TYPE_FOREIGN_OBJECT]: foreign_object_item || null,
+            [ItemsInspector.TYPE_AIR_BUBBLES]: air_bubbles_item || null,
         };
     }
 
@@ -106,6 +114,14 @@ export class ItemsInspector {
      */
     getEndChippingItems() {
         return this.getInspector(ItemsInspector.TYPE_END_CHIPPING);
+    }
+
+    getForeignObjectItems() {
+        return this.getInspector(ItemsInspector.TYPE_FOREIGN_OBJECT);
+    }
+
+    getAirBubblesItems() {
+        return this.getInspector(ItemsInspector.TYPE_AIR_BUBBLES);
     }
 
     toDict() {
@@ -213,6 +229,17 @@ export class ItemsInspector {
             end_chipping_item
         );
     }
+
+    setForeignObjectItems(foreign_object_item) {
+        this.setInspector(ItemsInspector.TYPE_FOREIGN_OBJECT, foreign_object_item);
+    }
+
+    setAirBubblesItems(air_bubbles_item) {
+        this.setInspector(
+            ItemsInspector.TYPE_AIR_BUBBLES,
+            air_bubbles_item
+        );
+    }
     clearInspectors() {
         for (const type of Object.keys(this.inspectors)) {
             this.inspectors[type] = null;
@@ -231,7 +258,8 @@ export class ItemsInspector {
                 null,
                 null,
                 null,
-                null // Mặc định cho EndChipping
+                null,
+                null
             );
         }
 
@@ -310,6 +338,16 @@ export class ItemsInspector {
             console.log("Đối tượng endChippingInstance",endChippingInstance);
         }
 
+        const foreignObjectData = categories[ItemsInspector.TYPE_FOREIGN_OBJECT];
+        const foreignObjectInstance = foreignObjectData
+            ? ForeignObjectInspector.fromDict(foreignObjectData)
+            : null;
+
+        const airBubblesData = categories[ItemsInspector.TYPE_AIR_BUBBLES];
+        const airBubblesInstance = airBubblesData
+            ? AirBubblesItemInspector.fromDict(airBubblesData)
+            : null;
+
         return new ItemsInspector(
             items_id,
             measurementInstance,
@@ -320,7 +358,9 @@ export class ItemsInspector {
             permeableMembraneInstance,
             holeInstance,
             scratchedPipeInstance,
-            endChippingInstance // Đóng gói EndChipping vào instance trả về
+            endChippingInstance,
+            foreignObjectInstance,
+            airBubblesInstance
         );
     }
 }

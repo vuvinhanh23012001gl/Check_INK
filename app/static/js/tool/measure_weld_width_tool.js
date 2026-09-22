@@ -77,7 +77,7 @@ bntJudment.addEventListener("click",async ()=>{
     let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     if (status_selected){
         write_log_clear(txtBoxLog,"");
-        let result_judment = await postData("/law_regulation/measurement/judment_item",selected);
+        let result_judment = await postData("/law_regulation/measurement/run_model",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;

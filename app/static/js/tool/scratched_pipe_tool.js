@@ -223,7 +223,7 @@ btn_judment_scratched_pipe.addEventListener("click",async ()=>{
         write_log_clear(log_scratched_pipe,"⏳ Đang xử lý phán định ARM Sensor...");
         try {
             // 4. Gọi API gửi yêu cầu phán định
-            const result_judment = await postData("/law_regulation/scratched_pipe/judment_item", data_send);
+            const result_judment = await postData("/law_regulation/scratched_pipe/run_model", data_send);
             console.log("result_judment nhận được:", result_judment);
             if (result_judment && result_judment.ok) {
                 const data_res = result_judment.data;

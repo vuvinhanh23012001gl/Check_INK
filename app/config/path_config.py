@@ -28,7 +28,10 @@ PATH_CONFIG_POINTS =   str(BASE_PATH_STORAGE / "points.json")
 # print(PATH_CONFIG_POINTS)
 
 PATH_FOLDER_IMG_COORDINATE_PRODUCT = str(BASE_PATH_STORAGE/"img_points")
-PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN = str(BASE_PATH_STORAGE/"retrain"/"patch_core")
+BASE_PATH_OUTPUT = BASE_DIR / "output"
+PATH_FOLDER_IMG_COORDINATE_OUTPUT = str(BASE_PATH_OUTPUT / "patch_core")
+# Alias giữ tương thích với các module/test đang dùng tên cũ.
+PATH_FOLDER_IMG_COORDINATE_PRODUCT_RETRAIN = PATH_FOLDER_IMG_COORDINATE_OUTPUT
 # file config
 PATH_FILE_DATA_CONFIG_IAI = str(BASE_PATH_STORAGE/"config"/"iai.json")
 PATH_FILE_DATA_CONFIG_COM = str(BASE_PATH_STORAGE/"config"/"COM.json")
@@ -38,6 +41,12 @@ PATH_FILE_DATA_CONFIG_JUDMENT_LAW = str(BASE_PATH_STORAGE/"config_judgment_law.j
 PATH_FILE_UNET_DETECT_WELD_LINE = str(BASE_PATH_INPUT_STORAGE/"model"/"unet"/"detect_weld_line.pth")
 PATH_FILE_UNET_DETECT_FILM_BORDER_LINE = str(BASE_PATH_INPUT_STORAGE/"model"/"unet"/"detect_film_border_line.pth")
 PATH_FOLDER_MODEL_DETECT_PATCH_CORE = str(BASE_PATH_INPUT_STORAGE/"model"/"patch_core")
+PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST = str(
+	BASE_PATH_STORAGE / "end_chipping_crop_patch_core_record.json"
+)
+PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST = str(
+	BASE_PATH_STORAGE / "foreign_crop_patch_core_record.json"
+)
 PATH_FILE_MODEL_YOLO_STRUCTURE = str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"object_structure_detect.pt")
 PATH_FILE_MODEL_YOLO_SURFACE  =  str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"object_surface_detect.pt")
 PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER =  str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"segment_inner_permeable_membrane.pt")

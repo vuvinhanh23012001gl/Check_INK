@@ -48,6 +48,21 @@ const selected = {
     frame_id: -1,
     items_id: -1
 };
+
+window.addEventListener("iai-point-selected", event => {
+    const coordinates = event.detail || {};
+    if (coordinates.valid) {
+        coordinate_items_now = {
+            x: coordinates.x,
+            y: coordinates.y,
+            z: coordinates.z,
+        };
+        console.log("Tọa độ point đã chọn từ summary:", coordinate_items_now);
+    } else {
+        coordinate_items_now = {x: -1, y: -1, z: -1};
+        console.warn("Point được chọn không có tọa độ hợp lệ.");
+    }
+});
 let dict_lines_of_frames = {};  //data ALL
 let id_product_selecting_now = null; //San pham dang chon
 let current_frame_box = null ; // Frame hiện tại đang đc click

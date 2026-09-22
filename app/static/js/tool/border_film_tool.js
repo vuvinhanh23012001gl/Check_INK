@@ -58,22 +58,33 @@ btn_judment_border_film.addEventListener("click",async()=>{
     let status_selected =  checkSelected(selected);
     if (status_selected){
         write_log_clear(log_border_film,"");
-        let result_judment = await postData("/law_regulation/boder_film/judment_item",selected);
+        let result_judment = await postData("/law_regulation/border_film/run_model",selected);
         console.log("result_judment",result_judment);
         let status_judment =  result_judment?.ok;
         let message_judment =  result_judment?.message;
-        if (!status_judment){
-                    write_log_clear(log_border_film,message_judment);return;
-        }
         let width_judment =  result_judment?.data?.width;
         let polygon_judment =  result_judment?.data?.polygon;
-        // console.log("polygon_judment",polygon_judment);
-        //  console.log("width_judment",width_judment);
+        console.log("polygon_judment",polygon_judment);
+         console.log("width_judment",width_judment);
         if (width_judment!= undefined &&  polygon_judment!= undefined){
                 obj_film_border_item_inspector.setPolygons(polygon_judment);
                 imageWidth = width_judment;// 2 biến chỗ này bằng giá trị của nhau 
                 obj_film_border_item_inspector.drawPolygons(canvasManager,polygon_judment,width_judment,WIDTH_IMG_SHAPE);
             }
+        write_log_clear(
+            log_border_film,
+            status_judment
+                ? "Phán định đường biên: OK"
+                : (message_judment || "Phán định đường biên: NG")
+        );
+        for (const line of result_judment?.data?.lines || []) {
+            write_log_append(
+                log_border_film,
+                `Line ${line.line_index}: ${line.is_valid ? "OK" : "NG"} - `
+                + `${Number(line.distance_mm ?? 0).toFixed(3)} mm `
+                + `(chuẩn ${line.width_min_mm}..${line.width_max_mm} mm)`
+            );
+        }
         }
 });
     

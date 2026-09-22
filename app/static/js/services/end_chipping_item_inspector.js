@@ -5,11 +5,13 @@ import * as draw from "../utills/draw.js";
 export class EndChippingInspector {
     static NAME = "EndChippingInspector";
 
-    constructor(cropRoi = null,threshold = 0 ) {
+    constructor(cropRoi = null, threshold = 0, saveRuntimeImages = false) {
         /** @type {ModelRectangle|null} Khung vùng chính dùng để cắt ảnh */
         this.cropRoi = cropRoi;
         /** @type {number} Ngưỡng thresholdNG */
-        this.threshold = threshold; 
+        this.threshold = threshold;
+        /** @type {boolean} Có lưu ảnh runtime để train PatchCore hay không */
+        this.saveRuntimeImages = Boolean(saveRuntimeImages);
     }
 
     // ==========================================
@@ -71,6 +73,25 @@ export class EndChippingInspector {
     clearThresholds() {
         this.threshold = 0;
         return true;
+    }
+
+    /**
+     * Lấy cờ quyết định lưu ảnh runtime để train PatchCore.
+     *
+     * @returns {boolean} True nếu runtime được phép lưu ảnh train.
+     */
+    getSaveRuntimeImages() {
+        return this.saveRuntimeImages;
+    }
+
+    /**
+     * Cập nhật cờ quyết định lưu ảnh runtime để train PatchCore.
+     *
+     * @param {boolean} shouldSave True để lưu ảnh runtime, false để không lưu.
+     * @returns {void}
+     */
+    setSaveRuntimeImages(shouldSave) {
+        this.saveRuntimeImages = Boolean(shouldSave);
     }
 
     // ==========================================
@@ -177,7 +198,14 @@ export class EndChippingInspector {
     // ==========================================
     // 5. SERIALIZATION (TO / FROM DICT)
     // ==========================================
-    toDict() { if (!this.cropRoi) { return null; } return { ...this.cropRoi.toDict(), threshold: Number(this.threshold) || 0 }; }
+    toDict() {
+        if (!this.cropRoi) return null;
+        return {
+            ...this.cropRoi.toDict(),
+            threshold: Number(this.threshold) || 0,
+            saveRuntimeImages: this.getSaveRuntimeImages(),
+        };
+    }
 
     static fromDict(fullDict) {
         if (!fullDict){
@@ -187,9 +215,10 @@ export class EndChippingInspector {
         console.log("EndChippingInspector FULLDICT",fullDict);
         let model_rectangle = ModelRectangle.fromDict(fullDict);
         let threshold = fullDict?.threshold || 0;
+        let saveRuntimeImages = fullDict?.saveRuntimeImages === true;
         console.log("Ngưỡng",threshold);
         console.log("Tạo lớp EndChippingInspector");
-        return new EndChippingInspector(model_rectangle,threshold);
+        return new EndChippingInspector(model_rectangle, threshold, saveRuntimeImages);
     }
 }
 

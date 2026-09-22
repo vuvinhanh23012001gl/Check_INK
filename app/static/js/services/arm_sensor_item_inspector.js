@@ -8,7 +8,7 @@ export class ArmSensorItemInspector {
     constructor(rectangle = null, boxs = []) {
         // Thay đổi từ mảng thành một đối tượng duy nhất (mặc định là null)
         this.rectangle = rectangle;
-        this.boxs = boxs; // Danh sách các điểm polygon bổ trợ
+        this.boxs = Array.isArray(boxs) ? boxs : []; // Danh sách các điểm polygon bổ trợ
     }
 
     /**

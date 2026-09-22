@@ -32,7 +32,9 @@ class Pipeline:
         while True:
             if self.running:
                 mode = self.services.get_mode() 
-                if (mode == EnumMode.MODE_PREPOCESS): 
+                if mode == EnumMode.MODE_IDLE:
+                    time.sleep(1)
+                elif (mode == EnumMode.MODE_PREPOCESS): 
                     print("--Vào chế độ chuẩn bị chạy --") 
                     self.stage_ingest.run()
 

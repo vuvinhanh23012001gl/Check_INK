@@ -300,10 +300,11 @@ btn_erase_frame.addEventListener("click",()=>{
 
 
 async function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
+    input_x_value = Number(input_x_value);
+    input_y_value = Number(input_y_value);
+    input_z_value = Number(input_z_value);
     let status_check = validatePoint(input_x_value,input_y_value,input_z_value,max_point_run.x ,max_point_run.y ,max_point_run.z);
     if(!status_check){
-    //   console.log("Dữ liệu không hợp lệ");
-    //   write_log_capture_clear("❌ Dữ liệu không nằm trong giới hạn trục.\n✅ Hãy kiểm tra lại\n");
       return;
     }
     let status_run_point = await postData("/captureproduct/run_point",{x:input_x_value,y:input_y_value,z:input_z_value});    
@@ -427,6 +428,7 @@ btn_run_frame.addEventListener("click",()=>{
     }
     postData("/captureproduct/run_frame", {"ProductID":id_product_selecting_now,"FrameID":selected.frame_id}).then(data => {
             console.log("Data Receive RunFrame:",data);
+            write_log_capture_clear(data?.message || "Không nhận được phản hồi.");
     });
 
 });
@@ -439,6 +441,7 @@ btn_run_product.addEventListener("click",()=>{
     }
     postData("/captureproduct/run_product", {"ProductID":id_product_selecting_now}).then(data => {
             console.log("Data Receive RunProduct:",data);
+            write_log_capture_clear(data?.message || "Không nhận được phản hồi.");
     });
 
 });
@@ -716,7 +719,7 @@ function validatePoint(x, y, z, Limit_x, Limit_y, Limit_z) {
 }
 
 function CheckData(element,str_name, data, value_max) {
-    if (str_name == null || data == null || value_max == null ||element.value == ""||element.value == null ) {
+    if (str_name == null || data == null || !Number.isFinite(Number(data)) || value_max == null ||element.value == ""||element.value == null ) {
         console.log(`⚠️ Dữ liệu "${str_name}" không có giá trị`);
         log_box.innerHTML = `⚠️ Dữ liệu "${str_name}" không có giá trị`;
         element.value = 0;
@@ -729,7 +732,7 @@ function CheckData(element,str_name, data, value_max) {
         return false;
     }
 
-    if (data >= value_max) {
+    if (Number(data) > Number(value_max)) {
         console.log(`❌ Giá trị "${str_name}" phải nhỏ hơn hoặc bằng ${value_max}`);
         log_box.innerHTML = `❌ Giá trị "${str_name}" phải nhỏ hơn hoặc bằng ${value_max}`;
          element.value = value_max;

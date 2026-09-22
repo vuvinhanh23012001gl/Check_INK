@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
 from app.container import create_container
-from app.pipeline import Pipeline
+# from app.pipeline import Pipeline
 
 from app.routers import (
     camera_router,
@@ -20,11 +20,25 @@ from app.routers import (
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
     print("🚀 Đang khởi tạo tài nguyên...")
+    loop = asyncio.get_running_loop()
+    previous_exception_handler = loop.get_exception_handler()
+
+    def handle_connection_reset(loop, context):
+        error = context.get("exception")
+        if isinstance(error, ConnectionResetError) and getattr(error, "winerror", None) == 10054:
+            return
+        if previous_exception_handler is not None:
+            previous_exception_handler(loop, context)
+        else:
+            loop.default_exception_handler(context)
+
+    loop.set_exception_handler(handle_connection_reset)
     fastapi_app.state.services = create_container()
-    _ =  Pipeline(fastapi_app.state.services)
+    # _ =  Pipeline(fastapi_app.state.services)
     asyncio.create_task(log_sender(fastapi_app))
     yield 
     print("🛑 Đang dọn dẹp tài nguyên...")
+    loop.set_exception_handler(previous_exception_handler)
 
 
 def create_app():

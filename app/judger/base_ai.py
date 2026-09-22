@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,33 @@ class BaseJudgerAI(ABC):
     Lớp base chỉ định nghĩa hợp đồng, không áp đặt cách xử lý riêng của từng
     bài toán detection, segmentation hoặc measurement.
     """
+
+    INSPECTOR_NAME: ClassVar[str]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Kiểm tra mỗi judger con khai báo tên inspector riêng.
+
+        Input: ``cls`` là lớp judger con đang được tạo.
+        Output: Không trả về dữ liệu.
+        Errors: ``TypeError`` nếu lớp con không khai báo ``INSPECTOR_NAME``
+            hoặc tên inspector không phải chuỗi không rỗng.
+        """
+        super().__init_subclass__(**kwargs)
+        inspector_name = cls.__dict__.get("INSPECTOR_NAME")
+        if not isinstance(inspector_name, str) or not inspector_name.strip():
+            raise TypeError(
+                f"{cls.__name__} phải khai báo INSPECTOR_NAME riêng"
+            )
+
+    @classmethod
+    def get_inspector_name(cls) -> str:
+        """Lấy tên inspector cấu hình của judger.
+
+        Input: Không có.
+        Output: Tên key inspector dùng trong cấu hình judgment.
+        Errors: Không phát sinh vì tên đã được kiểm tra khi tạo class.
+        """
+        return cls.INSPECTOR_NAME
 
     def evaluate(self, standard_data: Any, *args: Any, **kwargs: Any) -> JudgmentResult:
         """Thực hiện đầy đủ quy trình define, compare và judge.

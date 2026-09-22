@@ -42,8 +42,20 @@ from app.config import (PATH_FILE_UNET_DETECT_WELD_LINE,
 from app.config import YoloSegmentConfig
 from app.engines.model_AI import ModelYoloObject,ModelYoloSegment
 from app.engines.AI_model_process import FrameModelYoloObject
+from app.judger import (
+    ArmCoverDetector,
+    ArmSensorDetector,
+    BorderDetector,
+    HoleDetector,
+    Judment,
+    MeasurementWeldingDetector,
+    SemiPermeableMembrane,
+    ScratchThePipeDetector,
+    SlitDetector,
+    WeldSeamAirBubbles,
+)
 from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig,ClassNameModelSurfaceConfig
-from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService,SurfaceFrameYoloService
+from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService,SurfaceFrameYoloService,EndChippingPatchCoreService,ForeignObjectPatchCoreService
 from app.engines.AI_model_process import FrameModelYoloSegment
 
 
@@ -57,6 +69,7 @@ from app.engines.AI_model_process import FrameModelYoloSegment
 
 
 class EnumMode(Enum):
+    MODE_IDLE = auto()
     MODE_PREPOCESS = auto()
     MODE_TRANSFORM = auto()
     MODE_EXPORT = auto()
@@ -103,7 +116,7 @@ class ServiceContainer:
         # ---------------------------------------------------------
         # 2. CHẾ ĐỘ HOẠT ĐỘNG (MODES) & VALIDATE
         # ---------------------------------------------------------
-        self._mode = EnumMode.MODE_PREPOCESS
+        self._mode = EnumMode.MODE_IDLE
         self._lock_mode = threading.Lock()
     
         print("...----------------------------------.Init Service...-----------------------------.")
@@ -116,12 +129,18 @@ class ServiceContainer:
         from app.manager.serial import ManagerSerial
         from app.manager.serial import SerialConnect
         from app.repository import ComRepository
+        from app.machine.iaicontrol import IAIControl
         
         
         self.obj_com_reponsitory = ComRepository()
         self.obj_serial_connect = SerialConnect(self.obj_com_reponsitory)
         self.obj_manager_serial = ManagerSerial(self.obj_serial_connect, self.queue_listen_MCU, self.queue_send_MCU)
         self.obj_com_service = ComService(self.obj_manager_serial)
+        self.obj_iai_control = IAIControl(
+            self.obj_manager_serial,
+            self.obj_iai_config
+        )
+        self.obj_iai_control.start_thread_handl_request_stm32()
 
         self.obj_camera = Camera()
         print("✔ Camera init")
@@ -132,6 +151,9 @@ class ServiceContainer:
         # Quản lý Point
         self.obj_point_repository = PointRepository()
         self.obj_point_service = PointService(self.obj_point_repository)
+        self.obj_end_chipping_patch_core_service = EndChippingPatchCoreService(
+            self.obj_point_service
+        )
             
         # Quản lý dữ liệu law regulations
         self.obj_law_regulation_reponsitory = JudmentLawProductRepository()
@@ -196,6 +218,13 @@ class ServiceContainer:
         self.obj_model_yolo_structure = ModelYoloObject(self.obj_yolo_structure_config)
         self.obj_frame_model_yolo_structure =  FrameModelYoloObject(self.obj_model_yolo_structure )
         self.obj_structure_model_service =    StructureFrameYoloService(self.obj_frame_model_yolo_structure)
+        self.obj_arm_sensor_detector = ArmSensorDetector(
+            self.obj_frame_model_yolo_structure
+        )
+        self.obj_arm_cover_detector = ArmCoverDetector(
+            self.obj_frame_model_yolo_structure
+        )
+        self.obj_hole_detector = HoleDetector(self.obj_frame_model_yolo_structure)
 
    
         self.CLASS_SURFACE_NAME =  ClassNameModelSurfaceConfig # cai nay tham chieu den bien khong thay doi
@@ -203,6 +232,16 @@ class ServiceContainer:
         self.obj_model_yolo_surface = ModelYoloObject(self.obj_yolo_surface_config)   
         self.obj_frame_model_yolo_surface = FrameModelYoloObject(self.obj_model_yolo_surface)
         self.obj_surface_model_service = SurfaceFrameYoloService(self.obj_frame_model_yolo_surface)
+        self.obj_foreign_object_patch_core_service = ForeignObjectPatchCoreService(
+            self.obj_point_service,
+            self.obj_model_yolo_surface,
+        )
+        self.obj_scratch_detector = ScratchThePipeDetector(
+            self.obj_frame_model_yolo_surface
+        )
+        self.obj_weld_seam_air_bubbles_detector = WeldSeamAirBubbles(
+            self.obj_frame_model_yolo_surface
+        )
  
 
 
@@ -211,6 +250,7 @@ class ServiceContainer:
         self.obj_unet_border_line_cofig= UnetConfig(path = PATH_FILE_UNET_DETECT_FILM_BORDER_LINE)
         self.obj_unet_border_line_model = ModelUnet(self.obj_unet_border_line_cofig)
         self.obj_unet_border_film_service =  BorderFilmUnetService(self.obj_unet_border_line_model)
+        self.obj_border_detector = BorderDetector(self.obj_unet_border_line_model)
 
         
         self.config_permeable_membrane_inner = YoloSegmentConfig(path_model= PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER)
@@ -221,6 +261,10 @@ class ServiceContainer:
         self.obj_frame_segment_inner_permeable_membrane = FrameModelYoloSegment(self.model_permeable_membrane_inner)
         self.obj_frame_segment_border_permeable_membrane = FrameModelYoloSegment(self.model_permeable_membrane_border)
         self.obj_judment_permeable_membrane_service = PermeableMembraneService(self.obj_frame_segment_border_permeable_membrane ,self.obj_frame_segment_inner_permeable_membrane)
+        self.obj_membrane_detector = SemiPermeableMembrane(
+            self.obj_frame_segment_border_permeable_membrane,
+            self.obj_frame_segment_inner_permeable_membrane,
+        )
       
 
 
@@ -228,6 +272,21 @@ class ServiceContainer:
         self.obj_unet_config_line_master = UnetCofigAutoDetectLineMaster()
         self.obj_unet_weld_line_config = UnetConfig(path = PATH_FILE_UNET_DETECT_WELD_LINE)
         self.obj_unet_weld_line_model = ModelUnet(self.obj_unet_weld_line_config)
+        self.obj_measurement_welding_detector = MeasurementWeldingDetector(
+            self.obj_unet_weld_line_model
+        )
+        self.obj_slit_detector = SlitDetector(self.obj_unet_weld_line_model)
+        self.obj_judment = Judment({
+            "ArmSensorInspector": self.obj_arm_sensor_detector,
+            "ArmCoverInspector": self.obj_arm_cover_detector,
+            "BorderFilmInspector": self.obj_border_detector,
+            "HoleItemInspector": self.obj_hole_detector,
+            "ScratchedPipeItemInspector": self.obj_scratch_detector,
+            "SlitWeldInspector": self.obj_slit_detector,
+            "AirBubblesItemInspector": self.obj_weld_seam_air_bubbles_detector,
+            "MeasurementWeldInspector": self.obj_measurement_welding_detector,
+            "MembraneInspector": self.obj_membrane_detector,
+        })
         self.obj_deployment_Unet = WeldMeamunetUnetService(
             self.obj_unet_config_line_master,
             self.obj_unet_weld_line_model

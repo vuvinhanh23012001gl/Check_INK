@@ -1,3 +1,5 @@
 
 from .frame_yolo_segment_process import FrameModelYoloSegment
 from .frame_yolo_object_process import FrameModelYoloObject
+from .frame_patch_core_process import FrameModelPatchCore
+from .frame_patch_core_object_detector import FramePatchCoreObjectDetector

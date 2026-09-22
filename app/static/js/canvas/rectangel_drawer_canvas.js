@@ -94,8 +94,11 @@ export class RectangleDrawer {
 
             if (status) {
                 this.emit(RectangleDrawer.NAME_EVENT_WHEN_CLICK_ON_RECT, this.rect_current);
+                return;
             }
-            return;
+
+            this.reset();
+            canvasManager.clearShapeCanvas();
         }
 
         // Tiến trình vẽ hình chữ nhật mới
@@ -215,5 +218,32 @@ export class RectangleDrawer {
         this.isDrawing = false;
         this.cout_click = 0;
         this.is_available_one_rect = false;
+    }
+
+    /**
+     * Nạp rectangle đã tồn tại vào trạng thái tương tác của drawer.
+     * @param {Object} rectangle - Rectangle có xStart, yStart, xEnd, yEnd.
+     */
+    setCurrentRectangle(rectangle) {
+        if (!rectangle) return false;
+        const xStart = Number(rectangle.xStart);
+        const yStart = Number(rectangle.yStart);
+        const xEnd = Number(rectangle.xEnd);
+        const yEnd = Number(rectangle.yEnd);
+        if (![xStart, yStart, xEnd, yEnd].every(Number.isFinite)) return false;
+        if (xStart >= xEnd || yStart >= yEnd) return false;
+        this.rect_current = {
+            xStart,
+            yStart,
+            xEnd,
+            yEnd,
+            width: xEnd - xStart,
+            height: yEnd - yStart,
+        };
+        this.is_available_one_rect = true;
+        this.isDrawing = false;
+        this.cout_click = 0;
+        this.start = { x: -1, y: -1 };
+        return true;
     }
 }

@@ -72,11 +72,15 @@ class ErrorCode(Enum):
     INVALID_FORMAT = 8002        # <-- THÊM MỚI: Định dạng JSON/Dict chung không đúng
     MISSING_FIELD = 8003         # <-- THÊM MỚI: Thiếu trường bắt buộc trong dữ liệu
     INVALID_VALUE = 8004
+    PATCHCORE_MODEL_NOT_FOUND = 8200
+    PATCHCORE_BUSY = 8201
 
 
 
 
 ERROR_MESSAGE = {
+    ErrorCode.PATCHCORE_BUSY: "[Thông báo] Model PatchCore đang bận. Vui lòng chờ phiên hiện tại hoàn tất.",
+    ErrorCode.PATCHCORE_MODEL_NOT_FOUND: "[Lỗi] Chưa tạo model PatchCore cho item này. Vui lòng nhấn 'Tạo model' trước.",
     ErrorCode.IMAGE_NOT_FOUND:"[Thất bại] Không thể tìm thấy ảnh trong bộ nhớ.",
     # =====================================
     # CAMERA

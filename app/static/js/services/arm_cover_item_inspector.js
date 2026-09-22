@@ -4,11 +4,11 @@ import * as draw from "../utills/draw.js";
 import { EndChippingInspector } from './end_chipping_item_inspector.js';
 
 export class ArmCoverItemInspector {
-    static NAME = "CoverSensorInspector";
+    static NAME = "ArmCoverInspector";
 
     constructor(rectangle = null, boxs = null) {
         this.rectangle = rectangle;
-        this.boxs = (Array.isArray(boxs) && boxs.length > 0) ? boxs : null;
+        this.boxs = Array.isArray(boxs) ? boxs : [];
     }
 
     /**
