@@ -51,6 +51,9 @@ async def log_sender(app):
                 elif log_type == TypeSend.log_calibration:
                     msg = data_log.get("message","")
                     await sio.emit(TypeSend.log_calibration, {"msg": msg}, namespace= NAMESPACE_LOG)
+                elif log_type == TypeSend.log_home:
+                    msg = data_log.get("message", "")
+                    await sio.emit(TypeSend.log_home, {"msg": msg}, namespace=NAMESPACE_LOG)
 
                     
             data_send_client:dict = services.queue_data_send_client.get()   #Lay queue data

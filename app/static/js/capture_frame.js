@@ -307,6 +307,7 @@ async function HandleClickBtnRun(input_x_value,input_y_value,input_z_value){
     if(!status_check){
       return;
     }
+        show_video_product();
     let status_run_point = await postData("/captureproduct/run_point",{x:input_x_value,y:input_y_value,z:input_z_value});    
     let status =  status_run_point?.ok;
     let message = status_run_point?.message;
@@ -426,6 +427,7 @@ btn_run_frame.addEventListener("click",()=>{
         console.log("Hiện tại bạn chưa chọn Frame cần chạy");
         return;
     }
+    show_video_product();
     postData("/captureproduct/run_frame", {"ProductID":id_product_selecting_now,"FrameID":selected.frame_id}).then(data => {
             console.log("Data Receive RunFrame:",data);
             write_log_capture_clear(data?.message || "Không nhận được phản hồi.");
@@ -439,6 +441,7 @@ btn_run_product.addEventListener("click",()=>{
         console.log("Hiện tại bạn chưa chọn loại sản phẩm");
         return;
     }
+    show_video_product();
     postData("/captureproduct/run_product", {"ProductID":id_product_selecting_now}).then(data => {
             console.log("Data Receive RunProduct:",data);
             write_log_capture_clear(data?.message || "Không nhận được phản hồi.");

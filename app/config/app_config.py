@@ -5,6 +5,7 @@ class TypeSend:
     type_log_capture = "type_log_capture"
     log_capture = "log_CaptureProduct"
     log_home = "log_Home"
+    log_judment = "log_Home"
     log_calibration = "log_calibration"
 
 

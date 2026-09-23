@@ -64,8 +64,7 @@ export function active_sceen_show_video(){
 }
 
 export function show_video_product(){
-    canvasManager.video_product.style.display = "block";
-    videoManager.connect();
+    videoManager.show();
     canvasManager.setWrapCanvasVisible(false);
 }
 

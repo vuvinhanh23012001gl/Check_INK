@@ -44,7 +44,15 @@ export class CanvasManager {
         this.setWrapCanvasVisible(true);
         this.clearAllCanvas();
         this.resizeAllCanvas();
-        this.drawImageContain(this.ctxImg,this.cImg,img);
+        if (img.complete && img.naturalWidth > 0) {
+            this.drawImageContain(this.ctxImg,this.cImg,img);
+            return;
+        }
+        img.addEventListener("load", () => {
+            if (this.video_product.style.display === "none") {
+                this.drawImageContain(this.ctxImg,this.cImg,img);
+            }
+        }, {once: true});
     }
 
     handleRightClick(event){

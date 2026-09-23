@@ -54,6 +54,10 @@ class IAIConfig(BaseConfig):
         self.status_returned_origin = "has_returned_org:"
         self.input_poll_interval = 0.05
         self.queue_timeout = 0.01
+        self.move_retry_count = 3
+        self.capture_retry_count = 3
+        self.move_timeout = 4.0
+        self.capture_timeout = 1.0
         self.load()
 
     # ==========================================================
@@ -107,6 +111,15 @@ class IAIConfig(BaseConfig):
             "limit_z_max",
             self.limit_z_max
         )
+
+        self.move_retry_count = data.get(
+            "move_retry_count", self.move_retry_count
+        )
+        self.capture_retry_count = data.get(
+            "capture_retry_count", self.capture_retry_count
+        )
+        self.move_timeout = data.get("move_timeout", self.move_timeout)
+        self.capture_timeout = data.get("capture_timeout", self.capture_timeout)
 
         # =========================
         # HOME POSITION
@@ -182,7 +195,11 @@ class IAIConfig(BaseConfig):
             "command_resume": self.command_resume,
             "status_returned_origin": self.status_returned_origin,
             "input_poll_interval": self.input_poll_interval,
-            "queue_timeout": self.queue_timeout
+            "queue_timeout": self.queue_timeout,
+            "move_retry_count": self.move_retry_count,
+            "capture_retry_count": self.capture_retry_count,
+            "move_timeout": self.move_timeout,
+            "capture_timeout": self.capture_timeout,
         }
 
         with open(self.path_config_iai, "w", encoding="utf-8") as file:
@@ -228,5 +245,9 @@ class IAIConfig(BaseConfig):
             "command_resume": self.command_resume,
             "status_returned_origin": self.status_returned_origin,
             "input_poll_interval": self.input_poll_interval,
-            "queue_timeout": self.queue_timeout
+            "queue_timeout": self.queue_timeout,
+            "move_retry_count": self.move_retry_count,
+            "capture_retry_count": self.capture_retry_count,
+            "move_timeout": self.move_timeout,
+            "capture_timeout": self.capture_timeout,
         }

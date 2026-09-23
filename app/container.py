@@ -57,6 +57,7 @@ from app.judger import (
 from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig,ClassNameModelSurfaceConfig
 from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService,SurfaceFrameYoloService,EndChippingPatchCoreService,ForeignObjectPatchCoreService
 from app.engines.AI_model_process import FrameModelYoloSegment
+from app.core.context import RuntimeState
 
 
 # from app.services.calculate_the_dimensions.handler_calibration import HandlerCalibration
@@ -77,6 +78,8 @@ class EnumMode(Enum):
 
 class ServiceContainer:
     def __init__(self):
+        self.runtime_state = RuntimeState()
+        self.prepared_product = None
         print("---------------Load config-----------")
         self.obj_iai_config = IAIConfig()
         self.obj_iai_service = IAIService(self.obj_iai_config)        
@@ -316,6 +319,26 @@ class ServiceContainer:
 
     def stop(self):
         print("....Stopping Service....")
+        self.runtime_state.request_stop()
+        if getattr(self, "obj_iai_control", None):
+            self.obj_iai_control.stop_thread_input_handler_stm32()
+            self.obj_iai_control.stop_thread_handler_stm32()
+        if getattr(self, "obj_manager_serial", None):
+            self.obj_manager_serial.stop()
+        if getattr(self, "obj_camera", None):
+            self.obj_camera.release()
+
+    def send_judgment_log(self, message: str) -> None:
+        """Gửi log pipeline tới ô log phán định trên giao diện.
+
+        Input: ``message`` là nội dung log dạng chuỗi.
+        Output: không trả về; bản tin được đưa vào queue Socket.IO hiện có.
+        Errors: queue worker chịu trách nhiệm xử lý lỗi truyền bản tin.
+        """
+        self.queue_log_send_client.put({
+            "type": "log_Home",
+            "message": str(message),
+        })
 
     def set_mode(self, mode: EnumMode):
         with self._lock_mode:

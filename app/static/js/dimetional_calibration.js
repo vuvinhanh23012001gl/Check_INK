@@ -51,6 +51,14 @@ const selected = {
 
 window.addEventListener("iai-point-selected", event => {
     const coordinates = event.detail || {};
+    const frameId = Number(coordinates.frameId);
+    const itemId = Number(coordinates.pointId);
+    if (Number.isInteger(frameId) && frameId >= 0) {
+        selected.frame_id = frameId;
+    }
+    if (Number.isInteger(itemId) && itemId >= 0) {
+        selected.items_id = itemId;
+    }
     if (coordinates.valid) {
         coordinate_items_now = {
             x: coordinates.x,
@@ -66,6 +74,7 @@ window.addEventListener("iai-point-selected", event => {
 let dict_lines_of_frames = {};  //data ALL
 let id_product_selecting_now = null; //San pham dang chon
 let current_frame_box = null ; // Frame hiện tại đang đc click
+let calibration_load_id = 0;
 
 
 
@@ -295,11 +304,15 @@ function selection_data_input(element, data, placeholder = "default") {
 }
 
 header_dimetional_calibration.addEventListener("click",async ()=>{
-   
+    const loadId = ++calibration_load_id;
     openOptionPanel(paner_draw_calibration);
+    scroll_container.innerHTML = "";
     canvasManager.setTool(obj_draw_calibration); 
     console.log("Bạn vừa click vào hiệu chuẩn kích thước");
     let head_data = await  fetchGet("/dimesional_calibration");
+    if (loadId !== calibration_load_id) {
+        return;
+    }
     console.log("Bạn nhấn vào hiệu chỉnh kích thước.");
     console.log("Data header dimesion calibration",head_data);
     let data_point =  head_data?.data?.data_point;
@@ -310,6 +323,7 @@ header_dimetional_calibration.addEventListener("click",async ()=>{
     actual_wid_img = head_data?.data?.wid_img;
     actual_hei_img = head_data?.data?.hei_img;
     create_calibration_table_show(data_dimesion,actual_wid_img,actual_hei_img);
+    scroll_container.innerHTML = "";
     create_img_items_dimesion_calibration(data_point);
     create_hight_light_items_for_frame(dict_lines_of_frames);
 
@@ -718,6 +732,8 @@ function loadPointCoordinates(dataPoint) {
 
 cancel_calibration_button.addEventListener("click",()=>{
     console.log("Tến hành thoát dimesionnal calibration");
+    calibration_load_id += 1;
+    scroll_container.innerHTML = "";
       fetch('/dimesional_calibration/exit')
       .then(response => {
           console.log("responsd")

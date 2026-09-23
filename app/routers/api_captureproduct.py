@@ -4,11 +4,11 @@
 # from app.utils import obj_queue,type_capture,name_queue_log_client
 from app.model import Point
 from fastapi import APIRouter, WebSocket, Body, Depends, WebSocketDisconnect
+import asyncio
 from app.container import ServiceContainer
 from app.core.dependencies import get_services,get_services_ws
 from app.config import TypeSend
 import cv2
-import asyncio
 from pydantic import BaseModel
 from app.core import (Result,ErrorCode)
 from app.validate import ValidateCaptureProduct
@@ -44,9 +44,11 @@ async def run_frame(services: ServiceContainer = Depends(get_services),payload: 
     if not services.obj_manager_serial.is_running():
         return {"ok": False, "message": "Cổng COM chưa sẵn sàng."}
     for point_id, point in points_result.data.items():
-        if not services.obj_iai_control.move_to_point(
-            point["x"], point["y"], point["z"]
-        ):
+        moved = await asyncio.to_thread(
+            services.obj_iai_control.move_to_point,
+            point["x"], point["y"], point["z"],
+        )
+        if not moved:
             return {"ok": False, "message": f"Chạy thất bại tại point {point_id}."}
     return {"ok": True, "message": f"Đã chạy xong frame {frame_id}."}
 
@@ -69,9 +71,11 @@ async def run_product(services: ServiceContainer = Depends(get_services),payload
         return {"ok": False, "message": "Cổng COM chưa sẵn sàng."}
     for frame_id, points in points_result.data.items():
         for point in points:
-            if not services.obj_iai_control.move_to_point(
-                point["x"], point["y"], point["z"]
-            ):
+            moved = await asyncio.to_thread(
+                services.obj_iai_control.move_to_point,
+                point["x"], point["y"], point["z"],
+            )
+            if not moved:
                 return {
                     "ok": False,
                     "message": (
@@ -247,7 +251,9 @@ async def run_point(data: PointData,services: ServiceContainer = Depends(get_ser
         }
     if services.obj_manager_serial.is_running():
         if services.obj_iai_service.is_valid_position(x,y,z):
-            status_resquest_control_services_arm_move = services.obj_iai_control.move_to_point(x, y, z)
+            status_resquest_control_services_arm_move = await asyncio.to_thread(
+                services.obj_iai_control.move_to_point, x, y, z
+            )
             if status_resquest_control_services_arm_move:
                 return {
                     "ok": True,
@@ -275,13 +281,16 @@ async def camera_ws(ws: WebSocket,services: ServiceContainer = Depends(get_servi
     await ws.accept()
     try:
         while True:
-            if services.obj_camera.image is not None:
-                _, buf = cv2.imencode(
+            image = services.obj_camera.image
+            if image is not None:
+                encoded, buf = await asyncio.to_thread(
+                    cv2.imencode,
                     ".jpg",
-                    services.obj_camera.image,
-                    [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+                    image,
+                    [int(cv2.IMWRITE_JPEG_QUALITY), 70],
                 )
-                await ws.send_bytes(buf.tobytes())
+                if encoded:
+                    await ws.send_bytes(buf.tobytes())
             if services.obj_camera.camera_lost:
                 print("Main: reconnect camera")
                 services.obj_camera.release()

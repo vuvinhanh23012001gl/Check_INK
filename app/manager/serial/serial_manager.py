@@ -71,6 +71,14 @@ class ManagerSerial:
         if clear_tx:
             self.clear_tx_queue()
 
+    def stop(self):
+        """Dừng luồng kiểm tra COM, RX/TX và đóng cổng serial."""
+        self.running_check = False
+        self.close_thread_receive_and_send()
+        with self._connection_lock:
+            self.serial_com.close_port()
+        self.com_is_open = False
+
 
 
     def _check_connect(self):
