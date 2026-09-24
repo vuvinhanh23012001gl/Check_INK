@@ -54,28 +54,45 @@
 
 #config-calibration{
     width: 100%;
-    border-radius: 10px;
-    border: solid 1px rgb(158, 153, 153);
+    border-radius: 14px;
+    border: 1px solid #0d5b5b;
+    overflow: hidden;
+    background: #fff;
 }
 .calibration-table {
     width: 100%;
     table-layout: fixed; 
     border-collapse: collapse;
     height: auto;
+    background: #fff;
 }
 
 .calibration-table th,
 .calibration-table td {
-    padding: 12px 8px;  
-    font-size: 13px;   
+    padding: 14px 12px;
+    font-size: 16px;
     word-wrap: break-word;
+    border-bottom: 1px solid #d9d9d9;
+}
+
+.calibration-table th {
+    width: 42%;
+    text-align: left;
+    background: #f1f3f6;
+    color: #182b3f;
+}
+
+.calibration-table td {
+    background: #fff;
 }
 
 .calibration-table input {
     width: 100%;
     box-sizing: border-box;
-    padding: 4px 6px;   
-    font-size: 13px;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #d4dce5;
+    border-radius: 10px;
 }
 
 .btn-accept-clean-line-calibration {
@@ -84,14 +101,17 @@
     align-items: center;
     width: 100%;
     gap: 14px;
-    margin-top: 5px;
+    padding: 14px;
+    margin-top: 0;
+    background: #fff;
 }
 .btn-accept-clean-line-calibration button {
-    padding:8px ;
-    margin-bottom: 5px;
+    min-width: 120px;
+    padding: 11px 18px;
+    margin-bottom: 0;
     border: none;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
@@ -99,12 +119,12 @@
     letter-spacing: 0.3px;
 }
 .btn-accept {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #428ed8, #347fc8);
     color: white;
 }
 
 .btn-clear {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, #428ed8, #347fc8);
     color: white;
 }
 

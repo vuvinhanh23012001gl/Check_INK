@@ -191,9 +191,17 @@ class CalibSearchCoordinator:
                         # Truyền tọa độ đã ép kiểu an toàn
                         self.queue_send_log_client.put({"type":TypeSend.log_calibration,"message":f""})
                         self.queue_send_log_client.put({"type":TypeSend.log_calibration,"message":f"📌Bắt đầu tính Frame {number_frame}"})
+                        self.queue_send_log_client.put({
+                            "type": TypeSend.log_calibration,
+                            "message": "CALIB_PROGRESS:5:Đang di chuyển IAI đến vị trí calibration...",
+                        })
                         status_resquest_control_services_arm_move = self.com.send_and_wait(coord_x, coord_y, coord_z)
                         if status_resquest_control_services_arm_move:
                             print("📌 Nhận đúng tín hiệu mong đợi")
+                            self.queue_send_log_client.put({
+                                "type": TypeSend.log_calibration,
+                                "message": "CALIB_PROGRESS:15:IAI đã đến vị trí, bắt đầu chụp mẫu...",
+                            })
                             self.process_calculate_calibration(product_id,frame_id,
                                 self.obj_calibration.number_capture, 
                                 self.obj_calibration.reality_mm, 
@@ -205,8 +213,16 @@ class CalibSearchCoordinator:
                         else:
                             print("📌 Nhận không đúng dữ liệu ARM")    
                             self.queue_send_log_client.put({"type":TypeSend.log_calibration,"message":f"❌Nhận không đúng dữ liệu ARM"})
+                            self.queue_send_log_client.put({
+                                "type": TypeSend.log_calibration,
+                                "message": "CALIB_PROGRESS:0:❌ IAI không phản hồi đúng vị trí calibration.",
+                            })
                         continue
                     self.queue_send_log_client.put({"type":TypeSend.log_calibration,"message":f"❌Không tìm thấy điểm trên hệ thống."})
+                    self.queue_send_log_client.put({
+                        "type": TypeSend.log_calibration,
+                        "message": "CALIB_PROGRESS:0:❌ Không tìm thấy điểm calibration trong hệ thống.",
+                    })
                     print("📌 Không tìm thấy điểm trên hệ thống.")
 
     def process_multi_thread(
@@ -270,6 +286,11 @@ class CalibSearchCoordinator:
             if status: 
                 count_capture_ok += 1
                 arr_img_photographed.append(img)                                                                                     
+                progress = 15 + int(((index_capture + 1) / number_capture) * 35)
+                self.queue_send_log_client.put({
+                    "type": TypeSend.log_calibration,
+                    "message": f"CALIB_PROGRESS:{progress}:Đã chụp {index_capture + 1}/{number_capture} ảnh mẫu...",
+                })
             else:
                 print(f"[Showqueue] Chụp ảnh không thành công [{index_capture}/{number_capture}]")                     
         
@@ -278,17 +299,30 @@ class CalibSearchCoordinator:
         length_img_valid: int = len(arr_img_photographed)
         if length_img_valid == 0:
             print("❌ [Showqueue] Không có ảnh nào hợp lệ để xử lý.")
+            self.queue_send_log_client.put({
+                "type": TypeSend.log_calibration,
+                "message": "CALIB_PROGRESS:0:❌ Không có ảnh hợp lệ để xử lý.",
+            })
             return
             
         start_time: float = time.time()
         for index in range(0, length_img_valid):
             self.process_multi_thread(index, arr_img_photographed[index], startX, startY, endX, endY)
+            progress = 50 + int(((index + 1) / length_img_valid) * 35)
+            self.queue_send_log_client.put({
+                "type": TypeSend.log_calibration,
+                "message": f"CALIB_PROGRESS:{progress}:Đang xử lý ảnh {index + 1}/{length_img_valid}...",
+            })
 
         while True:
             if self.complete_work >= length_img_valid:
                 break
             if time.time() - start_time > CalibSearchCoordinator.VALUE_TIMEOUT_WAIT_DATA:
                 print("❌ [Showqueue] Lỗi time out chưa xử lý xong ảnh")
+                self.queue_send_log_client.put({
+                    "type": TypeSend.log_calibration,
+                    "message": "CALIB_PROGRESS:0:❌ Hết thời gian xử lý ảnh calibration.",
+                })
                 break
             time.sleep(0.1)  
 
@@ -332,7 +366,15 @@ class CalibSearchCoordinator:
             else:
                 print("message", result_calculate_scale.message())
                 self.queue_send_log_client.put({"type":TypeSend.log_calibration,"message":f"❌Tính toán dữ liệu Scale thất bại"})
+                self.queue_send_log_client.put({
+                    "type": TypeSend.log_calibration,
+                    "message": "CALIB_PROGRESS:0:❌ Không thể tính hệ số calibration.",
+                })
                 print("❌Tính toán dữ liệu Scale thất bại ")
                 return
         print("❌Thất bại.Line không cắt đoạn thẳng")
+        self.queue_send_log_client.put({
+            "type": TypeSend.log_calibration,
+            "message": "CALIB_PROGRESS:0:❌ Không tìm thấy đoạn đường hàn hợp lệ.",
+        })
 

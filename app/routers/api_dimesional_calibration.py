@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter,Body,Depends
 from app.container import ServiceContainer
 from app.core.dependencies import get_services
@@ -16,6 +17,11 @@ class PointData(BaseModel):
     z: float
 class DataIn(BaseModel):
     data: dict
+
+
+class CalibrationDeleteData(BaseModel):
+    product_id: int
+    frame_id: int
 
 @router.get("/")
 def header_function(services: ServiceContainer = Depends(get_services)):
@@ -54,7 +60,9 @@ async def run_point_define_value(data:PointData,services: ServiceContainer = Dep
         }
     if services.obj_manager_serial.is_running():
         if services.obj_iai_service.is_valid_position(x,y,z):
-            status_resquest_control_services_arm_move = services.obj_iai_control.move_to_point(x, y, z)
+            status_resquest_control_services_arm_move = await asyncio.to_thread(
+                services.obj_iai_control.move_to_point, x, y, z
+            )
             if status_resquest_control_services_arm_move:
                 return {
                     "ok": True,
@@ -76,12 +84,7 @@ async def run_point_define_value(data:PointData,services: ServiceContainer = Dep
 
 
 @router.get("/exit")
-async def exit(services: ServiceContainer = Depends(get_services)):
-    try:
-        if services.obj_manager_serial.is_running():
-            services.obj_iai_control.move_to_origin()
-    except Exception as error:
-        print(f"[CALIBRATION_EXIT] Lỗi khi gửi lệnh về gốc IAI: {error}")
+async def exit():
     return {
         "status": "ok",
         "redirect_url": "/"
@@ -96,10 +99,27 @@ async def calculater_calibration(data:DataIn,services: ServiceContainer = Depend
         print("Validate dữ liệu OK")
         services.obj_unet_calib_search_coordinator.set_data_run(data_receive)
         services.obj_unet_calib_search_coordinator.start_algorithm()
+        return {
+            "ok": True,
+            "message": "Đã bắt đầu tính hệ số calibration.",
+        }
     else:
         print("Validate dữ liệu NG",msg)
-    return {
-            "ok": True,
-               
-                    }
+        return {
+            "ok": False,
+            "message": str(msg),
+        }
+
+
+@router.post("/delete_calibration")
+async def delete_calibration(
+    data: CalibrationDeleteData,
+    services: ServiceContainer = Depends(get_services),
+):
+    """Xóa kết quả calibration đã lưu của một frame."""
+    result = services.obj_service_calibration.delete_calibration(
+        data.product_id,
+        data.frame_id,
+    )
+    return result.to_dict()
     

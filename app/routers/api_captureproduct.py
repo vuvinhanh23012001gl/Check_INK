@@ -221,12 +221,7 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
 
 
 @router.get("/exit")
-async def exit(services: ServiceContainer = Depends(get_services)):
-    try:
-        if services.obj_manager_serial.is_running():
-            services.obj_iai_control.move_to_origin()
-    except Exception as error:
-        print(f"[CAPTUREPRODUCT_EXIT] Lỗi khi gửi lệnh về gốc IAI: {error}")
+async def exit():
     return {
         "status": "ok",
         "redirect_url": "/"

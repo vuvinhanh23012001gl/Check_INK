@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter,Body
 from app.container import ServiceContainer
 from app.core.dependencies import get_services
@@ -143,9 +144,16 @@ async def run_model_measurement(
         frame_id,
         items_id
     )
+    if not result_get_path_img_master.ok:
+        return Result.Fail("Không tìm thấy ảnh master của item đang chọn.").to_dict()
     path_img = str(result_get_path_img_master.data)
     img = cv2.imread(path_img)
-    _ , polygons = services.obj_deployment_Unet.get_mask_and_polygon(img) 
+    if img is None:
+        return Result.Fail("Không đọc được ảnh master của item đang chọn.").to_dict()
+    _ , polygons = await asyncio.to_thread(
+        services.obj_deployment_Unet.get_mask_and_polygon,
+        img,
+    )
     polygon_json = [p.squeeze(1).tolist() for p in polygons]
     return Result.Ok({
         "width":img.shape[1],

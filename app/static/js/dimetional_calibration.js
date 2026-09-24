@@ -11,8 +11,8 @@ const header_dimetional_calibration = document.getElementById("header-ul-li-dime
 const obj_draw_calibration = new DimesionalCalibrationCanvas()
 const paner_draw_calibration = document.getElementById("paner-calibration");
 const open_video_calibration = document.getElementById("open-video-calibration");
+const run_model_calibration = document.getElementById("run-model-calibration");
 const log_calibration       = document.getElementById("log-calibration");
-const run_point             = document.getElementById("run-point-calibration");
 const cancel_calibration_button  = document.getElementById("cancel-calibration-button");
 const table_calib_config_and_show         =  document.getElementById("table-calib-config-and-show");
 const config_calibration    = document.getElementById("config-calibration"); 
@@ -66,6 +66,13 @@ window.addEventListener("iai-point-selected", event => {
             z: coordinates.z,
         };
         console.log("Tọa độ point đã chọn từ summary:", coordinate_items_now);
+        if (paner_draw_calibration.classList.contains("active")) {
+            move_to_selected_point(
+                coordinate_items_now.x,
+                coordinate_items_now.y,
+                coordinate_items_now.z
+            );
+        }
     } else {
         coordinate_items_now = {x: -1, y: -1, z: -1};
         console.warn("Point được chọn không có tọa độ hợp lệ.");
@@ -75,6 +82,14 @@ let dict_lines_of_frames = {};  //data ALL
 let id_product_selecting_now = null; //San pham dang chon
 let current_frame_box = null ; // Frame hiện tại đang đc click
 let calibration_load_id = 0;
+let calibration_move_request = null;
+let last_moved_position = null;
+let calibration_model_running = false;
+let calibration_result_data = null;
+const calibration_loading = document.getElementById("loading");
+const calibration_loading_status = document.getElementById("loading-status");
+const calibration_loading_bar = document.getElementById("loading-bar");
+const calibration_loading_percent = document.getElementById("loading-percent");
 
 
 
@@ -90,20 +105,97 @@ function func_callback_click_right_mouse_on_line() {
     );
     obj_draw_calibration.cout_click = 0;
     delete dict_lines_of_frames?.[id_product_selecting_now]?.[selected.frame_id];
+    if (selected.frame_id >= 0 && id_product_selecting_now !== null) {
+        postData("/dimesional_calibration/delete_calibration", {
+            product_id: Number(id_product_selecting_now),
+            frame_id: Number(selected.frame_id),
+        });
+    }
+    config_calibration.innerHTML = "";
+    canvasManager.clearShapeCanvas();
+    canvasManager.clearPreviewCanvas();
+    obj_draw_calibration.reset();
+    scroll_container.querySelectorAll(".active_hightlight").forEach(element => {
+        element.classList.remove("active_hightlight");
+    });
+    write_log_calibration_clear("✅ Đã xóa line và dữ liệu calibration tạm thời.");
     console.log("Sau:", structuredClone(dict_lines_of_frames));
 }
 
 
 SocketData.on("data_calibration", data =>{
-    // console.log("datataaaaaaaaaaa",data.data);
-    let data_show_table_new_proocess = extractResultParameters(data.data);
-    renderResultTableDiv(data_show_table_new_proocess,show_calibration);
+    calibration_result_data = data.data;
+    render_selected_calibration_result();
 });
 
 SocketLog.on("log_calibration",data=>{
     console.log("Log Calibration",data);
-    write_log_calibration_append(`${data?.msg}`);
+    const message = `${data?.msg || ""}`;
+    const progressMatch = message.match(/^CALIB_PROGRESS:(\d+):(.*)$/);
+    if (progressMatch) {
+        calibration_loading_show();
+        calibration_loading_set_progress(
+            Number(progressMatch[1]),
+            progressMatch[2]
+        );
+        if (Number(progressMatch[1]) === 0) {
+            window.setTimeout(calibration_loading_hide, 500);
+        }
+        return;
+    }
+    write_log_calibration_append(message);
+    if (message.startsWith("❌")) {
+        calibration_loading_set_progress(0, message);
+        window.setTimeout(calibration_loading_hide, 500);
+        return;
+    }
+    if (/Tính toán dữ liệu Calibration thành công|Scale thất bại|Camera chỉ chụp được|Không tìm thấy điểm|Nhận không đúng dữ liệu ARM/.test(message)) {
+        calibration_loading_set_progress(
+            message.includes("thành công") ? 100 : 0,
+            message
+        );
+        if (message.includes("thành công") || message.includes("thất bại") || message.includes("Không tìm thấy") || message.includes("không đúng")) {
+            window.setTimeout(calibration_loading_hide, 500);
+        }
+    }
 });
+
+function calibration_loading_show(message = "Đang tính hệ số calibration...") {
+    if (!calibration_loading) return;
+    calibration_loading.style.display = "flex";
+    calibration_loading_status.textContent = message;
+    calibration_loading_bar.style.width = "0%";
+    calibration_loading_percent.textContent = "0%";
+}
+
+function calibration_loading_set_progress(percent, message = null) {
+    if (!calibration_loading) return;
+    const safePercent = Math.max(0, Math.min(100, percent));
+    calibration_loading_bar.style.width = `${safePercent}%`;
+    calibration_loading_percent.textContent = `${Math.round(safePercent)}%`;
+    if (message !== null) calibration_loading_status.textContent = message;
+}
+
+function calibration_loading_hide() {
+    if (calibration_loading) calibration_loading.style.display = "none";
+}
+
+function render_selected_calibration_result() {
+    if (!calibration_result_data || selected.frame_id < 0) {
+        show_calibration.innerHTML = "";
+        return;
+    }
+    const productData = calibration_result_data?.[id_product_selecting_now];
+    const frameData = productData?.[String(selected.frame_id)];
+    if (!frameData?.result_parameters) {
+        show_calibration.innerHTML = "";
+        write_log_calibration_append(`ℹ️ Frame ${selected.frame_id} chưa có hệ số calibration.`);
+        return;
+    }
+    renderResultTableDiv({
+        [selected.frame_id]: frameData,
+    }, show_calibration);
+}
 
 
 function func_callback_click_on_line_drawn(line){   // Hàm này hoạt động khi click vào line
@@ -123,6 +215,71 @@ function func_callback_check_line_exis(line){
              return;
       }
      obj_draw_calibration.has_line_of_frame = false;
+}
+
+async function move_to_selected_point(x, y, z) {
+    if (![x, y, z].every(Number.isFinite) || [x, y, z].some(value => value < 0)) {
+        write_log_calibration_clear("❌ Tọa độ item không hợp lệ, không thể di chuyển IAI.");
+        return;
+    }
+    const requestKey = `${x},${y},${z}`;
+    if (last_moved_position === requestKey) {
+        write_log_calibration_append("ℹ️ IAI đã ở vị trí này, không gửi lại lệnh.");
+        return;
+    }
+    if (calibration_move_request === requestKey) {
+        write_log_calibration_append("ℹ️ IAI đang ở hoặc đang di chuyển đến vị trí này.");
+        return;
+    }
+    if (calibration_move_request !== null) {
+        write_log_calibration_append("⚠️ IAI đang di chuyển, vui lòng chờ hoàn tất.");
+        return;
+    }
+    calibration_move_request = requestKey;
+    write_log_calibration_clear(`⏳ IAI đang di chuyển đến X:${x}, Y:${y}, Z:${z}...`);
+    try {
+        const result = await postData(
+            "/dimesional_calibration/run_point_define_value",
+            {x, y, z}
+        );
+        write_log_calibration_clear(
+            result?.message || "❌ Không nhận được phản hồi di chuyển IAI."
+        );
+        if (result?.ok) last_moved_position = requestKey;
+    } catch (error) {
+        write_log_calibration_clear(`❌ Không thể di chuyển IAI: ${error}`);
+    } finally {
+        calibration_move_request = null;
+    }
+}
+
+function draw_model_polygons(polygons, sourceWidth, sourceHeight = null) {
+    canvasManager.clearPreviewCanvas();
+    if (!Array.isArray(polygons) || !polygons.length || !sourceWidth) return;
+    const canvas = canvasManager.cPrev;
+    const height = Number(sourceHeight) || sourceWidth * canvas.height / canvas.width;
+    const scale = Math.min(canvas.width / sourceWidth, canvas.height / height);
+    const offsetX = (canvas.width - sourceWidth * scale) / 2;
+    const offsetY = (canvas.height - height * scale) / 2;
+    const context = canvasManager.ctxPrev;
+    context.save();
+    context.strokeStyle = "#00e5ff";
+    context.lineWidth = 3;
+    context.fillStyle = "rgba(0, 229, 255, 0.12)";
+    polygons.forEach(polygon => {
+        if (!Array.isArray(polygon) || polygon.length < 2) return;
+        context.beginPath();
+        polygon.forEach((point, index) => {
+            const x = offsetX + Number(point[0]) * scale;
+            const y = offsetY + Number(point[1]) * scale;
+            if (index === 0) context.moveTo(x, y);
+            else context.lineTo(x, y);
+        });
+        context.closePath();
+        context.fill();
+        context.stroke();
+    });
+    context.restore();
 }
 
 
@@ -230,8 +387,19 @@ btn_calcular_calibration.addEventListener("click",()=>{
     console.log("Check dữ liệu",result_check);
     if (result_check.valid){
         write_log_calibration_clear("Đang gửi dữ liệu đến Server.");
+        calibration_loading_show("Đang chờ tính hệ số calibration...");
         console.log("Data Send",dict_lines_of_frames);
-        postData("/dimesional_calibration/calculater_calibration",{"data":dict_lines_of_frames});   
+        postData("/dimesional_calibration/calculater_calibration",{"data":dict_lines_of_frames})
+            .then(result => {
+                if (!result?.ok) {
+                    calibration_loading_set_progress(0, result?.message || "❌ Không thể bắt đầu calibration.");
+                    window.setTimeout(calibration_loading_hide, 500);
+                }
+            })
+            .catch(error => {
+                calibration_loading_set_progress(0, `❌ Lỗi gửi calibration: ${error}`);
+                window.setTimeout(calibration_loading_hide, 500);
+            });
         return;
     }
     write_log_calibration_clear(`❌${result_check.error}`);
@@ -318,11 +486,13 @@ header_dimetional_calibration.addEventListener("click",async ()=>{
     let data_point =  head_data?.data?.data_point;
     let id_product_choose_now = head_data?.data?.product?._id;
     id_product_selecting_now =  id_product_choose_now;
+    show_calibration.innerHTML = "";
     console.log("ID sản phẩm đang chọn là :",id_product_choose_now);
     let data_dimesion = head_data?.data?.data_dimesion;
     actual_wid_img = head_data?.data?.wid_img;
     actual_hei_img = head_data?.data?.hei_img;
-    create_calibration_table_show(data_dimesion,actual_wid_img,actual_hei_img);
+        calibration_result_data = data_dimesion; // Keep the initial calibration response available for frame-specific result rendering
+        create_calibration_table_show(data_dimesion, actual_wid_img, actual_hei_img);
     scroll_container.innerHTML = "";
     create_img_items_dimesion_calibration(data_point);
     create_hight_light_items_for_frame(dict_lines_of_frames);
@@ -538,30 +708,39 @@ function create_hight_light_items_for_frame(data){
     }
 } 
 
-run_point.addEventListener("click",async ()=>{
-    console.log("Bạn vừa click vào run point");
-    const {x, y, z} = coordinate_items_now;
-    if (![x, y, z].every(Number.isFinite) || [x, y, z].some(value => value === -1)){
-         console.log("Muốn chạy điểm dữ liệu x y z phải khác -1");
-         write_log_calibration_clear("❌Bạn chưa chọn điểm nào để di chuyển.\n✅ Hãy click vào hình muốn di chuyển đến.\n");
-         return;
-    }
-    write_log_calibration_clear("");
-    const result = await postData(
-        "/dimesional_calibration/run_point_define_value",
-        {x, y, z}
-    );
-    write_log_calibration_clear(
-        result?.message || "❌ Không nhận được phản hồi từ server."
-    );
-});
-
-
 open_video_calibration.addEventListener("click",()=>{
     console.log("Bạn vừa nhấn vào Stream video calibration");
     if(!get_camera_connection()){ write_log_calibration_clear("❌ Camera hiện tại chưa kết nối.\n✅ Hãy kiểm tra kết nối.\n"); return;}
     active_sceen_show_video();
     show_video_product();
+});
+
+run_model_calibration.addEventListener("click", async () => {
+    if (calibration_model_running) return;
+    const target = get_selected_calibration_target();
+    if (!target) {
+        write_log_calibration_clear("❌ Hãy chọn ảnh item trước khi chạy model.");
+        return;
+    }
+    calibration_model_running = true;
+    write_log_calibration_clear("⏳ Đang chạy model tìm đường hàn...");
+    try {
+        const result = await postData("/law_regulation/measurement/run_model", target);
+        if (!result?.ok) {
+            write_log_calibration_clear(result?.message || "❌ Chạy model thất bại.");
+            return;
+        }
+        draw_model_polygons(result?.data?.polygon, result?.data?.width, result?.data?.height);
+        write_log_calibration_clear(
+            result?.data?.polygon?.length
+                ? "✅ Model đã phát hiện đường hàn. Hãy vẽ line chính xác trên đường hàn."
+                : "⚠️ Model không phát hiện polygon đường hàn."
+        );
+    } catch (error) {
+        write_log_calibration_clear(`❌ Chạy model thất bại: ${error}`);
+    } finally {
+        calibration_model_running = false;
+    }
 });
 
 
@@ -653,7 +832,13 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
                     current_frame_box = frame_box; //đối tượng dom
                     selected.items_id = Number(img_item.dataset.id);  
                     selected.frame_id = Number(frame_id);
+                    render_selected_calibration_result();
                     console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.items_id}`);
+                    move_to_selected_point(
+                        coordinate_items_now.x,
+                        coordinate_items_now.y,
+                        coordinate_items_now.z
+                    );
                     // write_log_capture_clear("✍️ Nhập vị trí cần chụp ảnh.")
                     // console.log("ID thật:", img_item.dataset.id);
                     // console.log("Tên hiển thị:", img_text.textContent);
@@ -696,6 +881,8 @@ function create_box(box_id,index){
         div_box_frame.classList.add("box-frame-selected");
         console.log("Click vào frame thứ:", id);
         selected.frame_id = id;
+        selected.items_id = -1;
+        render_selected_calibration_result();
         current_frame_box = div_img_box; // lưu frame hiện tại
     });
     div_box_frame.appendChild(div_text_box_frame);
@@ -885,5 +1072,28 @@ function validateData(data) {
     return {
         valid: true,
         error: null
+    };
+}
+
+function get_selected_calibration_target() {
+    let frameId = Number(selected.frame_id);
+    let itemId = Number(selected.items_id);
+    const activeItem = scroll_container.querySelector(".img-item.active");
+    if (activeItem) {
+        const activeFrame = activeItem.closest(".box-frame");
+        if (activeFrame) frameId = Number(activeFrame.dataset.frameId);
+        itemId = Number(activeItem.dataset.id);
+    }
+    if (!Number.isInteger(frameId) || frameId < 0 ||
+        !Number.isInteger(itemId) || itemId < 0 ||
+        id_product_selecting_now === null || id_product_selecting_now === undefined) {
+        return null;
+    }
+    selected.frame_id = frameId;
+    selected.items_id = itemId;
+    return {
+        product_id: Number(id_product_selecting_now),
+        frame_id: frameId,
+        items_id: itemId,
     };
 }
