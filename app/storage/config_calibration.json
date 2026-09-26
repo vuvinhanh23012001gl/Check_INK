@@ -1,1 +1,50 @@
-{}
+{
+    "1": {
+        "0": {
+            "calculation_parameters": {
+                "number_capture": 20,
+                "name_item": "Vinhanh",
+                "id_tems": "-1",
+                "startX": 1428,
+                "startY": 1234,
+                "endX": 1410,
+                "endY": 1410,
+                "reality_mm": 1.0
+            },
+            "result_parameters": {
+                "pixel_mean": 31.095540491739907,
+                "pixel_std": 2.664545835508062,
+                "cv": 0.08568900213250388,
+                "scale_mm_per_pixel": 0.032158952190126294,
+                "scale_error_mm_per_pixel": 0.0027556685227988226,
+                "confidence": 0.7619258315562468,
+                "samples_used": 15,
+                "samples_raw": 18,
+                "mad": 1.6161727905273438
+            }
+        },
+        "1": {
+            "calculation_parameters": {
+                "number_capture": 20,
+                "name_item": "vinnhnanh3",
+                "id_tems": "1",
+                "startX": 786,
+                "startY": 1012,
+                "endX": 770,
+                "endY": 1184,
+                "reality_mm": 1.0
+            },
+            "result_parameters": {
+                "pixel_mean": 40.1221845626831,
+                "pixel_std": 2.9681948287773365,
+                "cv": 0.07397889374991808,
+                "scale_mm_per_pixel": 0.024923867204630763,
+                "scale_error_mm_per_pixel": 0.001843840123768447,
+                "confidence": 0.9260211062500819,
+                "samples_used": 20,
+                "samples_raw": 20,
+                "mad": 2.9720001220703125
+            }
+        }
+    }
+}

@@ -1,5 +1,4 @@
 
-import cv2
 import time
 import threading
 import statistics
@@ -90,24 +89,28 @@ class HandlerCalibration:
             number = line.get("numberCapture",self.number_capture)
             reality = line.get("reality",None)
             name =  line.get("name",None)
+            captured_frames = []
             for index in range(0,number):
                 status,frame = self.obj_cam.capture_once(timeout=1)
-                if status:
+                if status and frame is not None:
+                    captured_frames.append(frame)
                     self.queue_img_send_client.put(frame)
-            for index in range(0,number):
-                #frame = obj_queue.get_timeout(name_queue_img_calibration,HandlerCalibration.IMAGE_WATING_TIMEOUT)
-                frame = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_5.jpg")
-                if frame is None:
-                    result = Result.Fail(ErrorCode.CAMERA_TIMEOUT) 
-                    self.queue_log_send_client.put({"type":self.type_log,"message":result.message()})
-                    continue
+                else:
+                    result = Result.Fail(ErrorCode.CAMERA_TIMEOUT)
+                    self.queue_log_send_client.put({
+                        "type": self.type_log,
+                        "message": f"Ảnh calibration {index + 1}/{number}: {result.message()}",
+                    })
+            if not captured_frames:
+                return
+            for index, frame in enumerate(captured_frames):
                 self.process_multi_thread(index,frame,line)
             start_time = time.time()
             self.queue_log_send_client.put({"type":self.type_log,"message":"Đang tính toán tỷ số calibration.\n"})
             
             while True:
                 with self._lock:
-                    if self._complete_work >= number:
+                    if self._complete_work >= len(captured_frames):
                         break
                 self.queue_log_send_client.put({"type":self.type_log,"message":"."})
                 if time.time() - start_time > self.VALUE_TIMEOUT_WAIT_DATA:
@@ -287,7 +290,6 @@ class HandlerCalibration:
 #                         "PointEndY": 735,
 #                         "name": "Duong1"} 
 # for i in range (0,20):
-#     img = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_2.jpg")
 #     obj_queue.put(name_queue_img_calibration,img.copy()) # Sau 10s mà không nhận được ảnh thì cho ảnh lỗi và quay về lại gốc
 # H1.start_run_calibtion(data)
 # H1.thread_task.join()

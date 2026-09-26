@@ -1,7 +1,7 @@
 from fastapi import APIRouter,Body
 from app.container import ServiceContainer
 from app.core.dependencies import get_services
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 router = APIRouter(
     prefix="/calibration",
     tags=["Calibration"]
@@ -11,15 +11,12 @@ router = APIRouter(
 # def camera_status():
 #     return {"status": "ok"}
 
-import cv2
 @router.post("/capture")
 async def capture(services: ServiceContainer = Depends(get_services)):
     status,frame = services.obj_camera.capture_once(timeout=1)
-    if not status :
+    if not status or frame is None:
             return {"status": "error","message":"Không nhận được frame ảnh."}
-    img = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_5.jpg")
-    return {"status": "ok","img":services.obj_cv2.convert_frame_to_base64(img)}
-  #  return {"status": "ok","img":services.obj_cv2.convert_frame_to_base64(frame)}
+    return {"status": "ok","img":services.obj_cv2.convert_frame_to_base64(frame)}
 
 
 @router.post("/calculator")

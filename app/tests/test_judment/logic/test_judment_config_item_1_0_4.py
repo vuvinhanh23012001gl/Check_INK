@@ -66,6 +66,56 @@ def load_item_config() -> dict:
     return data["1"]["0"]["4"]
 
 
+def test_hole_roi_overlay() -> None:
+    """Kiểm tra ảnh runtime có khung ROI xanh và nhãn lỗ thủng rõ ràng.
+
+    Input: Ảnh đen giả lập và tọa độ ROI chuẩn.
+    Output: Không trả về; assert metadata nhãn và pixel khung.
+    Errors: AssertionError nếu overlay thiếu tên hoặc khung ROI.
+    """
+    image = np.zeros((240, 320, 3), dtype=np.uint8)
+    result = JudgmentResult(ok=True, status="OK")
+    overlay_image, overlay_data = Judment._render_inspector_overlay(
+        image,
+        "HoleItemInspector",
+        True,
+        (40, 50, 280, 200),
+        {},
+        {},
+        result,
+    )
+
+    assert overlay_data["standard"]["boxes"] == [[40, 50, 280, 200]]
+    assert overlay_data["standard"]["labels"] == ["Lỗ thủng"]
+    assert tuple(overlay_image[100, 40]) == (255, 0, 0)
+    assert np.any(np.all(overlay_image[50:100, 40:280] == (255, 255, 255), axis=2))
+
+
+def test_later_roi_does_not_fade_previous_roi() -> None:
+    """Kiểm tra overlay inspector sau không làm nhạt box đã vẽ trước.
+
+    Input: Ảnh nguồn và hai overlay ROI độc lập.
+    Output: Không trả về; assert pixel ROI đầu giữ nguyên sau khi blend ROI sau.
+    Errors: AssertionError nếu blend toàn ảnh làm mờ ROI trước.
+    """
+    source = np.zeros((32, 32, 3), dtype=np.uint8)
+    first_overlay = source.copy()
+    first_overlay[8, 8] = (255, 0, 0)
+    judgment = Judment._blend_overlay_image(
+        source.copy(), first_overlay, 0.85, source
+    )
+    first_roi_pixel = judgment[8, 8].copy()
+
+    later_overlay = source.copy()
+    later_overlay[20, 20] = (0, 0, 255)
+    judgment = Judment._blend_overlay_image(
+        judgment, later_overlay, 0.85, source
+    )
+
+    assert np.array_equal(judgment[8, 8], first_roi_pixel)
+    assert tuple(judgment[20, 20]) == (0, 0, 217)
+
+
 def main() -> None:
     """Kiểm tra Judment điều phối đúng config item 1/0/4 trên một ảnh.
 
@@ -93,6 +143,8 @@ def main() -> None:
         "width": image.shape[1],
         "channels": image.shape[2],
     }
+    test_hole_roi_overlay()
+    test_later_roi_does_not_fade_previous_roi()
     print("Judment config item 1/0/4 logic test: PASS")
     print(f"Inspectors: {list(config)}")
 

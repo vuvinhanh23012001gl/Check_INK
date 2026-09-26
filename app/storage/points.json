@@ -2,27 +2,36 @@
     "1": {
         "0": {
             "0": {
-                "x": 120,
+                "x": 136,
                 "y": 0,
-                "z": 0,
+                "z": 1,
                 "path_model_patch_core": "input\\model\\patch_core\\1\\0\\0",
                 "path_img_point": "storage\\img_points\\1\\0\\0.jpg",
                 "path_img_retrain": "app\\output\\patch_core\\1\\0\\0",
                 "arr_polygon": []
             },
             "1": {
-                "x": 122,
+                "x": 139,
                 "y": 0,
                 "z": 0,
                 "path_model_patch_core": "input\\model\\patch_core\\1\\0\\1",
                 "path_img_point": "storage\\img_points\\1\\0\\1.jpg",
                 "path_img_retrain": "app\\output\\patch_core\\1\\0\\1",
                 "arr_polygon": []
+            },
+            "2": {
+                "x": 144,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": "input\\model\\patch_core\\1\\0\\2",
+                "path_img_point": "storage\\img_points\\1\\0\\2.jpg",
+                "path_img_retrain": "app\\output\\patch_core\\1\\0\\2",
+                "arr_polygon": []
             }
         },
         "1": {
             "0": {
-                "x": 123,
+                "x": 134,
                 "y": 0,
                 "z": 0,
                 "path_model_patch_core": "input\\model\\patch_core\\1\\1\\0",
@@ -31,7 +40,7 @@
                 "arr_polygon": []
             },
             "1": {
-                "x": 120,
+                "x": 141,
                 "y": 0,
                 "z": 0,
                 "path_model_patch_core": "input\\model\\patch_core\\1\\1\\1",

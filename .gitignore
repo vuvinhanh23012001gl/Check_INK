@@ -8,3 +8,5 @@ train17/
 train38/
 train42/
 unet_test_model_vien/
+graphify-out/cache/
+graphify-out/2026-*/

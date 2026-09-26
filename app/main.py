@@ -3,6 +3,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
+from app.config.path_config import (
+    BASE_PATH_STORAGE,
+    PATH_FOLDER_OUTPUT,
+    PATH_FOLDER_STATIC,
+    URL_PATH_OUTPUT,
+    URL_PATH_STATIC,
+    URL_PATH_STORAGE,
+)
 from app.container import create_container
 from app.pipeline import Pipeline
 
@@ -13,7 +21,9 @@ from app.routers import (
     home_router,
     captureproduct_router,
     sio,draw_regulations_router,calibration_router,dimesional_calibration_router,tool_law_regulations_router,
-    log_sender,com_router
+    log_sender,com_router,
+    instruct_worker_router,instruct_staff_ee_router,instruct_fix_erro_router,
+    shutdown_router
 )
 
 
@@ -51,9 +61,9 @@ def create_app():
     fastapi_app = FastAPI(title="Width Line Detection",lifespan=lifespan)
 
     # 🔹 Static
-    fastapi_app.mount("/static", StaticFiles(directory="app/static"), name="static")
-    fastapi_app.mount("/storage", StaticFiles(directory="app/storage"), name="storage")
-    fastapi_app.mount("/output", StaticFiles(directory="app/output"), name="output")
+    fastapi_app.mount(URL_PATH_STATIC, StaticFiles(directory=str(PATH_FOLDER_STATIC)), name="static")
+    fastapi_app.mount(URL_PATH_STORAGE, StaticFiles(directory=str(BASE_PATH_STORAGE)), name="storage")
+    fastapi_app.mount(URL_PATH_OUTPUT, StaticFiles(directory=str(PATH_FOLDER_OUTPUT)), name="output")
     
     # 🔹 Router
     fastapi_app.include_router(home_router)
@@ -66,6 +76,10 @@ def create_app():
     fastapi_app.include_router(com_router)
     fastapi_app.include_router(dimesional_calibration_router)
     fastapi_app.include_router(tool_law_regulations_router)
+    fastapi_app.include_router(instruct_worker_router)
+    fastapi_app.include_router(instruct_staff_ee_router)
+    fastapi_app.include_router(instruct_fix_erro_router)
+    fastapi_app.include_router(shutdown_router)
    
     return socketio.ASGIApp(sio, fastapi_app)
 

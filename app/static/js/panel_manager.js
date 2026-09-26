@@ -4,4 +4,7 @@ export function openOptionPanel(panel) {
         item.classList.remove("active");
     });
     panel.classList.add("active");
+    if (["paner-capture-product", "paner-calibration", "panner-adjust-master"].includes(panel.id)) {
+        window.dispatchEvent(new CustomEvent("image-view-mode"));
+    }
 }

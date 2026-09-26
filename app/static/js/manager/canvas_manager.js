@@ -22,6 +22,7 @@ export class CanvasManager {
 
         this.coordinate = document.getElementById(coordinate);;
         this.wrapCanvas =  document.getElementById(wrapCanvasId);
+        this.imagePreview = document.getElementById("image-preview");
         this.video_product = video_product;
     }
 
@@ -40,6 +41,7 @@ export class CanvasManager {
     }
 
     show_img_items(img){
+        if (this.imagePreview) this.imagePreview.style.display = "none";
         this.video_product.style.display = "none";
         this.setWrapCanvasVisible(true);
         this.clearAllCanvas();
@@ -53,6 +55,22 @@ export class CanvasManager {
                 this.drawImageContain(this.ctxImg,this.cImg,img);
             }
         }, {once: true});
+    }
+
+    showImagePreview(source) {
+        if (!this.imagePreview) return;
+        this.video_product.style.display = "none";
+        this.setWrapCanvasVisible(false);
+        this.imagePreview.src = typeof source === "string"
+            ? source
+            : source.currentSrc || source.src;
+        this.imagePreview.style.display = "block";
+    }
+
+    hideImagePreview() {
+        if (!this.imagePreview) return;
+        this.imagePreview.style.display = "none";
+        this.imagePreview.removeAttribute("src");
     }
 
     handleRightClick(event){

@@ -9,6 +9,7 @@ from app.engines.train.patchcore_train_model.patchcore_train_record_repository i
 
 class EndChippingPatchCoreService(PatchCoreInspectionService):
     """Cấu hình PatchCore cho kiểm tra đầu ống mẻ."""
+    training_inspector_name = "EndChippingInspector"
 
     def __init__(self, point_service):
         """Khởi tạo service End Chipping với manifest riêng.

@@ -22,7 +22,7 @@ from app.config import (
     PATH_FOLDER_IMG_COORDINATE_PRODUCT,
     PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
     PATH_FOLDER_IMG_COORDINATE_OUTPUT,
-    BASE_PATH_OUTPUT,
+    PATH_FOLDER_OUTPUT_JUDGMENT,
 )
 
 class ProductService:
@@ -260,7 +260,7 @@ class ProductService:
         master_folder = Path(PATH_FOLDER_IMG_COORDINATE_PRODUCT) / product_id
         patchcore_folder = Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE) / product_id
         patchcore_output = Path(PATH_FOLDER_IMG_COORDINATE_OUTPUT) / product_id
-        judgment_root = Path(BASE_PATH_OUTPUT) / "judgment"
+        judgment_root = PATH_FOLDER_OUTPUT_JUDGMENT
         session_judgment = [
             path for path in judgment_root.glob("*/product_" + product_id)
             if path.exists()

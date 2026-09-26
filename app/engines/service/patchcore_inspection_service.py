@@ -6,10 +6,18 @@ import threading
 import cv2
 import torch
 import faiss
+import numpy as np
 from PIL import Image
 
-from app.config import PATH_FOLDER_MODEL_DETECT_PATCH_CORE, PatchCoreTrainConfig
+from app.config import (
+    PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
+    PATCHCORE_RUNTIME_DIR_NAME,
+    PATCHCORE_INITIAL_DIR_NAME,
+    PATCHCORE_INDEX_FILE_NAME,
+    PatchCoreTrainConfig,
+)
 from app.config.path_config import BASE_DIR
+from app.config.path_config import WORKSPACE_DIR
 from app.core import ErrorCode, Result
 from app.engines.train.patchcore_train_model import TrainWorkerPatchCore
 from app.config import PatchCoreAnomalyConfig
@@ -17,10 +25,12 @@ from app.engines.model_AI import ModelPatchCore
 from app.engines.train.patchcore_train_model.patchcore_train_record_repository import (
     PatchCoreTrainRecordRepository,
 )
+from app.utils.opencv_tool import Tool_OpenCv2
 
 
 class PatchCoreInspectionService:
     """Chuẩn bị ảnh Point và điều phối PatchCore cho một loại kiểm tra cấu hình sẵn."""
+    training_inspector_name = "PatchCoreInspector"
 
     def __init__(
         self,
@@ -121,7 +131,7 @@ class PatchCoreInspectionService:
             return None
         model_root = Path(record["model_root"])
         if not model_root.is_absolute():
-            model_root = BASE_DIR.parent / model_root
+            model_root = WORKSPACE_DIR / model_root
         expected_root = (
             Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
             / str(product_id) / str(frame_id) / str(item_id)
@@ -261,6 +271,9 @@ class PatchCoreInspectionService:
                 converted_roi["yStart"]:converted_roi["yEnd"],
                 converted_roi["xStart"]:converted_roi["xEnd"],
             ]
+            self._save_retrain_input(
+                cropped_bgr,
+            )
             model_root = (
                 Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
                 / str(product_id) / str(frame_id) / str(item_id)
@@ -299,6 +312,29 @@ class PatchCoreInspectionService:
         finally:
             self._inference_lock.release()
 
+    def _save_retrain_input(
+        self,
+        cropped_image: np.ndarray,
+    ) -> None:
+        """Lưu crop PatchCore trước inference mà không làm gián đoạn judgment.
+
+        Input: Crop BGR đã được PatchCore chuẩn bị cho model.
+        Output: Không trả về; lưu mẫu trong folder inspector tương ứng.
+        Errors: Lỗi ghi được in cảnh báo để không bỏ qua lượt inference.
+        """
+        try:
+            path = Tool_OpenCv2.save_training_input(
+                cropped_image,
+                self.training_inspector_name,
+                "roi",
+            )
+            print(f"[PATCHCORE][{self.training_inspector_name}] TRAIN_INPUT saved={path}")
+        except Exception as error:
+            print(
+                f"[PATCHCORE][{self.training_inspector_name}] "
+                f"TRAIN_INPUT_SAVE_WARNING: {error!r}"
+            )
+
     def training_status(self, product_id: int, frame_id: int, item_id: int) -> dict:
         """Trả trạng thái worker và model PatchCore của một Point."""
         model_root = (
@@ -335,9 +371,9 @@ class PatchCoreInspectionService:
         sessions.sort(key=lambda path: path.stat().st_mtime, reverse=True)
         for session in sessions:
             for relative_model in (
-                Path("runtime") / "patchcore.index",
-                Path("the_first") / "patchcore.index",
-                Path("patchcore.index"),
+                Path(PATCHCORE_RUNTIME_DIR_NAME) / PATCHCORE_INDEX_FILE_NAME,
+                Path(PATCHCORE_INITIAL_DIR_NAME) / PATCHCORE_INDEX_FILE_NAME,
+                Path(PATCHCORE_INDEX_FILE_NAME),
             ):
                 candidate = session / relative_model
                 if candidate.is_file():

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from typing import Any
 from app.engines.model_AI import ModelUnet
 from shapely.geometry import LineString, Polygon
 from .base_ai import BaseJudgerAI
@@ -20,7 +21,13 @@ class BorderDetector(BaseJudgerAI):
         super().__init__()
         self.unet_model = unet_model
 
-    def define(self, image, lines, Approx_value=0.002, min_area=100):
+    def define(
+        self,
+        image: np.ndarray,
+        lines: list[tuple[float, float, float, float]],
+        Approx_value: float = 0.002,
+        min_area: int = 100,
+    ) -> dict[str, Any]:
         """Lấy giao điểm chính xác giữa các line và polygon UNet.
 
         Input: ảnh BGR, danh sách line dạng ``(x1, y1, x2, y2)`` và tham số
@@ -35,6 +42,24 @@ class BorderDetector(BaseJudgerAI):
         polygon = self.unet_model.get_polygon(
             image, Approx_value=Approx_value, min_area=min_area
         )
+        return self.define_with_polygon(image, lines, polygon)
+
+    def define_with_polygon(
+        self,
+        image: np.ndarray,
+        lines: list[tuple[float, float, float, float]],
+        polygon: np.ndarray | None,
+    ) -> dict[str, Any]:
+        """Đo các line bằng polygon đã được detector khác suy luận cùng ảnh.
+
+        Input: Ảnh BGR, danh sách line và polygon UNet đã có.
+        Output: Dict polygon, giao điểm/độ rộng từng line và ảnh đã vẽ.
+        Errors: ``ValueError`` nếu ảnh rỗng hoặc ``lines`` không phải list.
+        """
+        if image is None or image.size == 0:
+            raise ValueError("image không được rỗng")
+        if not isinstance(lines, list):
+            raise ValueError("lines phải là list")
         runtime_lines = self.process_lines_from_polygon(image, lines, polygon)
         return {
             "polygon": polygon,

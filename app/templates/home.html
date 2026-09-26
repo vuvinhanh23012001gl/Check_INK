@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <link rel="icon" type="image/png" href="../static/img/image.png">
-    <link rel="stylesheet" href="../static/css/home.css">
+    <link rel="stylesheet" href="../static/css/home.css?v=20260926_3">
     <link rel="stylesheet" href="../static/css/add_new_product.css">
     <link rel="stylesheet" href="../static/css/choose_product.css">
     <link rel="stylesheet" href="../static/css/config_software.css">
@@ -17,6 +18,7 @@
     <script src="../static/cnd/cnd_lybrary.js"></script>
     <title>Kiểm tra độ rộng hộp mực</title>
 </head>
+
 <body>
     <!-- ==========================================
          HEADER MENU
@@ -51,7 +53,9 @@
             <li class="header-ul-li">
                 Thông tin
                 <ul>
-                    <li id="get_pdf_manual">Hướng dẫn sử dụng</li>
+                    <li id="btn_instruct_worker">Hướng dẫn sử dụng phần mềm cho người thao tác</li>
+                    <li id="btn_instruct_staff_ee">Hướng dẫn sử dụng RD&EE</li>
+                    <li id="btn_instruct_fix_erro">Hướng dẫn đối ứng lỗi</li>
                     <li id="get_infor_software">Thông tin phần mềm</li>
                 </ul>
             </li>
@@ -71,7 +75,7 @@
          WORKSPACE SPLIT FRAME
          ========================================== -->
     <div class="split-frame">
-        
+
         <!-- LEFT WORKSPACE: Image Master, Streaming and Status -->
         <div class="show-screen">
             <div class="show-img-master">
@@ -80,7 +84,8 @@
             </div>
 
             <div class="show-img">
-                <img alt="Video feed" id="video-product">
+                <img id="video-product">
+                <img id="image-preview">
                 <div id="wrap-canvas">
                     <canvas id="canvasImage"></canvas>
                     <canvas id="canvasShape"></canvas>
@@ -94,27 +99,27 @@
                     <div id="progress-row"></div>
                 </div>
 
+                <div id="product-count" class="header-show-item-conect">
+                    OK: 0 | NG: 0 | Tổng: 0
+                </div>
+
                 <button id="btn_reset_count_total" class="header-show-item-conect">
                     Đặt lại
                 </button>
 
-                <div id="time-display">
+                <div id="time-display" class="header-show-item-conect">
                     Thời gian chạy: 0.0 s
-                </div>
-
-                <div id="product-count">
-                    OK: 0 | NG: 0 | Tổng: 0
                 </div>
 
                 <div class="cluster">
                     <div class="header-show-item-conect item1">
-                        <p id="element-circle-status-com" class="header-show-circle on"></p>
-                        <h2 id="header-show-status">COM chờ kết nối...</h2>
+                        <span id="element-circle-status-com" class="header-show-circle off"></span>
+                        <span id="header-show-status">COM chờ kết nối...</span>
                     </div>
 
                     <div class="header-show-item-conect item2">
-                        <p id="element-circle-status-camera" class="header-show-circle off"></p>
-                        <h2 id="status-connect-cam">Camera chờ kết nối...</h2>
+                        <span id="element-circle-status-camera" class="header-show-circle off"></span>
+                        <span id="status-connect-cam">Camera chờ kết nối...</span>
                     </div>
 
                     <button id="toggleBtn" class="toggle-btn">
@@ -135,14 +140,35 @@
                     <p id="camera-config-log" role="status">Sẵn sàng cấu hình camera</p>
                 </div>
                 <div class="camera-config-fields">
-                    <div class="camera-config-row"><label for="camera-acquisition-frame-rate">Acquisition Frame Rate</label><input id="camera-acquisition-frame-rate" name="acquisition_frame_rate" type="number" min="0.01" step="0.01" placeholder="30"></div>
-                    <div class="camera-config-row"><label for="camera-exposure-time">Exposure Time</label><input id="camera-exposure-time" name="exposure_time" type="number" min="0" step="0.01" placeholder="10000"></div>
-                    <div class="camera-config-row"><label for="camera-gain">Gain</label><input id="camera-gain" name="gain" type="number" min="0" step="0.01" placeholder="0"></div>
-                    <div class="camera-config-row"><label for="camera-gamma">Gamma</label><input id="camera-gamma" name="gamma" type="number" min="0.01" step="0.01" placeholder="1"></div>
-                    <div class="camera-config-row"><label for="camera-black-level">Black Level</label><input id="camera-black-level" name="black_level" type="number" min="0" step="0.01" placeholder="0"></div>
-                    <div class="camera-config-row"><label for="camera-exposure-auto">Exposure Auto</label><select id="camera-exposure-auto" name="exposure_auto"><option>Off</option><option>Once</option><option>Continuous</option></select></div>
-                    <div class="camera-config-row"><label for="camera-trigger-mode">Trigger Mode</label><select id="camera-trigger-mode" name="trigger_mode"><option>Off</option><option>On</option></select></div>
-                    <div class="camera-config-row"><label for="camera-trigger-selector">Trigger Selector</label><select id="camera-trigger-selector" name="trigger_selector"><option>FrameStart</option><option>ExposureStart</option></select></div>
+                    <div class="camera-config-row"><label for="camera-acquisition-frame-rate">Acquisition Frame
+                            Rate</label><input id="camera-acquisition-frame-rate" name="acquisition_frame_rate"
+                            type="number" min="0.01" step="0.01" placeholder="30"></div>
+                    <div class="camera-config-row"><label for="camera-exposure-time">Exposure Time</label><input
+                            id="camera-exposure-time" name="exposure_time" type="number" min="0" step="0.01"
+                            placeholder="10000"></div>
+                    <div class="camera-config-row"><label for="camera-gain">Gain</label><input id="camera-gain"
+                            name="gain" type="number" min="0" step="0.01" placeholder="0"></div>
+                    <div class="camera-config-row"><label for="camera-gamma">Gamma</label><input id="camera-gamma"
+                            name="gamma" type="number" min="0.01" step="0.01" placeholder="1"></div>
+                    <div class="camera-config-row"><label for="camera-black-level">Black Level</label><input
+                            id="camera-black-level" name="black_level" type="number" min="0" step="0.01"
+                            placeholder="0"></div>
+                    <div class="camera-config-row"><label for="camera-exposure-auto">Exposure Auto</label><select
+                            id="camera-exposure-auto" name="exposure_auto">
+                            <option>Off</option>
+                            <option>Once</option>
+                            <option>Continuous</option>
+                        </select></div>
+                    <div class="camera-config-row"><label for="camera-trigger-mode">Trigger Mode</label><select
+                            id="camera-trigger-mode" name="trigger_mode">
+                            <option>Off</option>
+                            <option>On</option>
+                        </select></div>
+                    <div class="camera-config-row"><label for="camera-trigger-selector">Trigger Selector</label><select
+                            id="camera-trigger-selector" name="trigger_selector">
+                            <option>FrameStart</option>
+                            <option>ExposureStart</option>
+                        </select></div>
                 </div>
                 <div class="camera-white-balance">
                     <div class="camera-white-balance-header">
@@ -152,21 +178,33 @@
                     <div class="camera-white-balance-fields">
                         <div class="camera-config-row camera-white-balance-auto">
                             <span class="camera-config-label">Auto</span>
-                            <button id="camera-balance-auto" class="camera-auto-toggle" type="button" aria-pressed="false">
-                                <span class="camera-auto-toggle-track"><span class="camera-auto-toggle-thumb"></span></span>
+                            <button id="camera-balance-auto" class="camera-auto-toggle" type="button"
+                                aria-pressed="false">
+                                <span class="camera-auto-toggle-track"><span
+                                        class="camera-auto-toggle-thumb"></span></span>
                                 <span class="camera-auto-toggle-state">Off</span>
                             </button>
                         </div>
-                        <div class="camera-config-row"><label for="camera-balance-red">Red</label><input id="camera-balance-red" name="balance_ratio_red" type="number" min="0" step="1" value="229" disabled></div>
-                        <div class="camera-config-row"><label for="camera-balance-green">Green</label><input id="camera-balance-green" name="balance_ratio_green" type="number" min="0" step="1" value="128" disabled></div>
-                        <div class="camera-config-row"><label for="camera-balance-blue">Blue</label><input id="camera-balance-blue" name="balance_ratio_blue" type="number" min="0" step="1" value="272" disabled></div>
+                        <div class="camera-config-row"><label for="camera-balance-red">Red</label><input
+                                id="camera-balance-red" name="balance_ratio_red" type="number" min="0" step="1"
+                                value="229" disabled></div>
+                        <div class="camera-config-row"><label for="camera-balance-green">Green</label><input
+                                id="camera-balance-green" name="balance_ratio_green" type="number" min="0" step="1"
+                                value="128" disabled></div>
+                        <div class="camera-config-row"><label for="camera-balance-blue">Blue</label><input
+                                id="camera-balance-blue" name="balance_ratio_blue" type="number" min="0" step="1"
+                                value="272" disabled></div>
                     </div>
                 </div>
                 <div class="camera-config-actions">
-                    <button id="camera-config-stream" type="button"><img src="../static/img/live-stream-video.png" alt="">Stream Video</button>
-                    <button id="camera-config-accept" type="button"><img src="../static/img/check.png" alt="">Chấp nhận</button>
-                    <button id="camera-config-save" type="button"><img src="../static/img/save_icon.png" alt="">Lưu</button>
-                    <button id="camera-config-cancel" type="button"><img src="../static/img/close.png" alt="">Thoát</button>
+                    <button id="camera-config-stream" type="button"><img src="../static/img/live-stream-video.png"
+                            alt="">Stream Video</button>
+                    <button id="camera-config-accept" type="button"><img src="../static/img/check.png" alt="">Chấp
+                        nhận</button>
+                    <button id="camera-config-save" type="button"><img src="../static/img/save_icon.png"
+                            alt="">Lưu</button>
+                    <button id="camera-config-cancel" type="button"><img src="../static/img/close.png"
+                            alt="">Thoát</button>
                 </div>
             </div>
 
@@ -222,8 +260,8 @@
                     <div class="log" id="log-calibration"></div>
                     <div class="table">
                         <div id="config-calibration">
-                        </div> 
-                        <div id="configuration-data-calibration"></div> 
+                        </div>
+                        <div id="configuration-data-calibration"></div>
                     </div>
                 </div>
 
@@ -251,14 +289,14 @@
             </div>
 
             <div id="panner-adjust-master" class="paner">
-                <div id ="panner-measure-weld-width" class = "tool-content">
-                    <div id="log-measure-weld-width" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                    <div id="table-cof-tool-content-measure-weld-width"  class="table-cof-tool-content">
-                    </div>
+                <div id="panner-measure-weld-width" class="tool-content">
+                    <div id="log-measure-weld-width" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-tool-content-measure-weld-width" class="table-cof-tool-content">
+                        </div>
                     </div>
                     <div class="controler-tool">
-                        <button id ="judment-img-item" class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="judment-img-item" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
                             Chạy model
                         </button>
@@ -278,13 +316,13 @@
                 </div>
 
 
-                <div id = "panner-measure-slit-width" class = "tool-content">
-                    <div id="log-slit-measure" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-tool-content-measure-slit-width" class ="table-cof-tool-content"> </div> 
+                <div id="panner-measure-slit-width" class="tool-content">
+                    <div id="log-slit-measure" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-tool-content-measure-slit-width" class="table-cof-tool-content"> </div>
                     </div>
                     <div class="controler-tool">
-                        <button id ="btn-judment-slit"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-judment-slit" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
                             Chạy model
                         </button>
@@ -301,141 +339,142 @@
 
 
 
-                <div id = "panner-measure-border-film"   class = "tool-content">
-                    <div id = "log-border-film" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-border-film" class ="table-cof-tool-content"> </div> 
+                <div id="panner-measure-border-film" class="tool-content">
+                    <div id="log-border-film" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-border-film" class="table-cof-tool-content"> </div>
                     </div>
                     <div class="controler-tool">
-                        <button id ="btn-judment-border-film"class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
+                        <button id="btn-judment-border-film" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="Chạy model">
+                            Chạy model
                         </button>
-                        <button id="btn-erase-border-film"  class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/eraser (5).png" alt="clear frame">
-                                Tẩy frame
+                        <button id="btn-erase-border-film" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/eraser (5).png" alt="clear frame">
+                            Tẩy frame
                         </button>
-                        <button id="btn-exit-border-film"  class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
+                        <button id="btn-exit-border-film" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
                         </button>
                     </div>
                 </div>
 
 
 
-                <div id = "panner-region-cover-sensor" class = "tool-content">
-                    <div id = "log-arm-cover" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-arm-cover" class ="table-cof-tool-content"> </div> 
-                       
+                <div id="panner-region-cover-sensor" class="tool-content">
+                    <div id="log-arm-cover" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-arm-cover" class="table-cof-tool-content"> </div>
+
                     </div>
                     <div class="controler-tool">
-                            <button id ="btn-judment-arm-cover"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-judment-arm-cover" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id="btn-exit-arm-cover" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
-                            </button>
+                            Chạy model
+                        </button>
+                        <button id="btn-exit-arm-cover" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
                     </div>
                 </div>
-                <div id = "panner-region-arm-sensor" class = "tool-content">
-                    <div id = "log-arm-sensor" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-arm-sensor" class ="table-cof-tool-content"> </div> 
+                <div id="panner-region-arm-sensor" class="tool-content">
+                    <div id="log-arm-sensor" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-arm-sensor" class="table-cof-tool-content"> </div>
                     </div>
                     <div class="controler-tool">
-                            <button id ="btn-judment-arm-sensor"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-judment-arm-sensor" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id="btn-exit-arm-sensor" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
-                            </button>
+                            Chạy model
+                        </button>
+                        <button id="btn-exit-arm-sensor" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
                     </div>
                 </div>
 
-                <div id = "panner-region-hole" class = "tool-content">  
-                    <div id = "log-hole" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-hole" class ="table-cof-tool-content"> </div> 
+                <div id="panner-region-hole" class="tool-content">
+                    <div id="log-hole" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-hole" class="table-cof-tool-content"> </div>
                     </div>
                     <div class="controler-tool">
-                            <button id ="btn-judment-hole"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-judment-hole" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id ="btn-exit-hole" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
-                            </button>
+                            Chạy model
+                        </button>
+                        <button id="btn-exit-hole" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
                     </div>
                 </div>
-                <div id = "panner-permeable-membrane" class = "tool-content">
-                    <div id = "log-permeable-membrane" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-permeable-membrane" class ="table-cof-tool-content"> </div> 
+                <div id="panner-permeable-membrane" class="tool-content">
+                    <div id="log-permeable-membrane" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-permeable-membrane" class="table-cof-tool-content"> </div>
                     </div>
                     <div class="controler-tool">
-                            <button id ="btn-judment-permeable-membrane"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-judment-permeable-membrane" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id ="btn-exit-permeable-membrane" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
-                            </button>
-                    </div>
-                </div>
-
-                <div id = "panner-region-scratched-pipe" class = "tool-content">
-                    <div id = "log-scratched-pipe" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-scratched-pipe" class ="table-cof-tool-content"> </div> 
-                    </div>
-                    <div class="controler-tool">
-                            <button id ="btn-judment-scratched-pipe"class="tool-btn btn-controler-mesure-weld-width">
-                            <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id ="btn-exit-scratch" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng master
-                            </button>
+                            Chạy model
+                        </button>
+                        <button id="btn-exit-permeable-membrane" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
                     </div>
                 </div>
 
-                <div id = "panner-region-end-chipping" class = "tool-content">
-                    <div id = "log-end-chipping" class = "log-tool-content"></div>
-                    <div class = "cof-and-inf-tool-content">
-                        <div id="table-cof-end-chipping" class ="table-cof-tool-content"> </div>
-                        <div id="runtime-train-images-panel-end-chipping" class="runtime-train-images-panel" hidden></div>
+                <div id="panner-region-scratched-pipe" class="tool-content">
+                    <div id="log-scratched-pipe" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-scratched-pipe" class="table-cof-tool-content"> </div>
+                    </div>
+                    <div class="controler-tool">
+                        <button id="btn-judment-scratched-pipe" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/target.png" alt="Chạy model">
+                            Chạy model
+                        </button>
+                        <button id="btn-exit-scratch" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng master
+                        </button>
+                    </div>
+                </div>
+
+                <div id="panner-region-end-chipping" class="tool-content">
+                    <div id="log-end-chipping" class="log-tool-content"></div>
+                    <div class="cof-and-inf-tool-content">
+                        <div id="table-cof-end-chipping" class="table-cof-tool-content"> </div>
+                        <div id="runtime-train-images-panel-end-chipping" class="runtime-train-images-panel" hidden>
+                        </div>
                         <div id="patchcore-result-panel-end-chipping" class="patchcore-result-panel"></div>
                     </div>
                     <div class="controler-tool">
-                            <button id="btn-create-model-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/creating_model.png" alt="Tạo model">
-                                Tạo model
-                            </button>
-                            <button id="btn-runtime-images-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/gallery.png" alt="Ảnh train">
-                                Ảnh train
-                            </button>
-                            <button id ="btn-judment-end-chipping"class="tool-btn btn-controler-mesure-weld-width">
+                        <button id="btn-create-model-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/creating_model.png" alt="Tạo model">
+                            Tạo model
+                        </button>
+                        <button id="btn-runtime-images-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/gallery.png" alt="Ảnh train">
+                            Ảnh train
+                        </button>
+                        <button id="btn-judment-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model">
-                                Chạy model
-                            </button>
-                            <button id="btn-delete-model-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/eraser (6).png" alt="Xóa mô hình">
-                                Xóa mô hình
-                            </button>
-                            <button id="btn-exit-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
-                                <img src="../static/img/close.png" alt="close">
-                                Đóng model
-                            </button>
+                            Chạy model
+                        </button>
+                        <button id="btn-delete-model-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/eraser (6).png" alt="Xóa mô hình">
+                            Xóa mô hình
+                        </button>
+                        <button id="btn-exit-end-chipping" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/close.png" alt="close">
+                            Đóng model
+                        </button>
                     </div>
                 </div>
 
@@ -464,59 +503,70 @@
                     <div id="log-foreign-object" class="log-tool-content"></div>
                     <div class="cof-and-inf-tool-content">
                         <div id="table-cof-foreign-object" class="table-cof-tool-content"></div>
-                        <div id="runtime-train-images-panel-foreign-object" class="runtime-train-images-panel" hidden></div>
+                        <div id="runtime-train-images-panel-foreign-object" class="runtime-train-images-panel" hidden>
+                        </div>
                         <div id="patchcore-result-panel-foreign-object" class="patchcore-result-panel" hidden></div>
                     </div>
                     <div class="controler-tool">
-                        <button id="btn-create-model-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/creating_model.png" alt="Tạo model">Tạo model</button>
-                        <button id="btn-runtime-images-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/gallery.png" alt="Ảnh train">Ảnh train</button>
-                        <button id="btn-judment-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/target.png" alt="Chạy model">Chạy model 1</button>
-                        <button id="btn-detect-object-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/recognition.png" alt="Chạy model phát hiện đối tượng">Chạy model 2</button>
-                        <button id="btn-delete-model-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/eraser (6).png" alt="Xóa mô hình">Xóa mô hình</button>
-                        <button id="btn-exit-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/close.png" alt="Đóng model">Đóng model</button>
+                        <button id="btn-create-model-foreign-object"
+                            class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/creating_model.png"
+                                alt="Tạo model">Tạo model</button>
+                        <button id="btn-runtime-images-foreign-object"
+                            class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/gallery.png"
+                                alt="Ảnh train">Ảnh train</button>
+                        <button id="btn-judment-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img
+                                src="../static/img/target.png" alt="Chạy model">Chạy model 1</button>
+                        <button id="btn-detect-object-foreign-object"
+                            class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/recognition.png"
+                                alt="Chạy model phát hiện đối tượng">Chạy model 2</button>
+                        <button id="btn-delete-model-foreign-object"
+                            class="tool-btn btn-controler-mesure-weld-width"><img src="../static/img/eraser (6).png"
+                                alt="Xóa mô hình">Xóa mô hình</button>
+                        <button id="btn-exit-foreign-object" class="tool-btn btn-controler-mesure-weld-width"><img
+                                src="../static/img/close.png" alt="Đóng model">Đóng model</button>
                     </div>
                 </div>
-                
 
-                
-                <div class="fix-element">  
-                    <div id = "choose-tool"> 
-                        <button id ="btn-measure-weld-width"class="tool-btn" data-tool="weld_width_tool" >
+
+
+                <div class="fix-element">
+                    <div id="choose-tool">
+                        <button id="btn-measure-weld-width" class="tool-btn" data-tool="weld_width_tool">
                             <img src="../static/img/scale (1).png">
                             <span>Đo độ rộng <br>đường hàn</span>
                         </button>
 
-                        <button class="tool-btn" id = "btn-measurement-slit" data-tool="slit_width_tool">
+                        <button class="tool-btn" id="btn-measurement-slit" data-tool="slit_width_tool">
                             <img src="../static/img/graphic-design.png">
                             <span>Đo khoảng <br> cách khe hàn</span>
                         </button>
-                        <button class="tool-btn" id = "btn-border-film" data-tool="border_film_tool">
+                        <button class="tool-btn" id="btn-border-film" data-tool="border_film_tool">
                             <img src="../static/img/ruler_blue.png">
                             <span>Đo khoảng <br> cách mép film</span>
                         </button>
-                        <button id ="btn-check-arm-cover"  class="tool-btn"  data-tool="arm_cover_tool"  >
+                        <button id="btn-check-arm-cover" class="tool-btn" data-tool="arm_cover_tool">
                             <img src="../static/img/loupe.png">
                             <span>Kiểm tra <br>ARM cover</span>
                         </button>
 
-                        <button id ="btn-check-arm-sensor" class="tool-btn" data-tool="arm_sensor_tool" >
+                        <button id="btn-check-arm-sensor" class="tool-btn" data-tool="arm_sensor_tool">
                             <img src="../static/img/investigation.png">
                             <span>Kiểm tra <br>ARM sensor</span>
                         </button>
-                        <button id = "btn-check-hole" class="tool-btn" data-tool="hole_tool">
+                        <button id="btn-check-hole" class="tool-btn" data-tool="hole_tool">
                             <img src="../static/img/hematology.png">
                             <span>Kiểm tra <br>lỗ thủng</span>
                         </button>
 
-                        <button id = "btn-check-permeable-membrane" class="tool-btn" data-tool="permeable-membrane_tool">
+                        <button id="btn-check-permeable-membrane" class="tool-btn" data-tool="permeable-membrane_tool">
                             <img src="../static/img/digital (1).png">
                             <span>Kiểm tra màng <br> bán thấm</span>
                         </button>
-                        <button id ="btn-check-scratched-pipe" class="tool-btn" data-tool="scratched-pipe-tool">
+                        <button id="btn-check-scratched-pipe" class="tool-btn" data-tool="scratched-pipe-tool">
                             <img src="../static/img/water-pipe.png">
                             <span>Kiểm tra <br>vết xước ống</span>
                         </button>
-                        <button id ="btn-check-end-chipping" class="tool-btn" data-tool ="end-chipping-tool">
+                        <button id="btn-check-end-chipping" class="tool-btn" data-tool="end-chipping-tool">
                             <img src="../static/img/leak.png">
                             <span>Kiểm tra <br>mẻ đâu ống</span>
                         </button>
@@ -538,8 +588,8 @@
                         </button> -->
 
                     </div>
-                    <div id = "containner-control-master">
-                        <button id = "btn-save-law-regulation">
+                    <div id="containner-control-master">
+                        <button id="btn-save-law-regulation">
                             <img src="../static/img/save_icon.png" alt="Lưu">
                             Lưu
                         </button>
@@ -587,7 +637,7 @@
                         <img src="../static/img/erase_draw_img.png" alt="Xóa frame">
                         Xóa frame
                     </button>
-                    
+
                     <button class="btn-form-cap" id="btn-add-frame">
                         <img src="../static/img/product.png" alt="Thêm frame">
                         Thêm frame
@@ -597,12 +647,12 @@
                         <img src="../static/img/plus.png" alt="Thêm điểm kiểm tra">
                         Thêm điểm
                     </button>
-                    
+
                     <button class="btn-form-cap" id="btn-stream-video">
                         <img src="../static/img/live-stream-video.png" alt="Video Stream">
                         Stream Video
                     </button>
-                    
+
                     <button class="btn-form-cap" id="btn-run-frame">
                         <img src="../static/img/running.png" alt="Chạy Frame">
                         Chạy frame
@@ -631,7 +681,7 @@
 
     <!-- OVERLAY: Add New Product -->
     <div class="overlay-new-product" id="overlay-new-product">
-        
+
         <!-- ===== LEFT PANEL ===== -->
         <div class="left-panel">
             <h2>➕ Tạo loại sản phẩm</h2>
@@ -730,7 +780,10 @@
             </header>
             <div class="com-grid">
                 <section class="com-card com-ports-card">
-                    <div class="com-card-heading"><h2 class="com-card-title">Cổng COM khả dụng</h2><span id="show_info_list_cam" class="com-badge">0 cổng</span></div>
+                    <div class="com-card-heading">
+                        <h2 class="com-card-title">Cổng COM khả dụng</h2><span id="show_info_list_cam"
+                            class="com-badge">0 cổng</span>
+                    </div>
                     <ul id="com-ports-list" class="com-ports"></ul>
                     <p id="com-empty-state" class="com-empty-state">Đang kiểm tra cổng COM...</p>
                 </section>
@@ -738,16 +791,19 @@
                     <h2 class="com-card-title">Thiết lập kết nối</h2>
                     <p id="infor-com-connect" class="com-status">Chưa kết nối</p>
                     <form class="com-form" id="com-form">
-                        <div class="com-field"><label class="com-label" for="com-select">Cổng COM</label><select id="com-select" class="com-select"></select></div>
-                        <div class="com-field"><label class="com-label" for="baud-select">Tốc độ truyền</label><select id="baud-select" class="com-select">
-                            <option value="9600">9600</option>
-                            <option value="19200">19200</option>
-                            <option value="38400">38400</option>
-                            <option value="57600">57600</option>
-                            <option value="115200">115200</option>
-                            <option value="230400">230400</option>
-                        </select></div>
-                        <button type="submit" id="com-open" class="com-btn"><img src="../static/img/check.png" alt="">Mở cổng và lưu</button>
+                        <div class="com-field"><label class="com-label" for="com-select">Cổng COM</label><select
+                                id="com-select" class="com-select"></select></div>
+                        <div class="com-field"><label class="com-label" for="baud-select">Tốc độ truyền</label><select
+                                id="baud-select" class="com-select">
+                                <option value="9600">9600</option>
+                                <option value="19200">19200</option>
+                                <option value="38400">38400</option>
+                                <option value="57600">57600</option>
+                                <option value="115200">115200</option>
+                                <option value="230400">230400</option>
+                            </select></div>
+                        <button type="submit" id="com-open" class="com-btn"><img src="../static/img/check.png" alt="">Mở
+                            cổng và lưu</button>
                     </form>
                 </section>
             </div>
@@ -886,8 +942,8 @@
                 Bạn có chắc chắn muốn xóa dữ liệu?
             </p>
             <div class="confirm-actions">
-            <button id="btn-confirm-yes">Có</button>
-            <button id="btn-confirm-no">Không</button>
+                <button id="btn-confirm-yes">Có</button>
+                <button id="btn-confirm-no">Không</button>
             </div>
         </div>
     </div>
@@ -895,5 +951,5 @@
     <script type="module" src="../static/js/controler.js"></script>
 
 </body>
-</html>
 
+</html>

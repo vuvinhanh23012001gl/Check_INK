@@ -17,10 +17,105 @@ const circle_status_connect_camera =  document.getElementById("element-circle-st
 const label_status_connect_camera = document.getElementById("status-connect-cam");
 const label_status_connect_com = document.getElementById("header-show-status");
 const circle_status_connect_com = document.getElementById("element-circle-status-com");
+const element_product_count = document.getElementById("product-count");
+const btn_reset_count_total = document.getElementById("btn_reset_count_total");
+const element_time_display = document.getElementById("time-display");
 let divCreateList_Home = [];
 
+// ==========================================
+// 1. QUẢN LÝ SỐ ĐẾM SẢN PHẨM (OK / NG / TỔNG)
+// ==========================================
+function renderProductCount(counts) {
+  if (!element_product_count) return;
+  const ok = counts?.ok ?? 0;
+  const ng = counts?.ng ?? 0;
+  const total = counts?.total ?? (ok + ng);
+  element_product_count.textContent = `OK: ${ok} | NG: ${ng} | Tổng: ${total}`;
+}
 
+async function fetchProductCount() {
+  try {
+    const response = await fetch("/api/product_count");
+    if (response.ok) {
+      const counts = await response.json();
+      renderProductCount(counts);
+    }
+  } catch (error) {
+    console.error("Lỗi khi tải số đếm sản phẩm:", error);
+  }
+}
 
+btn_reset_count_total?.addEventListener("click", async () => {
+  try {
+    const response = await fetch("/api/product_count/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (response.ok) {
+      const counts = await response.json();
+      renderProductCount(counts);
+    }
+  } catch (error) {
+    console.error("Lỗi khi reset số lượng sản phẩm:", error);
+  }
+});
+
+// ==========================================
+// 2. BỘ ĐẾM THỜI GIAN CHU KỲ CHẠY (RUNTIME)
+// ==========================================
+let cycleTimerInterval = null;
+let cycleStartTime = null;
+let cycleTotalItems = 0;
+let cycleTimerRunning = false;
+
+function updateCycleTimeDisplay(seconds) {
+  if (!element_time_display) return;
+  element_time_display.textContent = `Thời gian chạy: ${Number(seconds).toFixed(1)} s`;
+}
+
+function startCycleTimer(totalItems) {
+  stopCycleTimer();
+  cycleStartTime = performance.now();
+  cycleTotalItems = Number(totalItems) || 0;
+  cycleTimerRunning = true;
+  updateCycleTimeDisplay(0);
+  cycleTimerInterval = setInterval(() => {
+    if (!cycleTimerRunning || !cycleStartTime) return;
+    const elapsed = (performance.now() - cycleStartTime) / 1000;
+    updateCycleTimeDisplay(elapsed);
+  }, 100);
+}
+
+function stopCycleTimer() {
+  if (cycleTimerInterval) {
+    clearInterval(cycleTimerInterval);
+    cycleTimerInterval = null;
+  }
+  if (cycleTimerRunning && cycleStartTime) {
+    const elapsed = (performance.now() - cycleStartTime) / 1000;
+    updateCycleTimeDisplay(elapsed);
+  }
+  cycleTimerRunning = false;
+}
+
+async function fetchInitialHardwareStatus() {
+  try {
+    const response = await fetch("/api/hardware_status");
+    if (response.ok) {
+      const status = await response.json();
+      set_camera_connection(status.camera);
+      set_com_connection(status.com);
+      isConect(status.camera, circle_status_connect_camera, label_status_connect_camera, "Camera");
+      isConect(status.com, circle_status_connect_com, label_status_connect_com, "COM");
+    }
+  } catch (error) {
+    console.error("Lỗi khi tải trạng thái phần cứng ban đầu:", error);
+  }
+}
+
+// Tải dữ liệu ban đầu
+fetchProductCount();
+fetchInitialHardwareStatus();
 
 
 SocketData.on("data_output_judment", data =>{
@@ -30,6 +125,8 @@ SocketData.on("data_output_judment", data =>{
 
 SocketData.on("judgment_reset", data => {
   const payload = data?.data || {};
+  canvasManager.hideImagePreview();
+  log_judment?.replaceChildren();
   judgment_results.clear();
   judgment_session = payload;
   judgment_complete = false;
@@ -38,6 +135,8 @@ SocketData.on("judgment_reset", data => {
   setProductJudgmentStatus("--");
   if (div_show_point_detect) div_show_point_detect.innerHTML = "";
   clearJudgmentBorders();
+  // Bắt đầu đếm thời gian chu kỳ từ tín hiệu bắt đầu
+  startCycleTimer(payload.number_step);
 });
 
 SocketData.on("judgment_item_result", data => {
@@ -48,6 +147,10 @@ SocketData.on("judgment_item_result", data => {
   markJudgmentItem(result);
   renderInspectorTable(result);
   showJudgmentImage(result);
+  // Dừng đếm thời gian khi phán định xong item cuối cùng
+  if (cycleTotalItems > 0 && judgment_results.size >= cycleTotalItems) {
+    stopCycleTimer();
+  }
 });
 
 SocketData.on("judgment_product_result", data => {
@@ -55,30 +158,37 @@ SocketData.on("judgment_product_result", data => {
   if (!result) return;
   judgment_complete = true;
   setProductJudgmentStatus(result.overall ? "OK" : "NG");
+  // Dừng đếm thời gian chu kỳ
+  stopCycleTimer();
+  // Cập nhật số đếm sản phẩm mới nhất
+  if (result.counts) {
+    renderProductCount(result.counts);
+  } else {
+    fetchProductCount();
+  }
 });
 
 
 SocketData.on("status_camera", data =>{
-  let status_connect  = data?.status;
-  // console.log("dataxyz",data);
+  let status_connect  = Boolean(data?.status);
   set_camera_connection(status_connect);
-  // set_c(status_connect);
-  isConect(status_connect,circle_status_connect_camera,label_status_connect_camera,"Camera");
-  // isConect(false,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
+  isConect(status_connect, circle_status_connect_camera, label_status_connect_camera, "Camera");
 });
 
 SocketData.on("status_com", data =>{
-  let status_connect  = data?.status;
+  let status_connect  = Boolean(data?.status);
   set_com_connection(status_connect);
-  // console.log("heeewe",get_com_connection());
-  // console.log("com",status_connect);
-  isConect(status_connect,circle_status_connect_com,label_status_connect_com,"COM");  //Chuc nang nay da xong
+  isConect(status_connect, circle_status_connect_com, label_status_connect_com, "COM");
 });
 
 
 SocketLog.on("log_Home", (data) => {
     console.log("Dữ liệu sản phẩm nhận được log_Home :", data);
-    log_judment.innerHTML += `<p>${data?.msg}</p>`;
+  if (!log_judment) return;
+  const log_entry = document.createElement("p");
+  log_entry.textContent = String(data?.msg ?? "");
+  log_judment.append(log_entry);
+  log_judment.scrollTop = log_judment.scrollHeight;
 });
 
 function clearJudgmentBorders() {
@@ -135,11 +245,7 @@ function renderInspectorTable(result) {
 
 function showJudgmentImage(result) {
   if (!result.judgment_path) return;
-  const image = new Image();
-  image.onload = () => {
-    canvasManager.show_img_items(image);
-  };
-  image.src = result.judgment_path;
+  canvasManager.showImagePreview(result.judgment_path);
 }
 
 function getActiveItemView() {
@@ -152,7 +258,7 @@ function getActiveItemView() {
 function showActiveMasterImage() {
   const active = getActiveItemView();
   const image = active?.item.querySelector(".img_show_point");
-  if (image) canvasManager.show_img_items(image);
+  if (image) canvasManager.showImagePreview(image);
 }
 
 function showActiveJudgmentImage() {
@@ -189,6 +295,7 @@ function selectJudgmentItem(frameId, itemId) {
 }
 
 scroll_container?.addEventListener("click", event => {
+  if (!document.getElementById("paner-main")?.classList.contains("active")) return;
   const item = event.target.closest(".img-item");
   const frame = item?.closest(".box-frame");
   if (!item || !frame) return;
@@ -196,6 +303,7 @@ scroll_container?.addEventListener("click", event => {
 });
 
 window.addEventListener("iai-point-selected", event => {
+  if (!document.getElementById("paner-main")?.classList.contains("active")) return;
   const detail = event.detail || {};
   selectJudgmentItem(detail.frameId, detail.pointId);
   if (!judgment_image_mode) {
@@ -208,6 +316,13 @@ window.addEventListener("iai-point-selected", event => {
     renderInspectorTable(result);
     showJudgmentImage(result);
   }
+});
+
+window.addEventListener("image-view-mode", () => {
+  judgment_image_mode = false;
+  if (toggle_judgment_images) toggle_judgment_images.textContent = "Ảnh phán định";
+  canvasManager.hideImagePreview();
+  canvasManager.setWrapCanvasVisible(false);
 });
 
 toggle_judgment_images?.addEventListener("click", () => {

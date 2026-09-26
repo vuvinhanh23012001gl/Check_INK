@@ -16,30 +16,41 @@ sio = socketio.AsyncServer(
     cors_allowed_origins="*"
 )
 
-@sio.event(namespace = NAMESPACE_LOG)
+_services_instance = None
+
+@sio.event(namespace=NAMESPACE_LOG)
 async def connect(sid, environ):
-    print("Client conected to log", sid)
+    print("Client connected to log", sid)
 
 @sio.event(namespace=NAMESPACE_LOG)
 async def disconnect(sid):
-    print("Client disconnected to log", sid)
+    print("Client disconnected from log", sid)
 
 @sio.event(namespace=NAMESPACE_DATA)
 async def connect(sid, environ):
-    print("Client conected to log", sid)
+    print("Client connected to data", sid)
+    if _services_instance is not None:
+        cam_status = bool(_services_instance.obj_camera.get_is_connect()) if getattr(_services_instance, "obj_camera", None) else False
+        com_status = bool(_services_instance.obj_manager_serial.is_running()) if getattr(_services_instance, "obj_manager_serial", None) else False
+        await sio.emit("status_camera", {"status": cam_status}, to=sid, namespace=NAMESPACE_DATA)
+        await sio.emit("status_com", {"status": com_status}, to=sid, namespace=NAMESPACE_DATA)
 
 @sio.event(namespace=NAMESPACE_DATA)
 async def disconnect(sid):
-    print("Client disconnected to log", sid)
+    print("Client disconnected from data", sid)
 
 
 async def log_sender(app):
     """Task chạy nền để tiêu thụ dữ liệu từ queue và gửi qua Socket.io"""
+    global _services_instance
     print("📢 Log Sender Task đã bắt đầu...")
     services: ServiceContainer = app.state.services
-    while True:
-            await sio.emit("status_camera", {"status":services.obj_camera.get_is_connect()}, namespace = NAMESPACE_DATA)
-            await sio.emit("status_com", {"status":services.obj_com_service.get_shake_hands_complete()}, namespace = NAMESPACE_DATA)
+    _services_instance = services
+    while not services.runtime_state.is_stop_requested():
+            cam_status = bool(services.obj_camera.get_is_connect()) if getattr(services, "obj_camera", None) else False
+            com_status = bool(services.obj_manager_serial.is_running()) if getattr(services, "obj_manager_serial", None) else False
+            await sio.emit("status_camera", {"status": cam_status}, namespace = NAMESPACE_DATA)
+            await sio.emit("status_com", {"status": com_status}, namespace = NAMESPACE_DATA)
     
             data_log = services.queue_log_send_client.get()
             if data_log is not None:

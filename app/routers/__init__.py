@@ -9,6 +9,10 @@ from .api_calibration import router as calibration_router
 from .api_dimesional_calibration import router as dimesional_calibration_router
 from .api_com import router as com_router
 from .api_tool_law_regulations import router as tool_law_regulations_router
+from .api_instruct_worker import router as instruct_worker_router
+from .api_instruct_staff_ee import router as instruct_staff_ee_router
+from .api_instruct_fix_erro import router as instruct_fix_erro_router
+from .api_shutdown import router as shutdown_router
 __all__ = [
     "home_router",
     "camera_router",
@@ -19,7 +23,11 @@ __all__ = [
     "draw_regulations_router",
     "calibration_router",
     "com_router",
-    "dimesional_calibration_router"
+    "dimesional_calibration_router",
     "tool_law_regulations_router",
+    "instruct_worker_router",
+    "instruct_staff_ee_router",
+    "instruct_fix_erro_router",
+    "shutdown_router",
 ]
 

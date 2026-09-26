@@ -2,6 +2,13 @@ from app.container import ServiceContainer,EnumMode
 from app.core.context import RuntimePipelineState
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import Any
+from app.config.path_config import (
+    BASE_DIR,
+    PATH_FOLDER_OUTPUT_JUDGMENT,
+    PATH_FOLDER_OUTPUT,
+    URL_PATH_OUTPUT,
+)
 import cv2
 import json
 import shutil
@@ -78,20 +85,24 @@ class StageTransform:
             if not self.services.obj_iai_control.move_to_point(0, 0, 0):
                 raise RuntimeError("IAI không về được vị trí 0,0,0 sau sản phẩm")
             self.services.runtime_state.set_product_result(results)
+            is_overall_ok = all(result.get("overall") is True for result in results)
+            counts = self.services.obj_product_count_service.record_result(is_overall_ok)
             self._send_client({
                 "type": "judgment_product_result",
                 "data": {
                     "product_id": prepared.product_id,
                     "session_id": prepared.session_id,
                     "number_step": prepared.number_step,
-                    "overall": all(result.get("overall") is True for result in results),
-                    "status": "OK" if all(result.get("overall") is True for result in results) else "NG",
+                    "overall": is_overall_ok,
+                    "status": "OK" if is_overall_ok else "NG",
                     "items": results,
+                    "counts": counts,
                 },
             })
             self.services.set_mode(EnumMode.MODE_EXPORT)
             return results
         except Exception as error:
+            counts = self.services.obj_product_count_service.record_result(False)
             self._send_client({
                 "type": "judgment_product_result",
                 "data": {
@@ -102,6 +113,7 @@ class StageTransform:
                     "status": "NG",
                     "error": str(error),
                     "items": results,
+                    "counts": counts,
                 },
             })
             raise
@@ -115,8 +127,20 @@ class StageTransform:
         if self.services.obj_iai_control.get_status().name == "STOP":
             raise RuntimeError("IAI đang ở trạng thái STOP")
 
-    def _process_point(self, prepared, frame: dict, point: dict, step: int) -> dict:
-        """Xử lý một point và trả về payload JSON hóa được."""
+    def _process_point(
+        self,
+        prepared: Any,
+        frame: dict[str, Any],
+        point: dict[str, Any],
+        step: int,
+    ) -> dict[str, Any]:
+        """Xử lý một point và trả về payload JSON hóa được.
+
+        Input: Dữ liệu sản phẩm đã chuẩn bị, frame, point và thứ tự xử lý.
+        Output: Payload kết quả phán định của point.
+        Errors: ``RuntimeError`` nếu IAI hoặc camera không xử lý được point;
+            lỗi từ các service lưu ảnh/phán định được truyền lên caller.
+        """
         frame_id = frame["frame_id"]
         point_id = point["point_id"]
         inspectors = point.get("judgment") or {}
@@ -153,6 +177,12 @@ class StageTransform:
             image=image,
             inspectors=inspectors,
             scale_mm_per_pixel=prepared.scale_mm_per_pixel,
+            training_context={
+                "session_id": prepared.session_id,
+                "product_id": prepared.product_id,
+                "frame_id": frame_id,
+                "item_id": point_id,
+            },
         )
         print(
             f"[STAGE2] Kết thúc phán định frame={frame_id}, item={point_id}: "
@@ -186,10 +216,17 @@ class StageTransform:
             summary,
         )
         summary["judgment_path"] = judgment_path
-        self.services.send_judgment_log(
-            f"{'✅' if summary['overall'] else '❌'} Frame {frame_id}, point {point_id}: "
-            f"{summary['status']}"
-        )
+        weld_result = summary.get("inspectors", {}).get("MeasurementWeldInspector")
+        if weld_result and weld_result.get("ok") is False:
+            weld_errors = weld_result.get("errors") or [
+                weld_result.get("message", "Hạng mục đo đường hàn không đạt.")
+            ]
+            for weld_error in weld_errors:
+                self.services.send_judgment_log(str(weld_error))
+        elif summary.get("overall") is False:
+            self.services.send_judgment_log(
+                f"❌ Frame {frame_id}, point {point_id}: NG"
+            )
         return summary
 
     def _send_client(self, payload: dict) -> None:
@@ -227,9 +264,7 @@ class StageTransform:
     def _session_item_dir(self, prepared, frame_id: str, point_id: str) -> Path:
         """Tạo thư mục lưu dữ liệu của một item trong một session."""
         output_dir = (
-            Path(__file__).resolve().parents[1]
-            / "output"
-            / "judgment"
+            PATH_FOLDER_OUTPUT_JUDGMENT
             / prepared.session_id
             / f"product_{prepared.product_id}"
             / f"frame_{frame_id}"
@@ -241,7 +276,7 @@ class StageTransform:
     def _save_master_result(self, prepared, frame: dict, point: dict, step: int) -> str:
         """Lưu ảnh master cho item không có cấu hình inspector."""
         output_dir = self._session_item_dir(prepared, frame["frame_id"], point["point_id"])
-        source_path = Path(__file__).resolve().parents[1] / str(
+        source_path = BASE_DIR / str(
             point["source"].get("path_img_point", "")
         ).replace("\\", "/")
         judgment_path = output_dir / "judgment.jpg"
@@ -301,8 +336,8 @@ class StageTransform:
     @staticmethod
     def _output_url(path: Path) -> str:
         """Đổi đường dẫn app/output thành URL static cho client."""
-        relative = path.relative_to(Path(__file__).resolve().parents[1]).as_posix()
-        return f"/output/{relative.removeprefix('output/')}"
+        relative = path.relative_to(PATH_FOLDER_OUTPUT).as_posix()
+        return f"{URL_PATH_OUTPUT}/{relative}"
 
     def _move_with_retry(self, point: dict) -> bool:
         """Gửi lệnh di chuyển với số lần thử cấu hình trong IAIConfig."""

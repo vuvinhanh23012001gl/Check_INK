@@ -2,7 +2,10 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from app.config.path_config import BASE_DIR, PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST
+from app.config.path_config import (
+    PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST,
+    WORKSPACE_DIR,
+)
 
 
 class PatchCoreTrainRecordRepository:
@@ -63,7 +66,7 @@ class PatchCoreTrainRecordRepository:
         if value is None or value == "":
             return ""
         path = Path(value).expanduser().resolve()
-        workspace_root = BASE_DIR.parent
+        workspace_root = WORKSPACE_DIR
         try:
             return path.relative_to(workspace_root).as_posix()
         except ValueError:
@@ -254,7 +257,7 @@ class PatchCoreTrainRecordRepository:
             if record_root_value:
                 record_root = Path(record_root_value).expanduser()
                 if not record_root.is_absolute():
-                    record_root = BASE_DIR.parent / record_root
+                    record_root = WORKSPACE_DIR / record_root
                 if record_root.resolve() == target_root:
                     deleted_count += 1
                     continue

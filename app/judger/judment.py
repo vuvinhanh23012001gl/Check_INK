@@ -1,10 +1,14 @@
 from dataclasses import dataclass, field
 from collections.abc import Mapping
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Sequence
 import numpy as np
 import cv2
+from app.config.path_config import PATH_FOLDER_OUTPUT_RETRAIN
 from .base_ai import BaseJudgerAI, JudgmentResult
+from .border_detector import BorderDetector
+from app.utils.opencv_tool import Tool_OpenCv2
 
 
 @dataclass
@@ -26,6 +30,7 @@ class InspectorTask:
     define_args: tuple[Any, ...] = ()
     define_kwargs: dict[str, Any] = field(default_factory=dict)
     compare_kwargs: dict[str, Any] = field(default_factory=dict)
+    overlay_labels: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         """Kiểm tra inspector ngay khi tạo task.
@@ -39,6 +44,23 @@ class InspectorTask:
 
 
 class Judment:
+    RETRAIN_OUTPUT_DIR = PATH_FOLDER_OUTPUT_RETRAIN
+    LINE_BASED_INSPECTORS = {
+        "BorderFilmInspector",
+        "MeasurementWeldInspector",
+        "SlitWeldInspector",
+    }
+    ROI_DISPLAY_NAMES = {
+        "ArmCoverInspector": "ARM Cover",
+        "ArmSensorInspector": "ARM Sensor",
+        "HoleItemInspector": "Lỗ thủng",
+        "MembraneInspector": "Màng bán thấm",
+        "ScratchedPipeItemInspector": "Vết xước ống",
+        "EndChippingInspector": "Mẻ ống",
+        "ForeignObjectInspector": "Dị vật",
+        "AirBubblesItemInspector": "Bọt khí đường hàn",
+    }
+
     """Điều phối toàn bộ inspector trên cùng một ảnh đầu vào.
 
     Mỗi task được chạy theo thứ tự xuất hiện trong mảng: ``define`` ->
@@ -187,7 +209,8 @@ class Judment:
 
             if name == "AirBubblesItemInspector":
                 regions = []
-                for region in inspector_config.values():
+                labels = []
+                for index, region in enumerate(inspector_config.values(), start=1):
                     if not isinstance(region, Mapping):
                         raise ValueError(f"Cấu hình vùng của {name} không hợp lệ")
                     try:
@@ -200,11 +223,16 @@ class Judment:
                     if x2 <= x1 or y2 <= y1:
                         raise ValueError(f"Cấu hình vùng của {name} có kích thước không hợp lệ")
                     regions.append((x1, y1, x2 - x1, y2 - y1))
+                    labels.append(str(
+                        region.get("name")
+                        or f"{Judment.ROI_DISPLAY_NAMES[name]} {index}"
+                    ))
                 tasks.append(
                     InspectorTask(
                         inspector=inspector,
                         standard_data=True,
                         define_args=(regions,),
+                        overlay_labels=tuple(labels),
                     )
                 )
                 continue
@@ -223,6 +251,10 @@ class Judment:
                     inspector=inspector,
                     standard_data=True,
                     define_args=define_args,
+                    overlay_labels=(str(
+                        inspector_config.get("name")
+                        or Judment.ROI_DISPLAY_NAMES.get(name, name)
+                    ),),
                 )
             )
         return tasks
@@ -253,6 +285,7 @@ class Judment:
         inspectors: Sequence[InspectorTask] | Mapping[str, Any],
         inspector_registry: Mapping[str, BaseJudgerAI] | None = None,
         scale_mm_per_pixel: float = 1.0,
+        training_context: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Chạy toàn bộ tool trên một ảnh và tạo output tổng để ghi log.
 
@@ -261,6 +294,7 @@ class Judment:
             inspectors: Danh sách task hoặc cấu hình judgment theo JSON.
             inspector_registry: Registry detector, dùng khi inspectors là JSON.
             scale_mm_per_pixel: Hệ số calibration truyền cho detector đo lường.
+            training_context: ID session/product/frame/item dùng phân loại ảnh lưu.
         Output:
             Dict gồm ``overall``, ``status``, ``inspectors``, ``errors``,
             ``message`` và metadata kích thước/thời điểm xử lý. Mỗi inspector
@@ -287,6 +321,7 @@ class Judment:
         errors: list[dict[str, str]] = []
         inspector_images: dict[str, np.ndarray] = {}
         overlay_data: dict[str, dict[str, Any]] = {}
+        shared_polygons: dict[tuple[int, tuple[str, ...], tuple[tuple[str, str], ...]], Any] = {}
         judgment_image = image.copy()
         for index, task in enumerate(tasks, start=1):
             if not isinstance(task, InspectorTask):
@@ -294,11 +329,50 @@ class Judment:
             name = task.inspector.get_inspector_name()
             self._log_inspector_start(index, name, image, task)
             try:
-                runtime_data = task.inspector.define(
-                    image,
-                    *task.define_args,
-                    **task.define_kwargs,
-                )
+                if training_context is not None:
+                    try:
+                        saved_inputs = self._save_training_inputs(
+                            image,
+                            name,
+                            task.define_args,
+                        )
+                        for saved_path in saved_inputs:
+                            print(f"[JUDMENT][{name}] TRAIN_INPUT saved={saved_path}")
+                    except Exception as save_error:
+                        print(
+                            f"[JUDMENT][{name}] TRAIN_INPUT_SAVE_WARNING: "
+                            f"{save_error!r}"
+                        )
+                polygon_key = None
+                if isinstance(task.inspector, BorderDetector) and task.define_args:
+                    polygon_key = (
+                        id(task.inspector.unet_model),
+                        tuple(repr(value) for value in task.define_args[1:]),
+                        tuple(sorted(
+                            (key, repr(value))
+                            for key, value in task.define_kwargs.items()
+                        )),
+                    )
+                if polygon_key is not None and polygon_key in shared_polygons:
+                    runtime_data = task.inspector.define_with_polygon(
+                        image,
+                        task.define_args[0],
+                        shared_polygons[polygon_key],
+                        *task.define_args[1:],
+                        **task.define_kwargs,
+                    )
+                else:
+                    runtime_data = task.inspector.define(
+                        image,
+                        *task.define_args,
+                        **task.define_kwargs,
+                    )
+                    if (
+                        polygon_key is not None
+                        and isinstance(runtime_data, dict)
+                        and "polygon" in runtime_data
+                    ):
+                        shared_polygons[polygon_key] = runtime_data["polygon"]
                 comparison_data = task.inspector.compare(
                     task.standard_data,
                     runtime_data,
@@ -316,10 +390,21 @@ class Judment:
                     runtime_data,
                     comparison_data,
                     result,
+                    task.overlay_labels,
                 )
                 inspector_images[name] = inspector_image
                 overlay_data[name] = inspector_overlay
-                judgment_image = self._blend_overlay_image(judgment_image, inspector_image)
+                overlay_alpha = (
+                    0.85
+                    if inspector_overlay.get("standard", {}).get("boxes")
+                    else 0.45
+                )
+                judgment_image = self._blend_overlay_image(
+                    judgment_image,
+                    inspector_image,
+                    overlay_alpha,
+                    image,
+                )
                 self._log_inspector_result(name, runtime_data, comparison_data, result)
                 if not result.ok:
                     errors.append({
@@ -361,12 +446,92 @@ class Judment:
             "inspector_images": inspector_images,
         }
 
+    @classmethod
+    def _save_training_inputs(
+        cls,
+        image: np.ndarray,
+        inspector_name: str,
+        define_args: tuple[Any, ...],
+    ) -> list[Path]:
+        """Lưu crop ROI hoặc full frame mà inspector thực sự nhận trước inference.
+
+        Input: Ảnh nguồn, tên inspector và đối số define chứa ROI.
+        Output: Danh sách đường dẫn JPG trong folder inspector/ngày hiện tại.
+        Errors: ``ValueError`` nếu ROI rỗng; ``OSError`` nếu không ghi được ảnh.
+        """
+        crops: list[tuple[str, np.ndarray]] = []
+        if inspector_name in cls.LINE_BASED_INSPECTORS:
+            crops.append(("full_frame", image))
+        elif inspector_name == "AirBubblesItemInspector" and define_args:
+            regions = define_args[0]
+            for index, region in enumerate(regions, start=1):
+                x, y, width, height = (int(value) for value in region)
+                crops.append((
+                    f"roi_{index:02d}",
+                    cls._crop_training_input(image, x, y, x + width, y + height),
+                ))
+        elif len(define_args) >= 4:
+            x1, y1, x2, y2 = (int(value) for value in define_args[:4])
+            crops.append(("roi_01", cls._crop_training_input(image, x1, y1, x2, y2)))
+        else:
+            crops.append(("full_frame", image))
+
+        saved_paths = []
+        for label, crop in crops:
+            saved_paths.append(Tool_OpenCv2.save_training_input(
+                crop,
+                inspector_name,
+                label,
+                cls.RETRAIN_OUTPUT_DIR,
+            ))
+        return saved_paths
+
     @staticmethod
-    def _blend_overlay_image(base: np.ndarray, overlay: np.ndarray) -> np.ndarray:
-        """Gộp ảnh overlay inspector lên ảnh judgment tổng."""
+    def _crop_training_input(
+        image: np.ndarray,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+    ) -> np.ndarray:
+        """Cắt ROI theo tọa độ gốc và chặn biên ảnh.
+
+        Input: Ảnh BGR và hai góc đối diện của ROI.
+        Output: Bản sao crop không rỗng.
+        Errors: ``ValueError`` nếu ROI nằm ngoài ảnh hoặc có diện tích bằng 0.
+        """
+        height, width = image.shape[:2]
+        left = max(0, min(width, min(x1, x2)))
+        right = max(0, min(width, max(x1, x2)))
+        top = max(0, min(height, min(y1, y2)))
+        bottom = max(0, min(height, max(y1, y2)))
+        if left >= right or top >= bottom:
+            raise ValueError(f"ROI không hợp lệ: {(x1, y1, x2, y2)}")
+        return image[top:bottom, left:right].copy()
+
+    @staticmethod
+    def _blend_overlay_image(
+        base: np.ndarray,
+        overlay: np.ndarray,
+        overlay_alpha: float = 0.45,
+        reference: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Gộp ảnh overlay inspector lên ảnh judgment tổng.
+
+        Input: Ảnh judgment tích lũy, ảnh overlay, alpha và ảnh nguồn trước khi vẽ.
+        Output: Ảnh judgment; chỉ pixel khác ảnh nguồn được blend để giữ ROI trước.
+        Errors: Không phát sinh; alpha được giới hạn trong khoảng 0..1.
+        """
         if not isinstance(overlay, np.ndarray) or overlay.shape != base.shape:
             return base
-        return cv2.addWeighted(base, 0.55, overlay, 0.45, 0)
+        source = reference if isinstance(reference, np.ndarray) and reference.shape == base.shape else base
+        changed = np.any(overlay != source, axis=2)
+        if not np.any(changed):
+            return base
+        alpha = max(0.0, min(1.0, float(overlay_alpha)))
+        blended = cv2.addWeighted(base, 1.0 - alpha, overlay, alpha, 0)
+        base[changed] = blended[changed]
+        return base
 
     @classmethod
     def _render_inspector_overlay(
@@ -378,6 +543,7 @@ class Judment:
         runtime_data: Any,
         comparison_data: Any,
         result: JudgmentResult,
+        roi_labels: tuple[str, ...] = (),
     ) -> tuple[np.ndarray, dict[str, Any]]:
         """Vẽ cấu hình chuẩn và dữ liệu runtime theo đúng loại inspector.
 
@@ -430,27 +596,34 @@ class Judment:
                     cls._draw_overlay_label(output, label, shape[0], shape[1], (255, 200, 0))
                     overlay["standard"].setdefault("lines", []).append(shape)
                 else:
-                    cv2.rectangle(
+                    Tool_OpenCv2.draw_labeled_roi(
                         output,
-                        (shape[0], shape[1]),
-                        (shape[2], shape[3]),
-                        (255, 200, 0),
-                        2,
+                        tuple(shape),
+                        label,
+                        (255, 0, 0),
                     )
-                    cls._draw_overlay_label(output, label, shape[0], shape[1], (255, 200, 0))
+                    overlay["standard"].setdefault("labels", []).append(label)
                     overlay["standard"].setdefault("boxes", []).append(shape)
         elif name == "AirBubblesItemInspector" and define_args:
             regions = define_args[0]
-            for region in regions if isinstance(regions, list) else []:
+            for index, region in enumerate(regions if isinstance(regions, list) else []):
                 if len(region) != 4:
                     continue
                 x, y, width, height = [int(value) for value in region]
                 box = [x, y, x + width, y + height]
-                cv2.rectangle(output, (x, y), (x + width, y + height), (255, 200, 0), 2)
+                label = (
+                    roi_labels[index]
+                    if index < len(roi_labels)
+                    else f"{cls.ROI_DISPLAY_NAMES[name]} {index + 1}"
+                )
+                Tool_OpenCv2.draw_labeled_roi(output, tuple(box), label)
+                overlay["standard"].setdefault("labels", []).append(label)
                 overlay["standard"].setdefault("boxes", []).append(box)
         elif standard_data is True and len(define_args) == 4:
             x1, y1, x2, y2 = [int(value) for value in define_args]
-            cv2.rectangle(output, (x1, y1), (x2, y2), (255, 200, 0), 2)
+            label = roi_labels[0] if roi_labels else cls.ROI_DISPLAY_NAMES.get(name, name)
+            Tool_OpenCv2.draw_labeled_roi(output, (x1, y1, x2, y2), label)
+            overlay["standard"]["labels"] = [label]
             overlay["standard"].setdefault("boxes", []).append([x1, y1, x2, y2])
 
         polygon = runtime_source.get("polygon")

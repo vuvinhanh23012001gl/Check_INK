@@ -95,7 +95,7 @@ class MeasurementWeldingDetector(BorderDetector):
 		"""Phán định toàn bộ line đo đường hàn thành OK hoặc NG.
 
 		Input: dict output của ``compare``.
-		Output: ``JudgmentResult``; chỉ OK khi mọi line ở level 4.
+		Output: ``JudgmentResult``; chỉ OK khi mọi line thuộc level 4 hoặc 5.
 		Errors: ``ValueError`` nếu thiếu danh sách comparison.
 		"""
 		if not isinstance(comparison_data, dict) or "comparisons" not in comparison_data:
@@ -105,16 +105,24 @@ class MeasurementWeldingDetector(BorderDetector):
 		errors = []
 		for item in comparisons:
 			if not item["is_valid"]:
-				if item["intersection_count"] != 2:
-					errors.append(
-						f"Line {item['name_line']} NG: "
-						f"có {item['intersection_count']} giao điểm, yêu cầu đúng 2"
-					)
-				else:
-					errors.append(
-						f"Line {item['name_line']} NG: "
-						f"đo={item['distance_mm']} mm, level={item['level']}"
-					)
+				standard = item["standard_line"]
+				runtime = item.get("runtime")
+				measured = bool(
+					runtime
+					and runtime.get("is_valid")
+					and item["intersection_count"] == 2
+					and item["distance_mm"] is not None
+				)
+				actual = (
+					f"{float(item['distance_mm']):g} mm"
+					if measured
+					else f"Không đo được ({item['intersection_count']} giao điểm)"
+				)
+				errors.append(
+					f"[Khoảng cách đường hàn] NG - \"{item['name_line']}\" - "
+					f"Quy định:\"{float(standard['level4']):g} mm - "
+					f"{float(standard['level5']):g} mm\" - Thực tế :\"{actual}\""
+				)
 		return JudgmentResult(
 			ok=ok,
 			status="OK" if ok else "NG",
@@ -128,9 +136,9 @@ class MeasurementWeldingDetector(BorderDetector):
 			},
 			comparison_data=comparison_data,
 			message=(
-				"Tất cả đường hàn đạt level 4"
+				"Tất cả đường hàn đạt level 4 hoặc 5"
 				if ok
-				else "Có đường hàn không nằm trong khoảng level 4"
+				else "Có đường hàn nằm ngoài vùng OK (level 4-5)"
 			),
 			errors=errors,
 		)
@@ -162,16 +170,26 @@ class MeasurementWeldingDetector(BorderDetector):
 		runtime_is_valid: bool,
 		levels: tuple[float, ...],
 	) -> tuple[int | None, bool]:
-		"""Xếp level cho kích thước đo; chỉ level 4 được xem là OK."""
+		"""Xếp khoảng cách vào level theo ngưỡng trên bao gồm.
+
+		Input: ``distance_mm`` là khoảng cách đo; ``runtime_is_valid`` cho biết
+			line có đúng hai giao điểm; ``levels`` chứa ngưỡng trên level1..level5.
+		Output: Cặp (level, is_ok); level 1-3 là NG, level 4-5 là OK, vượt
+			level5 trả về (None, False).
+		Errors: Không phát sinh; thiếu khoảng cách hoặc runtime không hợp lệ
+			được trả về (None, False).
+		"""
 		if distance_mm is None or not runtime_is_valid:
 			return None, False
-		level1, level2, level3, level4, _ = levels
-		if distance_mm < level1:
+		level1, level2, level3, level4, level5 = levels
+		if distance_mm <= level1:
 			return 1, False
-		if distance_mm < level2:
+		if distance_mm <= level2:
 			return 2, False
-		if distance_mm < level3:
+		if distance_mm <= level3:
 			return 3, False
-		if distance_mm < level4:
+		if distance_mm <= level4:
 			return 4, True
-		return 5, False
+		if distance_mm <= level5:
+			return 5, True
+		return None, False

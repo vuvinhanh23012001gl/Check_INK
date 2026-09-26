@@ -79,6 +79,7 @@ window.addEventListener("iai-point-selected", event => {
     }
 });
 let dict_lines_of_frames = {};  //data ALL
+let active_calibration_data = null;
 let id_product_selecting_now = null; //San pham dang chon
 let current_frame_box = null ; // Frame hiện tại đang đc click
 let calibration_load_id = 0;
@@ -205,7 +206,14 @@ function func_callback_click_on_line_drawn(line){   // Hàm này hoạt động 
     value_line_current_click[keys_line[2]] = line?.xEnd;
     value_line_current_click[keys_line[3]] = line?.yEnd;
     console.log(`[CallBackOnLine] Xstart,Ystart :(${value_line_current_click[keys_line[0]]},${value_line_current_click[keys_line[1]]}).xEnd,yEnd:(${value_line_current_click[keys_line[2]] },${value_line_current_click[keys_line[3]]})`);
-    createCalibrationTable(config_calibration, selected.frame_id,id_product_selecting_now,selected.items_id,dict_lines_of_frames);
+    createCalibrationTable(
+        config_calibration,
+        selected.frame_id,
+        id_product_selecting_now,
+        selected.items_id,
+        dict_lines_of_frames,
+        active_calibration_data,
+    );
 }
 
 function func_callback_check_line_exis(line){
@@ -283,7 +291,14 @@ function draw_model_polygons(polygons, sourceWidth, sourceHeight = null) {
 }
 
 
-function createCalibrationTable(container,frame_id,product_id,item_id,data = null) {
+function createCalibrationTable(
+    container,
+    frame_id,
+    product_id,
+    item_id,
+    data = null,
+    selectedCalibrationData = null,
+) {
     container.innerHTML = "";
     const table = document.createElement("table");
     table.classList.add("calibration-table");
@@ -295,7 +310,14 @@ function createCalibrationTable(container,frame_id,product_id,item_id,data = nul
     //  console.log("-------------------------------");
     //  console.log("dict_lines_of_frames",dict_lines_of_frames);
 
-    const calibrationData_box =  get_data_create_calibrationTable_config(data, product_id, frame_id, CALCULATION_PARAMETER,item_id);     
+    const calibrationData_box = selectedCalibrationData
+        || get_data_create_calibrationTable_config(
+            data,
+            product_id,
+            frame_id,
+            CALCULATION_PARAMETER,
+            item_id,
+        );
     fields.forEach(field => {
         const tr = document.createElement("tr");
         const th = document.createElement("th");
@@ -409,11 +431,15 @@ btn_calcular_calibration.addEventListener("click",()=>{
 
 function get_data_create_calibrationTable_config(data, product_id, frame_id, key,item_id) {   // Nếu Product id,frame id,items_id trung thi return gia tri. neu khac 1 trong 3 thi khong return
     const params = data?.[product_id]?.[frame_id]?.[key];
-    const items_id = data?.[product_id]?.[frame_id]?.[key]?.[KEY_ID_ITEM];
-    if (items_id == item_id){
-        return  params;
-    }
-    return null;
+    if (!params) return null;
+    const storedItemId = params[KEY_ID_ITEM];
+    const hasNoValidItemId = storedItemId === undefined
+        || storedItemId === null
+        || storedItemId === ""
+        || Number(storedItemId) < 0;
+    return String(storedItemId) === String(item_id) || hasNoValidItemId
+        ? params
+        : null;
 }
 
 
@@ -687,24 +713,21 @@ function set_calculation(data, actual_wid_img, actual_hei_img, width_after_adjus
 
 
 function create_hight_light_items_for_frame(data){
-    if (data){
-        for (let value in data){
-            // console.log("value",data[value]);
-            let dict_frame = data?.[value];
-            if (dict_frame){
-                for (const frame_id in dict_frame) {
-                    const calibration = dict_frame[frame_id]?.[CALCULATION_PARAMETER];
-                    // console.log("frame_id =", frame_id);
-                    // console.log("item_id =", calibration.id_item);
-                    if (calibration){
-                            high_light_item(frame_id,calibration.id_item);
-                            obj_draw_calibration.cout_click = 0; 
-                            obj_draw_calibration.has_line_of_frame = true;
-                    }
-                  
-                }
-            }
+    const frames = data?.[String(id_product_selecting_now)];
+    if (!frames) return;
+    for (const [frameId, frameData] of Object.entries(frames)) {
+        const calibration = frameData?.[CALCULATION_PARAMETER];
+        if (!calibration) continue;
+        const frame = [...scroll_container.querySelectorAll(".box-frame")]
+            .find(item => item.dataset.frameId === String(frameId));
+        const items = [...(frame?.querySelectorAll(".img-item") || [])];
+        if (!items.length) continue;
+        if (!items.some(item => item.dataset.id === String(calibration.id_item))) {
+            calibration.id_item = Number(items[0].dataset.id);
         }
+        high_light_item(frameId, calibration.id_item);
+        obj_draw_calibration.cout_click = 0;
+        obj_draw_calibration.has_line_of_frame = true;
     }
 } 
 
@@ -813,6 +836,7 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
                     });
                     });  //CALCULATION_PARAMETER   RESULT_PARAMETER
                     let calibration_frame =  dict_lines_of_frames?.[id_product_selecting_now]?.[frame_id]?.[CALCULATION_PARAMETER];
+                    active_calibration_data = null;
                     // console.log("Dữ liệu 323232323232",dict_lines_of_frames);
                     // console.log("ahihih",calibration_frame);
                     canvasManager.show_img_items(img_img);
@@ -832,6 +856,15 @@ function create_items_img(id, index ,data_point=null, frame_box =null, frame_id 
                     current_frame_box = frame_box; //đối tượng dom
                     selected.items_id = Number(img_item.dataset.id);  
                     selected.frame_id = Number(frame_id);
+                    const storedItemId = Number(calibration_frame?.[KEY_ID_ITEM]);
+                    if (calibration_frame && (
+                        !Number.isFinite(storedItemId)
+                        || storedItemId < 0
+                        || storedItemId === selected.items_id
+                    )) {
+                        calibration_frame[KEY_ID_ITEM] = selected.items_id;
+                        active_calibration_data = calibration_frame;
+                    }
                     render_selected_calibration_result();
                     console.log(`Point đang click frame: ${selected.frame_id} id: ${selected.items_id}`);
                     move_to_selected_point(
@@ -884,7 +917,8 @@ function create_box(box_id,index){
         selected.items_id = -1;
         render_selected_calibration_result();
         current_frame_box = div_img_box; // lưu frame hiện tại
-    });
+    })
+    ;
     div_box_frame.appendChild(div_text_box_frame);
     div_box_frame.appendChild(div_img_box);
     scroll_container.appendChild(div_box_frame);
@@ -910,9 +944,6 @@ function loadPointCoordinates(dataPoint) {
         y: Number(dataPoint?.y),
         z: Number(dataPoint?.z),
     };
-    if (!Object.values(coordinates).every(Number.isFinite)) {
-        return {x: -1, y: -1, z: -1};
-    }
     return coordinates;
 }
 

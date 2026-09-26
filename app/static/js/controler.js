@@ -19,6 +19,10 @@ import "./tool/scratched_pipe_tool.js";
 import "./tool/end_chipping_tool.js";
 import "./tool/foreign_object_tool.js";
 import "./tool/air_bubbles_tool.js";
+import "./instruct_worker.js";
+import "./instruct_staff_ee.js";
+import "./instruct_fix_erro.js";
+import "./shutdown.js";
 
 
 

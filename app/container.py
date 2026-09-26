@@ -20,7 +20,8 @@ from app.repository import (
     ChooseProductRepository,
     ProductRepository,
     PointRepository,
-    JudmentLawProductRepository
+    JudmentLawProductRepository,
+    ProductCountRepository
 )
 from app.services import (
     CalibrationService,
@@ -29,7 +30,8 @@ from app.services import (
     IAIService,
     PointService,
     ProductService,
-    JudmentLawProductSevice
+    JudmentLawProductSevice,
+    ProductCountService
 )
 from app.services.camera import Camera
 from app.services.log import Config_SoftWare, Infor_Software
@@ -176,6 +178,11 @@ class ServiceContainer:
         self.obj_choose_product = ChooseProductService(self.obj_choose_product_repository, self.obj_products_service)
         print("✔ ChooseProductService init")
 
+        # Quản lý số đếm sản phẩm OK/NG/Tổng
+        self.obj_product_count_repository = ProductCountRepository()
+        self.obj_product_count_service = ProductCountService(self.obj_product_count_repository)
+        print("✔ ProductCountService init")
+
         # HandlerWorkDetect (Commented gốc)
         # self.obj_detect = HandlerWorkDetect(
         #     self.obj_choose_product,
@@ -317,16 +324,41 @@ class ServiceContainer:
    
         print("..--------------------------------.. init Complete ...----------------------------------.")
 
-    def stop(self):
-        print("....Stopping Service....")
-        self.runtime_state.request_stop()
+    def stop(self) -> None:
+        """
+        Dừng toàn bộ dịch vụ, giải phóng cổng COM, đóng Camera, ngắt luồng và giải phóng bộ nhớ.
+        """
+        print("🛑 ....Stopping Service & Releasing Resources....")
+        try:
+            self.runtime_state.request_stop()
+        except Exception as e:
+            print(f"[Stop] Lỗi request_stop: {e}")
+
         if getattr(self, "obj_iai_control", None):
-            self.obj_iai_control.stop_thread_input_handler_stm32()
-            self.obj_iai_control.stop_thread_handler_stm32()
+            try:
+                self.obj_iai_control.stop_thread_input_handler_stm32()
+                self.obj_iai_control.stop_thread_handler_stm32()
+            except Exception as e:
+                print(f"[Stop] Lỗi dừng IAIControl: {e}")
+
         if getattr(self, "obj_manager_serial", None):
-            self.obj_manager_serial.stop()
+            try:
+                self.obj_manager_serial.stop()
+            except Exception as e:
+                print(f"[Stop] Lỗi dừng ManagerSerial: {e}")
+
         if getattr(self, "obj_camera", None):
-            self.obj_camera.release()
+            try:
+                self.obj_camera.release()
+            except Exception as e:
+                print(f"[Stop] Lỗi giải phóng Camera: {e}")
+
+        try:
+            import gc
+            gc.collect()
+            print("🧹 [Memory] Đã thu gom rác bộ nhớ (gc.collect).")
+        except Exception:
+            pass
 
     def send_judgment_log(self, message: str) -> None:
         """Gửi log pipeline tới ô log phán định trên giao diện.

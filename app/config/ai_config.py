@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 import torch
+from app.config.path_config import PATH_FILE_DEFAULT_PATCHCORE_INDEX
 
 
 
@@ -68,7 +69,7 @@ class ClassNameModelSurfaceConfig(StrEnum):
 
 @dataclass(slots=True)
 class PatchCoreAnomalyConfig:
-    index_path: str = "model/patchcore_ivf.index"
+    index_path: str = PATH_FILE_DEFAULT_PATCHCORE_INDEX
     nprobe: int = 10
     img_size: int = 256
     device: str = "cuda" if torch.cuda.is_available() else "cpu"

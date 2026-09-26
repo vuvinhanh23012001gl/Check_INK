@@ -181,7 +181,7 @@ class HandlerWorkDetect:
 # import threading
 
 # class ImageQueueTester:
-#     def __init__(self, handler, interval =2,image_path=r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_5.jpg"):
+#     def __init__(self, handler, interval =2,image_path=None):
 #         """
 #         handler     : instance HandlerWorkDetect
 #         queue       : queue object (obj_queue)
@@ -239,7 +239,7 @@ class HandlerWorkDetect:
 #     handler=H1,
 #     queue=obj_queue,
 #     queue_name = name_queue_process_capture,
-#     image_path=r"C:\Users\anhuv\Desktop\test_tool\data\images\img_2.jpg",
+#     image_path=None,
 #     interval=2
 # )
 # tester.start()

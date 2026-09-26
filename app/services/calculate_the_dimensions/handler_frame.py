@@ -284,7 +284,6 @@ class FrameHandlers:
 # from app.services.product import Manager_Product
 # choose_product_current = Choose_Product.get_choose_product_pick()
 # status,data,erro = Manager_Product.get_data_regulation_by_product_id(choose_product_current)
-# img = cv2.imread(r"C:\Users\anhuv\Desktop\test_tool\img_intput\img_2.jpg")
 # shape = (960,1280)
 # Model =  ModelHandler(PATH_FILE_UNET_DETECT_WELD_LINE,config_detect.encoder,img_size= config_detect.img_size,threshold= config_detect.threshold)
 # mask  = Model.predict(img) # Loc nhieu ảnh

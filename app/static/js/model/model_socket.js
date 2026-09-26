@@ -5,10 +5,10 @@ export class SocketModel {
         this.socket = null;
     }
     connect() {
-        this.socket = io(`http://127.0.0.1:8000/${this.namespace}`);
+        const baseUrl = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin : "http://127.0.0.1:8000";
+        this.socket = io(`${baseUrl}/${this.namespace}`);
         this.socket.on("connect", () => {
             console.log(`${this.namespace} connected Socket`);
-        
         });
         this.socket.on("disconnect", () => {
             console.log(`${this.namespace} disconnected`);

@@ -56,14 +56,25 @@ export function get_camera_connection() {
 
 
 export function active_sceen_show_video(){
-        video_product.style.width = `${WIDTH_IMG_SHAPE}px`;
-        video_product.style.height = `${HEIGH_IMG_SHAPE}px`;  
-        video_product.style.objectFit = "contain";   
+    canvasManager.hideImagePreview();
+    video_product.style.width = `${WIDTH_IMG_SHAPE}px`;
+    video_product.style.height = `${HEIGH_IMG_SHAPE}px`;  
+    video_product.style.objectFit = "contain";   
+    video_product.style.border = "none";
+    video_product.style.outline = "none";
+    if (video_product.getAttribute("src")) {
         video_product.style.display = "flex";
-        canvasManager.setWrapCanvasVisible(false);
+    } else {
+        video_product.style.display = "none";
+    }
+    canvasManager.setWrapCanvasVisible(false);
 }
 
 export function show_video_product(){
+    canvasManager.hideImagePreview();
+    video_product.style.border = "none";
+    video_product.style.outline = "none";
+    video_product.style.display = "flex";
     videoManager.show();
     canvasManager.setWrapCanvasVisible(false);
 }

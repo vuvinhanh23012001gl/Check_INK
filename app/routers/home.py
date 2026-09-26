@@ -3,9 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.core.dependencies import get_services
 from app.container import ServiceContainer
+from app.config.path_config import PATH_FOLDER_TEMPLATES
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(PATH_FOLDER_TEMPLATES))
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request):
@@ -51,5 +52,34 @@ def data_home(services: ServiceContainer = Depends(get_services),bayload:dict = 
         # print("result",result.data)
         # print("status result.ok path_arr_img result.data",result.ok ,result.data)
         return {"status": result.ok ,"path_arr_img":result.data}
+
+
+@router.get("/api/product_count")
+def get_product_count(services: ServiceContainer = Depends(get_services)):
+    """
+    Lấy số lượng sản phẩm OK, NG và Tổng đã lưu trong file JSON.
+    """
+    return services.obj_product_count_service.get_counts()
+
+
+@router.post("/api/product_count/reset")
+def reset_product_count(services: ServiceContainer = Depends(get_services)):
+    """
+    Đặt lại số lượng sản phẩm về 0 (OK=0, NG=0, Tổng=0) khi nhấn nút 'Đặt lại'.
+    """
+    return services.obj_product_count_service.reset_counts()
+
+
+@router.get("/api/hardware_status")
+def get_hardware_status(services: ServiceContainer = Depends(get_services)):
+    """
+    Lấy trạng thái kết nối phần cứng thực tế cho Camera và cổng COM.
+    """
+    is_cam = services.obj_camera.get_is_connect() if getattr(services, "obj_camera", None) else False
+    is_com = services.obj_manager_serial.is_running() if getattr(services, "obj_manager_serial", None) else False
+    return {
+        "camera": bool(is_cam),
+        "com": bool(is_com),
+    }
 
 

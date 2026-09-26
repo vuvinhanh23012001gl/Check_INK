@@ -337,6 +337,27 @@ class IAIControl:
         self.thread = threading.Thread(target=self._handler_request_stm32, daemon=True)
         self.thread.start()
 
+    def stop_thread_input_handler_stm32(self) -> None:
+        """
+        Dừng luồng đọc dữ liệu đầu vào từ các nút nhấn vật lý của STM32.
+        """
+        self.allow_button_thread = False
+        print("🛑 [IAIControl] Đã dừng luồng input STM32.")
+
+    def stop_thread_handler_stm32(self) -> None:
+        """
+        Dừng luồng chính xử lý logic và gửi dữ liệu Output tới STM32.
+        """
+        self.allow_open_thread = False
+        print("🛑 [IAIControl] Đã dừng luồng handler STM32.")
+
+    def stop(self) -> None:
+        """
+        Dừng toàn bộ các luồng hoạt động của bộ điều khiển STM32/IAI.
+        """
+        self.stop_thread_input_handler_stm32()
+        self.stop_thread_handler_stm32()
+
 
     def _input_thread(self):
         while self.allow_button_thread:

@@ -178,19 +178,24 @@ class JudmentLawProductSevice:
 
 
     def compare_structure(self, data: dict, data_frame: dict) -> bool:
-        """So sánh cấu trúc dict, cho phép data có nhiều key hơn.
+        """Kiểm tra payload judgment là một phần hợp lệ của cây point/frame.
+
         Args:
-            data: Cấu trúc nguồn.
-            data_frame: Cấu trúc cần so sánh.
+            data: Payload chỉ chứa các point đã cấu hình inspector.
+            data_frame: Cây định danh đầy đủ product/frame/point.
         Returns:
-            bool: True nếu data_frame là tập con của data.
+            bool: True nếu mọi khóa payload tồn tại trong cây định danh.
+        Errors: Không phát sinh; cấu trúc sai trả về False.
         """
-        for key, value in data_frame.items():
-            if key not in data:
+        if not isinstance(data, dict) or not isinstance(data_frame, dict):
+            return False
+        for key, value in data.items():
+            if key not in data_frame:
                 return False
             if isinstance(value, dict):
-                if not isinstance(data[key], dict):
+                expected = data_frame[key]
+                if not isinstance(expected, dict):
                     return False
-                if not self.compare_structure(data[key], value):
+                if expected and not self.compare_structure(value, expected):
                     return False
         return True

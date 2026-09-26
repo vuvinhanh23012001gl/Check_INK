@@ -21,6 +21,7 @@ from app.engines.train.patchcore_train_model.patchcore_train_record_repository i
 
 class ForeignObjectPatchCoreService(PatchCoreInspectionService):
     """Tạo model PatchCore Dị vật với manifest riêng và session foreign."""
+    training_inspector_name = "ForeignObjectInspector"
 
     def __init__(self, point_service, yolo_object_model=None):
         """Khởi tạo service kiểm tra dị vật.
@@ -92,6 +93,9 @@ class ForeignObjectPatchCoreService(PatchCoreInspectionService):
                 converted_roi["yStart"]:converted_roi["yEnd"],
                 converted_roi["xStart"]:converted_roi["xEnd"],
             ]
+            self._save_retrain_input(
+                cropped_bgr,
+            )
             model_root = (
                 Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
                 / str(product_id)

@@ -99,6 +99,32 @@ def test_point_service():
     result_data_product =  measurement.get_product_data("1")
     print(result_data_product.data)
 
-test_point_service()
+def test_partial_judgment_tree_is_valid():
+    """Cho phép lưu các point có inspector mà không yêu cầu mọi point.
+
+    Input: Cây đủ ba point và payload chỉ chứa hai point đã cấu hình.
+    Output: Không trả về; assert payload partial hợp lệ và khóa lạ bị từ chối.
+    Errors: AssertionError nếu kiểm tra cấu trúc sai.
+    """
+    service = JudmentLawProductSevice(None)
+    point_tree = {"1": {"0": {"0": {}, "1": {}, "2": {}}}}
+    partial_payload = {
+        "1": {
+            "0": {
+                "0": {"ArmCoverInspector": {"name": "ARM Cover"}},
+                "1": {"HoleItemInspector": {"name": "Lỗ thủng"}},
+            }
+        }
+    }
+
+    assert service.compare_structure(partial_payload, point_tree)
+    assert not service.compare_structure(
+        {"1": {"0": {"9": {"ArmCoverInspector": {}}}}},
+        point_tree,
+    )
+
+
+if __name__ == "__main__":
+    test_point_service()
 
 #python -m app.tests.services.test_judment_law_product_service

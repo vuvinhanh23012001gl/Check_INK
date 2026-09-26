@@ -17,7 +17,7 @@
 
 from pathlib import Path
 from datetime import datetime
-from app.config import PATH_CONFIG_SOFTWARE 
+from app.config import PATH_CONFIG_SOFTWARE, PATH_DEFAULT_LOG_DISK
 from app.utils import Folder
 
 class Config_SoftWare:
@@ -38,7 +38,7 @@ class Config_SoftWare:
     NAME_FOLDER_LOG_IMG = "log_img"
 
     # ====== BASE PATH ======
-    DISK_SAVE = Path("C:/")
+    DISK_SAVE = PATH_DEFAULT_LOG_DISK
 
     # ====== DATE ======
     DATE_NOW = datetime.now().strftime("%d-%m-%Y")
