@@ -1,5 +1,5 @@
 // import {scroll_content,,SocketData,SocketLog,WIDTH_IMG_SHAPE,HEIGH_IMG_SHAPE,set_camera_connection} from "./common_value.js"
-import {canvasManager,SocketData,SocketLog,set_camera_connection,set_com_connection, get_com_connection} from "./common_value.js"
+import {canvasManager,SocketData,SocketLog,scroll_container,set_camera_connection,set_com_connection, get_com_connection} from "./common_value.js"
 import {postData}from "./utills/api.js";
 
 const status_judment = document.querySelector(".paner-main-status-product");
@@ -7,6 +7,11 @@ const log_judment = document.getElementById("log_judment");
 const btn_left = document.querySelector(".scroll-up");   
 const btn_right = document.querySelector(".scroll-down");
 const div_show_point_detect = document.getElementById("table-show-point-detect");
+const toggle_judgment_images = document.getElementById("toggleBtn");
+const judgment_results = new Map();
+let judgment_session = null;
+let judgment_complete = false;
+let judgment_image_mode = false;
 
 const circle_status_connect_camera =  document.getElementById("element-circle-status-camera");
 const label_status_connect_camera = document.getElementById("status-connect-cam");
@@ -21,6 +26,35 @@ let divCreateList_Home = [];
 SocketData.on("data_output_judment", data =>{
   console.log("data judment :",data);
   handle_judment_realtime(data?.msg?.data_output_judment);
+});
+
+SocketData.on("judgment_reset", data => {
+  const payload = data?.data || {};
+  judgment_results.clear();
+  judgment_session = payload;
+  judgment_complete = false;
+  judgment_image_mode = true;
+  if (toggle_judgment_images) toggle_judgment_images.textContent = "Ảnh master";
+  setProductJudgmentStatus("--");
+  if (div_show_point_detect) div_show_point_detect.innerHTML = "";
+  clearJudgmentBorders();
+});
+
+SocketData.on("judgment_item_result", data => {
+  const result = data?.data;
+  if (!result) return;
+  const key = `${result.frame_id}:${result.item_id}`;
+  judgment_results.set(key, result);
+  markJudgmentItem(result);
+  renderInspectorTable(result);
+  showJudgmentImage(result);
+});
+
+SocketData.on("judgment_product_result", data => {
+  const result = data?.data;
+  if (!result) return;
+  judgment_complete = true;
+  setProductJudgmentStatus(result.overall ? "OK" : "NG");
 });
 
 
@@ -45,6 +79,152 @@ SocketData.on("status_com", data =>{
 SocketLog.on("log_Home", (data) => {
     console.log("Dữ liệu sản phẩm nhận được log_Home :", data);
     log_judment.innerHTML += `<p>${data?.msg}</p>`;
+});
+
+function clearJudgmentBorders() {
+  scroll_container?.querySelectorAll(".img-item").forEach(item => {
+    item.style.borderColor = "";
+  });
+}
+
+function markJudgmentItem(result) {
+  const frame = scroll_container?.querySelector(
+    `.box-frame[data-frame-id="${result.frame_id}"]`
+  );
+  const item = frame?.querySelector(`.img-item[data-id="${result.item_id}"]`);
+  if (!item) return;
+  item.style.border = "3px solid";
+  item.style.borderColor = ["NO_DATA", "ERROR"].includes(result.status)
+    ? "#f59e0b"
+    : result.overall === true ? "#16a34a" : "#dc2626";
+}
+
+function renderInspectorTable(result) {
+  if (!div_show_point_detect) return;
+  div_show_point_detect.innerHTML = "";
+  const table = document.createElement("table");
+  table.className = "master-table";
+  const header = document.createElement("tr");
+  ["STT", "Tên hạng mục", "Kết quả", "Message"].forEach(text => {
+    const cell = document.createElement("th");
+    cell.textContent = text;
+    header.appendChild(cell);
+  });
+  table.appendChild(header);
+  Object.entries(result.inspectors || {}).forEach(([name, inspector], index) => {
+    const row = document.createElement("tr");
+    const values = [
+      index + 1,
+      inspector.display_name || name,
+      inspector.status || (inspector.ok ? "OK" : "NG"),
+      inspector.message || "",
+    ];
+    values.forEach((value, valueIndex) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      if (valueIndex === 2) {
+        cell.classList.add("judgment-status-cell");
+        cell.classList.add(String(value).toUpperCase() === "OK" ? "is-ok" : "is-ng");
+      }
+      row.appendChild(cell);
+    });
+    table.appendChild(row);
+  });
+  div_show_point_detect.appendChild(table);
+}
+
+function showJudgmentImage(result) {
+  if (!result.judgment_path) return;
+  const image = new Image();
+  image.onload = () => {
+    canvasManager.show_img_items(image);
+  };
+  image.src = result.judgment_path;
+}
+
+function getActiveItemView() {
+  const item = scroll_container?.querySelector(".img-item.active");
+  const frame = item?.closest(".box-frame");
+  if (!item || !frame) return null;
+  return {item, frameId: frame.dataset.frameId, itemId: item.dataset.id};
+}
+
+function showActiveMasterImage() {
+  const active = getActiveItemView();
+  const image = active?.item.querySelector(".img_show_point");
+  if (image) canvasManager.show_img_items(image);
+}
+
+function showActiveJudgmentImage() {
+  const active = getActiveItemView();
+  if (!active) return;
+  const result = judgment_results.get(`${active.frameId}:${active.itemId}`);
+  if (!result) {
+    showActiveMasterImage();
+    div_show_point_detect.innerHTML = "";
+    return;
+  }
+  renderInspectorTable(result);
+  showJudgmentImage(result);
+}
+
+function selectJudgmentItem(frameId, itemId) {
+  const frame = scroll_container?.querySelector(
+    `.box-frame[data-frame-id="${frameId}"]`
+  );
+  const item = frame?.querySelector(`.img-item[data-id="${itemId}"]`);
+  if (!item) return;
+  scroll_container.querySelectorAll(".img-item.active").forEach(activeItem => {
+    activeItem.classList.remove("active");
+  });
+  item.classList.add("active");
+  const result = judgment_results.get(`${frameId}:${itemId}`);
+  if (judgment_image_mode && result) {
+    renderInspectorTable(result);
+    showJudgmentImage(result);
+  } else if (!judgment_image_mode) {
+    div_show_point_detect.innerHTML = "";
+    showActiveMasterImage();
+  }
+}
+
+scroll_container?.addEventListener("click", event => {
+  const item = event.target.closest(".img-item");
+  const frame = item?.closest(".box-frame");
+  if (!item || !frame) return;
+  selectJudgmentItem(frame.dataset.frameId, item.dataset.id);
+});
+
+window.addEventListener("iai-point-selected", event => {
+  const detail = event.detail || {};
+  selectJudgmentItem(detail.frameId, detail.pointId);
+  if (!judgment_image_mode) {
+    showActiveMasterImage();
+    div_show_point_detect.innerHTML = "";
+    return;
+  }
+  const result = judgment_results.get(`${detail.frameId}:${detail.pointId}`);
+  if (result) {
+    renderInspectorTable(result);
+    showJudgmentImage(result);
+  }
+});
+
+toggle_judgment_images?.addEventListener("click", () => {
+  if (!judgment_complete) {
+    log_judment.innerHTML += "<p>Chưa có dữ liệu phán định.</p>";
+    return;
+  }
+  judgment_image_mode = !judgment_image_mode;
+  toggle_judgment_images.textContent = judgment_image_mode
+    ? "Ảnh master"
+    : "Ảnh phán định";
+  if (!judgment_image_mode) {
+    div_show_point_detect.innerHTML = "";
+    showActiveMasterImage();
+    return;
+  }
+  showActiveJudgmentImage();
 });
 
 
@@ -231,4 +411,11 @@ function isConect(isconect,element_circle,element_lable,str_lable){
         element_circle.classList.remove("on");
         element_lable.innerText = `${str_lable} mất kết nối`;
     }  
+}
+
+function setProductJudgmentStatus(status) {
+  if (!status_judment) return;
+  status_judment.textContent = status;
+  status_judment.classList.remove("OK", "NG", "WARNING", "ERRO", "PENDING");
+  status_judment.classList.add(status === "OK" || status === "NG" ? status : "PENDING");
 }

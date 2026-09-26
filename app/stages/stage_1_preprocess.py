@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,6 +20,8 @@ class PreparedProduct:
     product_id: str
     frames: list[dict]
     scale_mm_per_pixel: float
+    session_id: str
+    number_step: int
 
 class StagePreprocess:
     """Đọc và chuẩn hóa dữ liệu sản phẩm trước khi điều khiển IAI."""
@@ -36,6 +39,11 @@ class StagePreprocess:
         Errors: ``ValueError`` nếu thiếu/sai product, frame, point hoặc judgment law.
         """
         prepared = self._load_product_data()
+        print(
+            "[STAGE1] Chuẩn bị product="
+            f"{prepared.product_id}, frames={len(prepared.frames)}, "
+            f"number_step={prepared.number_step}, session={prepared.session_id}"
+        )
         self.services.prepared_product = prepared
         self.services.runtime_state.set_pipeline_state(
             RuntimePipelineState.READY
@@ -80,6 +88,10 @@ class StagePreprocess:
             raise ValueError(f"Không có points cho product {product_id}")
         if not isinstance(law_data, dict):
             raise ValueError(f"Không có config judgment cho product {product_id}")
+        print(
+            f"[STAGE1] Đã đọc product={product_id}: "
+            f"frames_points={len(points_data)}, judgment_frames={len(law_data)}"
+        )
 
         frames = []
         for frame_id in sorted(points_data, key=self._sort_key):
@@ -104,9 +116,11 @@ class StagePreprocess:
                     ) from error
                 judgment = frame_law.get(str(point_id))
                 if not isinstance(judgment, dict) or not judgment:
-                    raise ValueError(
-                        f"Thiếu config judgment tại frame {frame_id}, point {point_id}"
-                    )
+                    judgment = {}
+                print(
+                    f"[STAGE1] frame={frame_id}, item={point_id}, "
+                    f"inspectors={list(judgment.keys()) if judgment else []}"
+                )
                 points.append({
                     "point_id": str(point_id),
                     **coordinates,
@@ -119,7 +133,9 @@ class StagePreprocess:
             raise ValueError(f"Product {product_id} không có frame/point hợp lệ")
 
         scale = self._read_scale(calibration_data)
-        return PreparedProduct(product_id, frames, scale)
+        number_step = sum(len(frame["points"]) for frame in frames)
+        session_id = datetime.now(timezone.utc).strftime("session_%Y%m%dT%H%M%S%fZ")
+        return PreparedProduct(product_id, frames, scale, session_id, number_step)
 
     @staticmethod
     def _sort_key(value: str) -> tuple[int, str]:

@@ -53,6 +53,7 @@ def create_app():
     # 🔹 Static
     fastapi_app.mount("/static", StaticFiles(directory="app/static"), name="static")
     fastapi_app.mount("/storage", StaticFiles(directory="app/storage"), name="storage")
+    fastapi_app.mount("/output", StaticFiles(directory="app/output"), name="output")
     
     # 🔹 Router
     fastapi_app.include_router(home_router)

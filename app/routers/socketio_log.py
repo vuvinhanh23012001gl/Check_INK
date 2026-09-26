@@ -62,6 +62,12 @@ async def log_sender(app):
                 data_data = data_send_client.get("data",None)
                 if TypeDataSendClient.data_calibration_send_client == data_type:
                     await sio.emit(TypeDataSendClient.data_calibration_send_client, {"data": data_data}, namespace = NAMESPACE_DATA)
+                elif data_type in {
+                    TypeSend.judgment_reset,
+                    TypeSend.judgment_item_result,
+                    TypeSend.judgment_product_result,
+                }:
+                    await sio.emit(data_type, {"data": data_data}, namespace=NAMESPACE_DATA)
             await asyncio.sleep(0.5)
 
 

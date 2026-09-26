@@ -1,11 +1,24 @@
 {
     "1": {
         "0": {
-            "0": {},
-            "1": {},
-            "2": {},
-            "3": {},
-            "4": {
+            "0": {
+                "MeasurementWeldInspector": {
+                    "0": {
+                        "name_line": "1",
+                        "level1": 1,
+                        "level2": 2,
+                        "level3": 3,
+                        "level4": 4,
+                        "level5": 5,
+                        "xStart": 1226,
+                        "yStart": 896,
+                        "xEnd": 1222,
+                        "yEnd": 1116,
+                        "coordinateSpace": "image"
+                    }
+                }
+            },
+            "1": {
                 "MeasurementWeldInspector": {
                     "0": {
                         "name_line": "1",
@@ -14,252 +27,72 @@
                         "level3": 4,
                         "level4": 5,
                         "level5": 6,
-                        "xStart": 1783,
-                        "yStart": 687,
-                        "xEnd": 1787,
-                        "yEnd": 801,
-                        "coordinateSpace": "image"
-                    },
-                    "1": {
-                        "name_line": "2",
-                        "level1": 1,
-                        "level2": 2,
-                        "level3": 3,
-                        "level4": 4,
-                        "level5": 5,
-                        "xStart": 1651,
-                        "yStart": 693,
-                        "xEnd": 1655,
-                        "yEnd": 807,
-                        "coordinateSpace": "image"
-                    },
-                    "2": {
-                        "name_line": "3",
-                        "level1": 1,
-                        "level2": 2,
-                        "level3": 3,
-                        "level4": 4,
-                        "level5": 5,
-                        "xStart": 1342,
-                        "yStart": 697,
-                        "xEnd": 1342,
-                        "yEnd": 807,
+                        "xStart": 1058,
+                        "yStart": 784,
+                        "xEnd": 1018,
+                        "yEnd": 1078,
                         "coordinateSpace": "image"
                     }
-                },
-                "SlitWeldInspector": {
-                    "0": {
-                        "nameLine": "1",
-                        "widthMin": 3,
-                        "widthMax": 4,
-                        "xStart": 1701,
-                        "yStart": 745,
-                        "xEnd": 1695,
-                        "yEnd": 855,
-                        "coordinateSpace": "image"
-                    },
-                    "1": {
-                        "nameLine": "2",
-                        "widthMin": 3,
-                        "widthMax": 4,
-                        "xStart": 1418,
-                        "yStart": 751,
-                        "xEnd": 1422,
-                        "yEnd": 863,
-                        "coordinateSpace": "image"
-                    }
-                },
-                "ArmSensorInspector": {
-                    "id": 0,
-                    "name": "ARM Sensor",
-                    "xStart": 138,
-                    "yStart": 64,
-                    "xEnd": 1978,
-                    "yEnd": 677,
-                    "width": 917,
-                    "height": 305,
-                    "coordinateSpace": "image"
-                },
-                "ArmCoverInspector": {
-                    "id": 0,
-                    "name": "ARM Cover",
-                    "xStart": 646,
-                    "yStart": 930,
-                    "xEnd": 1422,
-                    "yEnd": 1530,
-                    "width": 387,
-                    "height": 299,
-                    "coordinateSpace": "image"
-                },
-                "BorderFilmInspector": {
-                    "0": {
-                        "nameLine": "1",
-                        "widthMin": 2,
-                        "widthMax": 3,
-                        "xStart": 100,
-                        "yStart": 1245,
-                        "xEnd": 325,
-                        "yEnd": 980,
-                        "coordinateSpace": "image"
-                    },
-                    "1": {
-                        "nameLine": "2",
-                        "widthMin": 3,
-                        "widthMax": 4,
-                        "xStart": 187,
-                        "yStart": 1327,
-                        "xEnd": 427,
-                        "yEnd": 1148,
-                        "coordinateSpace": "image"
-                    }
-                },
-                "MembraneInspector": {
-                    "id": 0,
-                    "name": "Màng bám thấm",
-                    "xStart": 1400,
-                    "yStart": 972,
-                    "xEnd": 2006,
-                    "yEnd": 1428,
-                    "width": 302,
-                    "height": 227,
-                    "coordinateSpace": "image"
                 },
                 "HoleItemInspector": {
                     "id": 0,
                     "name": "Lỗ thủng",
-                    "xStart": 638,
-                    "yStart": 918,
-                    "xEnd": 1424,
-                    "yEnd": 1532,
-                    "width": 392,
-                    "height": 306,
+                    "xStart": 616,
+                    "yStart": 352,
+                    "xEnd": 1404,
+                    "yEnd": 914,
+                    "width": 394,
+                    "height": 281,
                     "coordinateSpace": "image"
-                },
-                "ScratchedPipeItemInspector": {
-                    "id": 0,
-                    "name": "Vết trầy xước",
-                    "xStart": 999,
-                    "yStart": 185,
-                    "xEnd": 1791,
-                    "yEnd": 707,
-                    "width": 395,
-                    "height": 260,
-                    "coordinateSpace": "image"
-                },
-                "EndChippingInspector": {
-                    "id": 0,
-                    "name": "Lỗi mẻ cạnh",
-                    "xStart": 1091,
-                    "yStart": 145,
-                    "xEnd": 1759,
-                    "yEnd": 687,
-                    "width": 333,
-                    "height": 270,
-                    "threshold": 1,
-                    "saveRuntimeImages": true,
-                    "coordinateSpace": "image"
-                },
-                "ForeignObjectInspector": {
-                    "id": 0,
-                    "name": "Dị vật",
-                    "xStart": 1077,
-                    "yStart": 62,
-                    "xEnd": 1747,
-                    "yEnd": 649,
-                    "width": 334,
-                    "height": 292,
-                    "threshold": 0.5,
-                    "saveRuntimeImages": true,
-                    "coordinateSpace": "image"
-                },
-                "AirBubblesItemInspector": {
+                }
+            }
+        },
+        "1": {
+            "0": {
+                "MeasurementWeldInspector": {
                     "0": {
-                        "id": 0,
-                        "name": "Bọt khí 1",
-                        "xStart": 584,
-                        "yStart": 221,
-                        "xEnd": 820,
-                        "yEnd": 454,
-                        "width": 118,
-                        "height": 116,
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 626,
+                        "yStart": 752,
+                        "xEnd": 622,
+                        "yEnd": 942,
                         "coordinateSpace": "image"
-                    },
-                    "1": {
-                        "id": 1,
-                        "name": "Bọt khí 2",
-                        "xStart": 1667,
-                        "yStart": 371,
-                        "xEnd": 1902,
-                        "yEnd": 556,
-                        "width": 117,
-                        "height": 92,
+                    }
+                },
+                "HoleItemInspector": {
+                    "id": 0,
+                    "name": "Lỗ thủng",
+                    "xStart": 928,
+                    "yStart": 432,
+                    "xEnd": 1682,
+                    "yEnd": 984,
+                    "width": 377,
+                    "height": 276,
+                    "coordinateSpace": "image"
+                }
+            },
+            "1": {
+                "MeasurementWeldInspector": {
+                    "0": {
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 978,
+                        "yStart": 806,
+                        "xEnd": 920,
+                        "yEnd": 1020,
                         "coordinateSpace": "image"
                     }
                 }
-            },
-            "5": {},
-            "6": {},
-            "7": {},
-            "8": {},
-            "9": {},
-            "10": {},
-            "11": {},
-            "12": {},
-            "13": {},
-            "14": {},
-            "15": {},
-            "16": {},
-            "17": {},
-            "18": {},
-            "19": {},
-            "20": {},
-            "21": {},
-            "22": {},
-            "23": {},
-            "24": {},
-            "25": {}
-        },
-        "1": {
-            "0": {},
-            "1": {},
-            "2": {},
-            "3": {},
-            "4": {
-                "EndChippingInspector": {
-                    "id": 0,
-                    "name": "Lỗi mẻ cạnh",
-                    "xStart": 1078,
-                    "yStart": 62,
-                    "xEnd": 1654,
-                    "yEnd": 622,
-                    "width": 288,
-                    "height": 280,
-                    "threshold": 1,
-                    "saveRuntimeImages": true,
-                    "coordinateSpace": "image"
-                }
-            },
-            "5": {},
-            "6": {},
-            "7": {},
-            "8": {},
-            "9": {},
-            "10": {},
-            "11": {},
-            "12": {},
-            "13": {},
-            "14": {},
-            "15": {},
-            "16": {},
-            "17": {},
-            "18": {},
-            "19": {},
-            "20": {},
-            "21": {},
-            "22": {},
-            "23": {},
-            "24": {},
-            "25": {}
+            }
         }
     }
 }

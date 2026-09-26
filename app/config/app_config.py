@@ -7,6 +7,9 @@ class TypeSend:
     log_home = "log_Home"
     log_judment = "log_Home"
     log_calibration = "log_calibration"
+    judgment_reset = "judgment_reset"
+    judgment_item_result = "judgment_item_result"
+    judgment_product_result = "judgment_product_result"
 
 
 

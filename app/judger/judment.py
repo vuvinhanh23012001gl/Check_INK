@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any, Sequence
 import numpy as np
+import cv2
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 
@@ -284,6 +285,9 @@ class Judment:
 
         inspector_results: dict[str, dict[str, Any]] = {}
         errors: list[dict[str, str]] = []
+        inspector_images: dict[str, np.ndarray] = {}
+        overlay_data: dict[str, dict[str, Any]] = {}
+        judgment_image = image.copy()
         for index, task in enumerate(tasks, start=1):
             if not isinstance(task, InspectorTask):
                 raise TypeError("mọi phần tử inspectors phải là InspectorTask")
@@ -304,6 +308,18 @@ class Judment:
                 if not isinstance(result, JudgmentResult):
                     raise TypeError("detector phải trả về JudgmentResult")
                 inspector_results[name] = result.to_dict()
+                inspector_image, inspector_overlay = self._render_inspector_overlay(
+                    image,
+                    name,
+                    task.standard_data,
+                    task.define_args,
+                    runtime_data,
+                    comparison_data,
+                    result,
+                )
+                inspector_images[name] = inspector_image
+                overlay_data[name] = inspector_overlay
+                judgment_image = self._blend_overlay_image(judgment_image, inspector_image)
                 self._log_inspector_result(name, runtime_data, comparison_data, result)
                 if not result.ok:
                     errors.append({
@@ -340,7 +356,185 @@ class Judment:
             "processed_at": datetime.now(timezone.utc).isoformat(),
             "inspectors": inspector_results,
             "errors": errors,
+            "overlay_data": overlay_data,
+            "judgment_image": judgment_image,
+            "inspector_images": inspector_images,
         }
+
+    @staticmethod
+    def _blend_overlay_image(base: np.ndarray, overlay: np.ndarray) -> np.ndarray:
+        """Gộp ảnh overlay inspector lên ảnh judgment tổng."""
+        if not isinstance(overlay, np.ndarray) or overlay.shape != base.shape:
+            return base
+        return cv2.addWeighted(base, 0.55, overlay, 0.45, 0)
+
+    @classmethod
+    def _render_inspector_overlay(
+        cls,
+        image: np.ndarray,
+        name: str,
+        standard_data: Any,
+        define_args: tuple[Any, ...],
+        runtime_data: Any,
+        comparison_data: Any,
+        result: JudgmentResult,
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        """Vẽ cấu hình chuẩn và dữ liệu runtime theo đúng loại inspector.
+
+        Input: Ảnh gốc, tên inspector, cấu hình chuẩn, dữ liệu runtime/so
+            sánh và kết quả phán định của một tool.
+        Output: Tuple gồm ảnh overlay và metadata các line, khung, polygon
+            đã vẽ. Line đo chỉ được vẽ là line có nhãn, còn cấu hình vùng
+            được vẽ thành rectangle có nhãn.
+        Errors: Không phát sinh với cấu hình không đầy đủ; các phần tử không
+            có đủ tọa độ sẽ được bỏ qua.
+        """
+        runtime_source = runtime_data if isinstance(runtime_data, dict) else {}
+        comparison_source = comparison_data if isinstance(comparison_data, dict) else {}
+        runtime_image = runtime_source.get("image")
+        if not isinstance(runtime_image, np.ndarray):
+            runtime_image = comparison_source.get("image")
+        output = runtime_image.copy() if isinstance(runtime_image, np.ndarray) else image.copy()
+        overlay: dict[str, Any] = {"standard": {}, "runtime": {}, "status": result.status}
+        config = standard_data.get(name, standard_data) if isinstance(standard_data, dict) else standard_data
+
+        if isinstance(config, dict):
+            for config_key, value in config.items():
+                if not isinstance(value, dict):
+                    continue
+                coordinate_keys = ("xStart", "yStart", "xEnd", "yEnd")
+                if not all(key in value for key in coordinate_keys):
+                    continue
+                shape = [
+                        int(value["xStart"]), int(value["yStart"]),
+                        int(value["xEnd"]), int(value["yEnd"]),
+                ]
+                is_measurement_line = any(
+                    key in value
+                    for key in ("level1", "level2", "level3", "level4", "level5", "widthMin", "widthMax")
+                )
+                label = str(
+                    value.get("name_line")
+                    or value.get("nameLine")
+                    or value.get("name")
+                    or config_key
+                )
+                if is_measurement_line:
+                    cv2.line(
+                        output,
+                        (shape[0], shape[1]),
+                        (shape[2], shape[3]),
+                        (255, 200, 0),
+                        2,
+                    )
+                    cls._draw_overlay_label(output, label, shape[0], shape[1], (255, 200, 0))
+                    overlay["standard"].setdefault("lines", []).append(shape)
+                else:
+                    cv2.rectangle(
+                        output,
+                        (shape[0], shape[1]),
+                        (shape[2], shape[3]),
+                        (255, 200, 0),
+                        2,
+                    )
+                    cls._draw_overlay_label(output, label, shape[0], shape[1], (255, 200, 0))
+                    overlay["standard"].setdefault("boxes", []).append(shape)
+        elif name == "AirBubblesItemInspector" and define_args:
+            regions = define_args[0]
+            for region in regions if isinstance(regions, list) else []:
+                if len(region) != 4:
+                    continue
+                x, y, width, height = [int(value) for value in region]
+                box = [x, y, x + width, y + height]
+                cv2.rectangle(output, (x, y), (x + width, y + height), (255, 200, 0), 2)
+                overlay["standard"].setdefault("boxes", []).append(box)
+        elif standard_data is True and len(define_args) == 4:
+            x1, y1, x2, y2 = [int(value) for value in define_args]
+            cv2.rectangle(output, (x1, y1), (x2, y2), (255, 200, 0), 2)
+            overlay["standard"].setdefault("boxes", []).append([x1, y1, x2, y2])
+
+        polygon = runtime_source.get("polygon")
+        if polygon is None:
+            polygon = comparison_source.get("polygon")
+        if polygon is not None:
+            polygon_points = cls._points_array(polygon)
+            if polygon_points is not None and len(polygon_points) >= 3:
+                cv2.polylines(output, [polygon_points], True, (0, 255, 0), 3)
+                overlay["runtime"]["polygons"] = [polygon_points.reshape(-1, 2).tolist()]
+
+        lines = []
+        for item in comparison_source.get("comparisons", []):
+            runtime_line = item.get("runtime") if isinstance(item, dict) else None
+            original_line = runtime_line.get("original_line") if isinstance(runtime_line, dict) else None
+            if original_line and len(original_line) == 4:
+                lines.append([float(value) for value in original_line])
+                is_valid = bool(item.get("is_valid"))
+                color = (0, 255, 0) if is_valid else (0, 0, 255)
+                cv2.line(
+                    output,
+                    (int(original_line[0]), int(original_line[1])),
+                    (int(original_line[2]), int(original_line[3])),
+                    color,
+                    3,
+                )
+                for point_key in ("intersection_point_1", "intersection_point_2"):
+                    point = runtime_line.get(point_key)
+                    if point and len(point) == 2:
+                        cv2.circle(output, (int(point[0]), int(point[1])), 6, (255, 0, 0), -1)
+        if lines:
+            overlay["runtime"]["lines"] = lines
+
+        objects = runtime_source.get("objects") or comparison_source.get("objects")
+        if isinstance(objects, list):
+            boxes = []
+            for obj in objects:
+                if not isinstance(obj, dict):
+                    continue
+                box = obj.get("box") or obj.get("bbox")
+                if isinstance(box, (list, tuple)) and len(box) == 4:
+                    x1, y1, x2, y2 = [int(float(value)) for value in box]
+                    cv2.rectangle(output, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    boxes.append([x1, y1, x2, y2])
+            if boxes:
+                overlay["runtime"]["boxes"] = boxes
+
+        return output, overlay
+
+    @staticmethod
+    def _draw_overlay_label(
+        image: np.ndarray,
+        label: str,
+        x: int,
+        y: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Vẽ nhãn ngắn, dễ đọc tại góc trên-trái của line hoặc rectangle.
+
+        Input: Ảnh OpenCV, nội dung nhãn, tọa độ neo và màu BGR.
+        Output: Không trả về; nhãn được vẽ trực tiếp lên ``image``.
+        Errors: Không phát sinh; nhãn rỗng được thay bằng chuỗi mặc định.
+        """
+        text = label.strip() or "Unnamed"
+        origin = (max(0, int(x)), max(16, int(y) - 6))
+        cv2.putText(
+            image,
+            text,
+            origin,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            color,
+            2,
+            cv2.LINE_AA,
+        )
+
+    @staticmethod
+    def _points_array(value: Any) -> np.ndarray | None:
+        """Chuẩn hóa polygon về mảng OpenCV dạng Nx1x2."""
+        try:
+            array = np.asarray(value, dtype=np.float32).reshape(-1, 1, 2)
+            return array.astype(np.int32)
+        except (TypeError, ValueError):
+            return None
 
     @staticmethod
     def _log_inspector_start(

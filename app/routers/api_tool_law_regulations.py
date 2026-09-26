@@ -55,7 +55,7 @@ def header_function(services: ServiceContainer = Depends(get_services)):
         "product": product,
         "data_point": points_result.data if points_result.ok else [],
         "data_master": None,
-        "tree": tree,
+        "tree": tree.data if tree.ok else None,
     }).to_dict()
 
 @router.get("/exit")

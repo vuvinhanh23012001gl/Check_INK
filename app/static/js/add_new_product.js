@@ -45,7 +45,20 @@ function show_box_warning_accept(id,name) {
     ).textContent = "⚠️ Xác nhận xóa";
     document.getElementById(
         "warning-message"
-    ).innerText = `Xóa sản phẩm có ID:${id} Tên:${name}?\nKhi nhấn xóa tất cả dữ liệu về sản phẩm sẽ bị xóa !`;
+    ).innerText = `Đang tải dữ liệu liên quan của sản phẩm ${id}...`;
+    fetchGetSendData("/product/delete_preview", {ID_Erase: id})
+        .then(result => {
+            const items = result?.data?.items || [];
+            const details = items.length
+                ? items.map(item => `- ${item.label}`).join("\n")
+                : "- Không tìm thấy dữ liệu đã lưu";
+            document.getElementById("warning-message").innerText =
+                `Xóa sản phẩm có ID:${id} Tên:${name}?\n\nDữ liệu sẽ xóa:\n${details}`;
+        })
+        .catch(() => {
+            document.getElementById("warning-message").innerText =
+                `Xóa sản phẩm có ID:${id} Tên:${name}?\nKhông lấy được danh sách dữ liệu.`;
+        });
     //dang ki su kien xoa
 }
 
@@ -116,7 +129,7 @@ btn_cancel_delete.addEventListener("click",function(){
 
 
 btn_confirm_delete.addEventListener("click", async function () {
-    if (!selected_delete_id_current) return;
+    if (selected_delete_id_current === null) return;
     try {
         let status_erase = await fetchGetSendData(
             "/product/erase_product",
@@ -127,6 +140,9 @@ btn_confirm_delete.addEventListener("click", async function () {
                 "Xóa thành công:",
                 selected_delete_id_current
             );
+            await UpDateTable();
+        } else if (status_erase?.partial) {
+            alert(status_erase.message);
             await UpDateTable();
         } else {
             console.log(

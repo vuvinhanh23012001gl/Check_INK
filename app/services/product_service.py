@@ -4,11 +4,26 @@
 
 import cv2
 import datetime
+import json
+import shutil
 import numpy as np
+from pathlib import Path
 from app.model import Product
 from app.repository import (ProductRepository)
 from app.utils import (Tool_OpenCv2,Folder)
 from app.core import (Result,ErrorCode)
+from app.config import (
+    PATH_CONFIG_CALIBRATION,
+    PATH_CONFIG_POINTS,
+    PATH_PRODUCT_DATA,
+    PATH_PRODUCT_IMG,
+    PATH_PRODUCT_ROI_PRODUCT_IMG,
+    PATH_FILE_DATA_CONFIG_JUDMENT_LAW,
+    PATH_FOLDER_IMG_COORDINATE_PRODUCT,
+    PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
+    PATH_FOLDER_IMG_COORDINATE_OUTPUT,
+    BASE_PATH_OUTPUT,
+)
 
 class ProductService:
 
@@ -175,42 +190,112 @@ class ProductService:
                 ErrorCode.PRODUCT_NOT_FOUND
             )
 
-        product = result_find.data
+        report = self.delete_product_data(product_id)
+        if report["failed"]:
+            return Result.Fail(report)
+        return Result.Ok(report)
 
-        # =====================
-        # DELETE IMAGE
-        # =====================
+    def get_delete_preview(self, product_id: int) -> dict:
+        """Liệt kê dữ liệu product sẽ bị xóa trước khi người dùng xác nhận.
 
-        path_img = (
-            self.repository
-            .get_product_image_path(
-                product.id
-            )
-        )
+        Input: ``product_id`` có thể bằng 0.
+        Output: báo cáo gồm các nhóm dữ liệu tồn tại và tổng số mục.
+        Errors: không ném lỗi; lỗi đọc file được ghi trong ``failed``.
+        """
+        product_id = str(product_id)
+        paths = self._product_cleanup_paths(product_id)
+        existing = [item for item in paths if item["exists"]]
+        return {
+            "product_id": int(product_id),
+            "items": existing,
+            "count": len(existing),
+            "failed": [],
+        }
 
-        Tool_OpenCv2.delete_image(
-            str(path_img)
-        )
+    def delete_product_data(self, product_id: int) -> dict:
+        """Xóa toàn bộ dữ liệu liên quan product và trả báo cáo từng nhóm.
 
-        # =====================
-        # DELETE ROI FOLDER
-        # =====================
+        Input: ``product_id`` có thể bằng 0.
+        Output: ``deleted`` và ``failed`` là danh sách thao tác đã thực hiện.
+        Errors: lỗi từng thao tác không dừng các thao tác còn lại.
+        """
+        product_key = str(product_id)
+        report = {"product_id": int(product_id), "deleted": [], "failed": []}
+        if int(product_id) not in self.products:
+            report["failed"].append({
+                "label": "products_data.json",
+                "error": "Không tìm thấy sản phẩm.",
+            })
+            return report
+        for item in self._product_cleanup_paths(product_key):
+            if not item["exists"]:
+                continue
+            try:
+                if item["kind"] == "json_key":
+                    self._delete_json_key(item["path"], product_key)
+                elif item["kind"] == "products_json":
+                    data = self.repository.read_config()
+                    data.get("products", {}).pop(product_key, None)
+                    self.repository.write_config(data)
+                else:
+                    path = Path(item["path"])
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                    elif path.exists():
+                        path.unlink()
+                report["deleted"].append(item["label"])
+            except Exception as error:
+                report["failed"].append({
+                    "label": item["label"],
+                    "error": str(error),
+                })
+        self.products.pop(int(product_id), None)
+        self._save_products()
+        return report
 
-        self.repository.delete_roi_folder(
-            product.id
-        )
-
-        # =====================
-        # DELETE PRODUCT
-        # =====================
-
-        del self.products[
-            product.id
+    def _product_cleanup_paths(self, product_id: str) -> list[dict]:
+        """Tạo danh sách file/thư mục có dữ liệu riêng của product."""
+        product_image = self.repository.get_product_image_path(product_id)
+        roi_folder = self.repository.get_roi_folder(product_id)
+        master_folder = Path(PATH_FOLDER_IMG_COORDINATE_PRODUCT) / product_id
+        patchcore_folder = Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE) / product_id
+        patchcore_output = Path(PATH_FOLDER_IMG_COORDINATE_OUTPUT) / product_id
+        judgment_root = Path(BASE_PATH_OUTPUT) / "judgment"
+        session_judgment = [
+            path for path in judgment_root.glob("*/product_" + product_id)
+            if path.exists()
+        ] if judgment_root.exists() else []
+        return [
+            {"label": "products_data.json", "path": str(PATH_PRODUCT_DATA), "kind": "products_json", "exists": Path(PATH_PRODUCT_DATA).exists()},
+            {"label": "Ảnh sản phẩm chính", "path": str(product_image), "kind": "path", "exists": product_image.exists()},
+            {"label": "Thư mục ROI sản phẩm", "path": str(roi_folder), "kind": "path", "exists": roi_folder.exists()},
+            {"label": "points.json", "path": str(PATH_CONFIG_POINTS), "kind": "json_key", "exists": self._json_key_exists(PATH_CONFIG_POINTS, product_id)},
+            {"label": "config_judgment_law.json", "path": str(PATH_FILE_DATA_CONFIG_JUDMENT_LAW), "kind": "json_key", "exists": self._json_key_exists(PATH_FILE_DATA_CONFIG_JUDMENT_LAW, product_id)},
+            {"label": "config_calibration.json", "path": str(PATH_CONFIG_CALIBRATION), "kind": "json_key", "exists": self._json_key_exists(PATH_CONFIG_CALIBRATION, product_id)},
+            {"label": "Ảnh master theo item", "path": str(master_folder), "kind": "path", "exists": master_folder.exists()},
+            {"label": "Model PatchCore", "path": str(patchcore_folder), "kind": "path", "exists": patchcore_folder.exists()},
+            {"label": "Output PatchCore", "path": str(patchcore_output), "kind": "path", "exists": patchcore_output.exists()},
+            *[
+                {"label": f"Judgment session: {path.parent.name}", "path": str(path), "kind": "path", "exists": True}
+                for path in session_judgment
+            ],
         ]
 
-        self._save_products()
+    @staticmethod
+    def _json_key_exists(path: str, key: str) -> bool:
+        try:
+            with open(path, "r", encoding="utf-8-sig") as file:
+                return key in json.load(file)
+        except (OSError, json.JSONDecodeError):
+            return False
 
-        return Result.Ok()
+    @staticmethod
+    def _delete_json_key(path: str, key: str) -> None:
+        with open(path, "r", encoding="utf-8-sig") as file:
+            data = json.load(file)
+        data.pop(key, None)
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
 
 
 

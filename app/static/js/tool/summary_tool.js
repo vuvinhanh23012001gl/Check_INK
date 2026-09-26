@@ -371,6 +371,7 @@ async function loadMasterDataOnce(openPanel = false){
 
     let data_master = head_data_master.data.data_master;
     console.log("Data master",data_master);
+    set_obj_product(null);
     write_log_append(log_regulations, `📸 Đã lấy danh sách master (${Object.keys(data_point || {}).length} frame).`);
 
     let actual_wid_img = head_data_master.data.wid_img;
@@ -380,9 +381,10 @@ async function loadMasterDataOnce(openPanel = false){
     write_log_append(log_regulations, `📐 Kích thước ảnh master: ${actual_wid_img} x ${actual_hei_img}.`);
     write_log_append(log_regulations, "📋 Đang nạp cây luật phán định của master...");
     try {
-        create_object_need(head_data_master.data.tree?.data);
+        create_object_need(head_data_master.data.tree);
     } catch (error) {
         console.error("Lỗi nạp cây luật phán định:", error);
+        set_obj_product(null);
         write_log_append(log_regulations, "⚠️ Không thể nạp cây luật phán định, nhưng vẫn hiển thị ảnh master.");
     }
 
@@ -416,9 +418,23 @@ header_adjust_master.addEventListener("click", async ()=>{
 loadMasterData();
 
 function create_object_need(tree){
-    console.log("tree",tree);
-    const product = Product.fromDict(convertStoredImageCoordinatesToCanvas(tree));
-    console.log("tree ObJect",product);
+    const treeData = tree?.data ?? tree;
+    console.log("[MASTER] Tree nhận được:", treeData);
+    if (!treeData || typeof treeData !== "object" || !Object.keys(treeData).length) {
+        throw new Error("Cây luật master rỗng");
+    }
+    const convertedTree = convertStoredImageCoordinatesToCanvas(treeData);
+    const product = Product.fromDict(convertedTree);
+    const frameCount = product.arr_frames.length;
+    const itemCount = product.arr_frames.reduce(
+        (total, frame) => total + frame.arr_items.length,
+        0,
+    );
+    const inspectorCount = product.getAllInspectors(ItemsInspector.TYPE_MEASUREMENT).length;
+    console.log(
+        `[MASTER] Đã nạp product=${product.product_id}, ` +
+        `frames=${frameCount}, items=${itemCount}, measurementItems=${inspectorCount}`
+    );
     set_obj_product(product);
 }
 
@@ -494,7 +510,10 @@ function create_items_img(id, index ,data_point = null, frame_box =null, frame_i
     img_item.appendChild(img_text);
     if(!frame_box){console.log("Lỗi hoặc không có sản phẩm");return;}
     frame_box.appendChild(img_item);
-        img_item.addEventListener("click",()=>{
+        img_item.addEventListener("click",(event)=>{
+            if (panner_adjust_master.classList.contains("active")) {
+                event.stopPropagation(); // tránh home.js xử lý lại click và clearAllCanvas() xóa mất line vừa vẽ
+            }
             canvasManager.clearShapeCanvas();
             canvasManager.clearPreviewCanvas();
             canvasManager.show_img_items(img_img);

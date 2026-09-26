@@ -19,6 +19,8 @@ class CalibSearchCoordinator:
     
     VALUE_TIMEOUT_WAIT_DATA: int = 20 
     MAX_NUMBER_THREAD_RUN_TIME: int = CalibrationConfig.MAX_NUMBER_CALIBRATION_METRICS 
+    CAPTURE_TIMEOUT_SECONDS: float = 2.0
+    CAPTURE_RETRY_COUNT: int = 3
 
     def __init__(
         self, 
@@ -122,7 +124,6 @@ class CalibSearchCoordinator:
         print("-------------------- Mở luồng xử lý thuật toán Calib------------------------------Đ.")
         self.com.set_shake_hands_complete(True)   
         status_hand_camera: bool = self.camera.get_is_connect() 
-        status_hand_camera = True
         status_hand_shake: bool = self.com.get_shake_hands_complete() # Nếu chưa bắt tay thì trả gửi log trả về 
         
         if status_hand_camera and status_hand_shake:
@@ -280,10 +281,8 @@ class CalibSearchCoordinator:
         self.data_all = {}
         
         for index_capture in range(0, number_capture):
-            # status, img = self.camera.capture_once(timeout=1)
-            status: bool = True
-            img: Any = cv2.imread(r"C:\Users\anhuv\Desktop\train\img_input\0_copy (24).jpg")
-            if status: 
+            status, img = self._capture_calibration_image()
+            if status and img is not None:
                 count_capture_ok += 1
                 arr_img_photographed.append(img)                                                                                     
                 progress = 15 + int(((index_capture + 1) / number_capture) * 35)
@@ -295,6 +294,16 @@ class CalibSearchCoordinator:
                 print(f"[Showqueue] Chụp ảnh không thành công [{index_capture}/{number_capture}]")                     
         
         print("✅ [Showqueue] Chụp ảnh thành công") if count_capture_ok == number_capture else print("❌ [Showqueue] Chụp ảnh có lỗi")          
+
+        if count_capture_ok != number_capture:
+            self.queue_send_log_client.put({
+                "type": TypeSend.log_calibration,
+                "message": (
+                    f"CALIB_PROGRESS:0:❌ Camera chỉ chụp được "
+                    f"{count_capture_ok}/{number_capture} ảnh; không tính calibration."
+                ),
+            })
+            return
         
         length_img_valid: int = len(arr_img_photographed)
         if length_img_valid == 0:
@@ -377,4 +386,35 @@ class CalibSearchCoordinator:
             "type": TypeSend.log_calibration,
             "message": "CALIB_PROGRESS:0:❌ Không tìm thấy đoạn đường hàn hợp lệ.",
         })
+
+    def _capture_calibration_image(self) -> tuple[bool, Any]:
+        """Chụp một frame mới từ camera thật với retry và timeout ổn định.
+
+        Input: không có; camera phải đang kết nối và acquisition đang chạy.
+        Output: ``(True, image)`` khi nhận được frame mới, ngược lại ``(False, None)``.
+        Errors: lỗi SDK/camera được ghi log và không làm chết thread calibration.
+        """
+        for attempt in range(1, self.CAPTURE_RETRY_COUNT + 1):
+            try:
+                if not self.camera.get_is_connect():
+                    self.queue_send_log_client.put({
+                        "type": TypeSend.log_calibration,
+                        "message": "❌ Camera chưa kết nối để chụp calibration.",
+                    })
+                    return False, None
+                status, image = self.camera.capture_once(
+                    timeout=self.CAPTURE_TIMEOUT_SECONDS
+                )
+                if status and image is not None:
+                    return True, image
+            except Exception as error:
+                print(f"[Calibration] Lỗi chụp ảnh lần {attempt}: {error}")
+            self.queue_send_log_client.put({
+                "type": TypeSend.log_calibration,
+                "message": (
+                    f"⚠️ Chụp ảnh calibration thất bại "
+                    f"lần {attempt}/{self.CAPTURE_RETRY_COUNT}."
+                ),
+            })
+        return False, None
 

@@ -35,13 +35,40 @@ def erase_product(
     services: ServiceContainer = Depends(get_services),
     ID_Erase: int = Query(..., description="Xoa San Pham")
 ):
-    result = services.obj_products_service.delete_product(ID_Erase)
-    if result.ok:
-        if services.obj_choose_product.is_choose_product(ID_Erase):
-            services.obj_choose_product.reset_choose_product()
+    if (
+        services.runtime_state.is_judgment_running()
+        or services.get_mode().name in {"MODE_PREPOCESS", "MODE_TRANSFORM", "MODE_EXPORT"}
+    ):
+        return {
+            "success": False,
+            "message": "Không thể xóa sản phẩm khi pipeline đang chạy hoặc đang phán định.",
+        }
+    report = services.obj_products_service.delete_product_data(ID_Erase)
+    if services.obj_choose_product.is_choose_product(ID_Erase):
+        services.obj_choose_product.reset_choose_product()
+    if report["failed"]:
+        message = "Đã xóa một phần dữ liệu; còn sót: " + "; ".join(
+            f"{item['label']}: {item['error']}" for item in report["failed"]
+        )
+    else:
+        message = "Đã xóa toàn bộ dữ liệu sản phẩm."
     return {
-        "success": result.ok,
-        "message": result.message()
+        "success": not report["failed"],
+        "partial": bool(report["deleted"]) and bool(report["failed"]),
+        "message": message,
+        "report": report,
+    }
+
+
+@router.get("/delete_preview")
+def delete_preview(
+    services: ServiceContainer = Depends(get_services),
+    ID_Erase: int = Query(..., description="Sản phẩm cần xem dữ liệu sẽ xóa"),
+):
+    """Liệt kê dữ liệu product sẽ bị xóa trước khi xác nhận."""
+    return {
+        "success": True,
+        "data": services.obj_products_service.get_delete_preview(ID_Erase),
     }
 
 
