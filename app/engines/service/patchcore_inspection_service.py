@@ -286,7 +286,7 @@ class PatchCoreInspectionService:
             index_probe = faiss.read_index(str(model_file))
             config = PatchCoreAnomalyConfig(
                 index_path=str(model_file),
-                nprobe=max(1, int(index_probe.nlist)),
+                nprobe=max(1, int(faiss.extract_index_ivf(index_probe).nlist)),
                 img_size=256,
                 device="cuda" if torch.cuda.is_available() else "cpu",
             )
@@ -303,7 +303,7 @@ class PatchCoreInspectionService:
             if not ok:
                 raise ValueError("Không thể mã hóa ảnh inference")
             return Result.Ok({
-                "image": "data:image/png;base64," + base64.b64encode(encoded).decode("ascii"),
+                "image": "data:image/png;base64," + base64.b64encode(bytes(encoded)).decode("ascii"),
                 "score": float(score),
                 "boxes": boxes,
                 "status": "NG" if boxes else "OK",

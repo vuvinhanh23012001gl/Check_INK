@@ -39,6 +39,7 @@ from app.validate import ValidateCaptureProduct
 
 from app.config import (PATH_FILE_UNET_DETECT_WELD_LINE,
                         PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,PATH_FILE_MODEL_YOLO_SURFACE,
+                        PATH_FILE_MODEL_YOLO_FOREIGN_OBJECT,
                         PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER,PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER)
 
 from app.config import YoloSegmentConfig
@@ -242,9 +243,16 @@ class ServiceContainer:
         self.obj_model_yolo_surface = ModelYoloObject(self.obj_yolo_surface_config)   
         self.obj_frame_model_yolo_surface = FrameModelYoloObject(self.obj_model_yolo_surface)
         self.obj_surface_model_service = SurfaceFrameYoloService(self.obj_frame_model_yolo_surface)
+        # Khởi tạo mô hình YOLO Object riêng cho chức năng 'Chạy model 2' (Foreign Object)
+        self.obj_yolo_foreign_object_config = YoloDetectObjectConfig(
+            path_model=PATH_FILE_MODEL_YOLO_FOREIGN_OBJECT
+        )
+        self.obj_model_yolo_foreign_object = ModelYoloObject(
+            self.obj_yolo_foreign_object_config
+        )
         self.obj_foreign_object_patch_core_service = ForeignObjectPatchCoreService(
             self.obj_point_service,
-            self.obj_model_yolo_surface,
+            self.obj_model_yolo_foreign_object,
         )
         self.obj_scratch_detector = ScratchThePipeDetector(
             self.obj_frame_model_yolo_surface

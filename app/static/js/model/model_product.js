@@ -1,4 +1,5 @@
 import { Frame } from "./model_frame.js";
+import { ItemsInspector } from "../services/items_inspector.js";
 
 export class Product {
     constructor(product_id = null) {
@@ -12,13 +13,17 @@ export class Product {
 
     getFrame(frame_id) {
         return this.arr_frames.find(
-            frame => frame.frame_id === frame_id
+            frame => String(frame.frame_id) === String(frame_id)
         );
     }
 
     toDict() {
         const framesDict = {};
         for (const frame of this.arr_frames) {
+            // Bỏ qua các frame rác có ID âm hoặc -1
+            if (Number(frame.frame_id) < 0 || String(frame.frame_id) === "-1") {
+                continue;
+            }
             Object.assign(framesDict, frame.toDict());
         }
         return {
@@ -67,29 +72,45 @@ export class Product {
     
 
     find_item_object_corresponding(frame_id, item_id , type){
+        // Chặn không tìm hoặc tạo cho ID âm hoặc -1
+        if (Number(frame_id) < 0 || Number(item_id) < 0 || String(frame_id) === "-1" || String(item_id) === "-1") {
+            return null;
+        }
         let obj_frame_iD = this.getFrame(frame_id);
-        if (!obj_frame_iD){console.log("Không tìm thấy đối Obj Frame");return null;}
+        if (!obj_frame_iD){
+            obj_frame_iD = new Frame(String(frame_id));
+            this.addFrame(obj_frame_iD);
+        }
         let obj_items_inspector = obj_frame_iD.getItemById(item_id);
-        // console.log("obj_items_inspector",obj_items_inspector);
-        if (!obj_items_inspector){console.log("Không tìm thấy đối Obj Item inspector");return null;}
-          let obj_type  = obj_items_inspector.getInspector(type);
-          if (!obj_type){console.log(`Với type:${type} không có dữ liệu`);return null;}
-          //console.log("obj_type",obj_type);
-          return obj_type  //trả về đối tượng MeasurementItemsInspector bằng cấp với type
+        if (!obj_items_inspector){
+            obj_items_inspector = new ItemsInspector(String(item_id));
+            obj_frame_iD.addItem(obj_items_inspector);
+        }
+        let obj_type  = obj_items_inspector.getInspector(type);
+        if (!obj_type){return null;}
+        return obj_type;  // trả về đối tượng inspector tương ứng
     }
 
     get_item_object(frame_id, item_id){
+        // Chặn không tạo Frame/Item cho ID âm hoặc -1
+        if (Number(frame_id) < 0 || Number(item_id) < 0 || String(frame_id) === "-1" || String(item_id) === "-1") {
+            return null;
+        }
         let obj_frame_iD = this.getFrame(frame_id);
-        if (!obj_frame_iD){console.log("Không tìm thấy đối Obj Frame");return null;}
+        if (!obj_frame_iD){
+            obj_frame_iD = new Frame(String(frame_id));
+            this.addFrame(obj_frame_iD);
+        }
         let obj_items_inspector = obj_frame_iD.getItemById(item_id);
+        if (!obj_items_inspector) {
+            obj_items_inspector = new ItemsInspector(String(item_id));
+            obj_frame_iD.addItem(obj_items_inspector);
+        }
         return obj_items_inspector;
     }
 
     get_item_inspector(frame_id, item_id){
-        let obj_frame_iD = this.getFrame(frame_id);
-        if (!obj_frame_iD){console.log("Không tìm thấy đối Obj Frame");return null;}
-        let obj_items_inspector = obj_frame_iD.getItemById(item_id);
-        return obj_items_inspector;
+        return this.get_item_object(frame_id, item_id);
     }
 
     find_line_object_corresponding(frame_id, item_id , type, line_id){

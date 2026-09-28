@@ -136,13 +136,23 @@ export function create_obj_cross_item(typeInspector, InspectorClass, setterMetho
         console.error("Thiếu tham số bắt buộc!");
         return null;
     }
+    const product = get_obj_product();
+    if (!product) {
+        console.warn("Chưa khởi tạo đối tượng Product");
+        return null;
+    }
+    // Kiểm tra đã chọn ảnh (frame và point) hợp lệ chưa, tránh tạo nhánh rác -1
+    if (!checkSelected(selected)) {
+        console.warn("Chưa chọn sản phẩm, frame hoặc point hợp lệ!");
+        return null;
+    }
     
     const frameId = String(selected?.frame_id);
     const itemsId = String(selected?.items_id);
 
-    let inspectorObj = get_obj_product().find_item_object_corresponding(frameId, itemsId, typeInspector);
+    let inspectorObj = product.find_item_object_corresponding(frameId, itemsId, typeInspector);
     if (!inspectorObj) {
-        const obj_items_inspector = get_obj_product().get_item_object(frameId, itemsId);
+        const obj_items_inspector = product.get_item_object(frameId, itemsId);
         
         if (obj_items_inspector) {
             // Kiểm tra xem phương thức có tồn tại trên object không

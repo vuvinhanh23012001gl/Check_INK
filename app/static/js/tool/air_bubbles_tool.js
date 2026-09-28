@@ -1,4 +1,4 @@
-import { ModelRectangle } from "../model/model_rectangle.js";
+wimport { ModelRectangle } from "../model/model_rectangle.js";
 import { canvasManager, scroll_container, WIDTH_IMG_SHAPE } from "../common_value.js";
 import { RectangleDrawer } from "../canvas/rectangel_drawer_canvas.js";
 import { AirBubblesItemInspector } from "../services/air_bubbles_item_inspector.js";

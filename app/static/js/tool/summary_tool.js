@@ -11,7 +11,7 @@ import {panner_measure_weld_width,panner_measure_slit_width,
     ,panner_region_end_chipping,obj_region_end_chipping_canvas,refesh_btn,setNameEventActivate,getNameEventActivate
     ,panner_region_foreign_object,obj_region_foreign_object_canvas
     ,panner_region_air_bubbles,obj_region_air_bubbles_canvas
-   ,set_obj_product,get_obj_product} from "./common_value_tool.js"
+    ,set_obj_product,get_obj_product,selected,checkSelected} from "./common_value_tool.js"
 import {Product} from "../model/model_product.js"
 import { ItemsInspector } from "../services/items_inspector.js"
 import { event_transition_items as eventTransitionSlit } from "./slit_tool.js";
@@ -64,11 +64,6 @@ let has_clicked_tool = false;
 let master_load_promise = null;
 let masterImageWidth = 0;
 let masterImageHeight = 0;
-let selected =  {
-        product_id: -1,
-        frame_id: -1,
-        items_id: -1
-}
 close_adjust_master.addEventListener("click",()=>{
     console.log("Tến hành thoát thay đổi master");
       fetch('/law_regulation/exit')
@@ -290,6 +285,16 @@ btn_measure_weld_width.addEventListener("click",()=>{
 });
 
 function changeToolEvent(button, tool) {
+    // Nếu chưa chọn ảnh (frame_id hoặc items_id đang là -1), tự động kích hoạt ảnh đầu tiên
+    if (!checkSelected(selected)) {
+        const firstImgItem = scroll_container.querySelector(".box-frame .img-item");
+        if (firstImgItem) {
+            firstImgItem.click();
+            write_log_append(log_regulations, "📸 Đã tự động chọn ảnh đầu tiên để điều chỉnh.");
+        } else {
+            write_log_append(log_regulations, "⚠️ Vui lòng chọn một ảnh trước khi thực hiện vẽ.");
+        }
+    }
     refesh_btn();
     setNameEventActivate(tool);
     button.classList.add("active");
@@ -391,6 +396,14 @@ async function loadMasterDataOnce(openPanel = false){
     scroll_container.querySelectorAll(".box-frame").forEach(frame => frame.remove());
     create_img_items_dimesion_calibration(data_point || {});
     master_tool_buttons.forEach(button => button.disabled = false);
+
+    // Tự động chọn ảnh đầu tiên nếu có để hiển thị lên canvas và gán selected
+    const firstImgItem = scroll_container.querySelector(".box-frame .img-item");
+    if (firstImgItem) {
+        firstImgItem.click();
+        write_log_append(log_regulations, "📸 Đã tự động chọn ảnh đầu tiên để điều chỉnh.");
+    }
+
     write_log_append(log_regulations, "✅ Hoàn tất lấy master. Có thể chọn ảnh và điều chỉnh các vùng kiểm tra.");
 }
 

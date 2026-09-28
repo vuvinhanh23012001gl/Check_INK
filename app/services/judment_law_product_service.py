@@ -45,8 +45,17 @@ class JudmentLawProductSevice:
             for point_id, item_data in frame_data.items():
                 if not isinstance(item_data, dict):
                     continue
+                # Nếu điểm này không có inspector nào cấu hình (dict rỗng), bỏ qua để tránh nghẽn I/O đọc ảnh
+                if not item_data:
+                    continue
+                try:
+                    f_id_int = int(frame_id)
+                    p_id_int = int(point_id)
+                    prod_id_int = int(product_id)
+                except (ValueError, TypeError):
+                    continue
                 image_result = point_service.get_path_img_point(
-                    int(product_id), int(frame_id), int(point_id)
+                    prod_id_int, f_id_int, p_id_int
                 )
                 if not image_result.ok:
                     return Result.Fail(ErrorCode.IMAGE_NOT_FOUND)

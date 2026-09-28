@@ -62,7 +62,7 @@ class ClassNameObjectStructureDetectConfig(StrEnum):
     SENSOR_ARM = "sensor_arm"
   
 
-@dataclass()
+# Không cho phép sửa lớp
 class ClassNameModelSurfaceConfig(StrEnum):
     AIR_BUBBLE = "air_bubble"
     SCRATCH = "scratch"

@@ -44,9 +44,11 @@ export function event_transition_items(){
     if (selected.frame_id  == -1 ||selected.items_id  == -1 || selected.product_id ==  -1){write_log_clear(txtBoxLog,"Hãy chọn những tấm ảnh cần vẽ");return;};
     let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
     obj_measure_weld_width_canvas.reset();
-    obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
-    let polygons = obj_measurement_items_inspector.getPolygons();
-    if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}    
+    if (obj_measurement_items_inspector) {
+        obj_measurement_items_inspector.draw_multiple_lines(canvasManager);
+        let polygons = obj_measurement_items_inspector.getPolygons();
+        if (polygons && imageWidth!= 0){obj_measurement_items_inspector.drawPolygons(canvasManager,polygons,imageWidth,WIDTH_IMG_SHAPE);}    
+    }
     
 }
 
@@ -173,6 +175,7 @@ function parseApiToMeasurements(
 
 function func_callback_click_on_line_have_aready(coordinate_now){
   let obj_measurement_items_inspector = create_obj_cross_item(ItemsInspector.TYPE_MEASUREMENT,MeasurementItemsInspector,"setMeasurementItems");
+  if (!obj_measurement_items_inspector){return;}
   let coordinate_now_x = coordinate_now?.x;
   let coordinate_now_y = coordinate_now?.y;
   let result_find_line  = obj_measurement_items_inspector.findClickedLine(coordinate_now_x,coordinate_now_y);

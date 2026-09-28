@@ -2,7 +2,6 @@
 
 import base64
 from pathlib import Path
-
 import cv2
 import faiss
 import torch
@@ -140,7 +139,7 @@ class ForeignObjectPatchCoreService(PatchCoreInspectionService):
             if not ok:
                 raise ValueError("Không thể mã hóa ảnh inference")
             return Result.Ok({
-                "image": "data:image/png;base64," + base64.b64encode(encoded).decode("ascii"),
+                "image": "data:image/png;base64," + base64.b64encode(bytes(encoded)).decode("ascii"),
                 "score": float(score),
                 "boxes": [self._box_to_dict(box) for box in boxes],
                 "anomaly_regions": anomaly_regions,
@@ -186,6 +185,6 @@ class ForeignObjectPatchCoreService(PatchCoreInspectionService):
                     "width": right - left,
                     "height": bottom - top,
                 },
-                "image": "data:image/png;base64," + base64.b64encode(encoded).decode("ascii"),
+                "image": "data:image/png;base64," + base64.b64encode(bytes(encoded)).decode("ascii"),
             })
         return regions

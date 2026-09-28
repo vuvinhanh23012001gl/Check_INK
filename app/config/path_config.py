@@ -64,6 +64,7 @@ PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST = str(
 )
 PATH_FILE_MODEL_YOLO_STRUCTURE = str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"object_structure_detect.pt")
 PATH_FILE_MODEL_YOLO_SURFACE  =  str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"object_surface_detect.pt")
+PATH_FILE_MODEL_YOLO_FOREIGN_OBJECT = str(BASE_PATH_INPUT_STORAGE / "model" / "yolo" / "object_foreign object.pt")
 PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER =  str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"segment_inner_permeable_membrane.pt")
 PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER =  str(BASE_PATH_INPUT_STORAGE/"model"/"yolo"/"segment_border_permeable_membrane.pt")
 

@@ -9,15 +9,27 @@ class FrameModelYoloObject:
         self.model = model
         self.limit_number_object = limit_number_object
 
-    def get_objects(self, image: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> list[dict]:
+    def get_objects(
+        self,
+        image: np.ndarray,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+    ) -> tuple[list[dict], np.ndarray]:
         """Lấy danh sách các đối tượng detect được trên ảnh gốc (bằng cách infer trên vùng crop).
+
         Args:
             image: Ảnh gốc đầu vào.
             x1, y1: Tọa độ góc trái trên của vùng crop.
             x2, y2: Tọa độ góc phải dưới của vùng crop.
+
         Returns:
-            list[dict]: Danh sách các đối tượng kèm tọa độ đã quy đổi về ảnh gốc.
-            image_crop : anh da crop
+            tuple[list[dict], np.ndarray]: Danh sách object đã quy đổi về ảnh gốc
+                và ảnh crop dùng để inference.
+
+        Raises:
+            Lỗi crop hoặc inference được truyền tiếp từ OpenCV và model.
         """
         # Crop ảnh sử dụng công cụ OpenCV có sẵn của hệ thống
         image_crop, left, top = Tool_OpenCv2.crop_image(

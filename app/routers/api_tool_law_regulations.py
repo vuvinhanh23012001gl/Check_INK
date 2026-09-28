@@ -41,9 +41,22 @@ def header_function(services: ServiceContainer = Depends(get_services)):
 
     print("📋 [Master] Đang lấy cây luật phán định...")
     tree = services.obj_law_regulation_service.get_product_data(str(product_id))
+    point_tree = services.obj_point_service.get_point_tree_by_product_id(product_id)
     if not tree.ok or tree.data is None:
         print("⚠️ [Master] Chưa có cây luật riêng, chuyển sang lấy cây điểm mặc định...")
-        tree = services.obj_point_service.get_point_tree_by_product_id(product_id)
+        tree = point_tree
+    elif point_tree.ok and point_tree.data:
+        # Tự động đồng bộ các frame và point từ points.json vào cây luật master
+        product_key = str(product_id)
+        if product_key in point_tree.data and product_key in tree.data:
+            base_frames = point_tree.data[product_key]
+            current_frames = tree.data[product_key]
+            for f_id, points_map in base_frames.items():
+                if f_id not in current_frames:
+                    current_frames[f_id] = {}
+                for p_id in points_map.keys():
+                    if p_id not in current_frames[f_id]:
+                        current_frames[f_id][p_id] = {}
     if tree.ok and tree.data is not None:
         print("✅ [Master] Đã lấy cây luật phán định của master.")
     else:
@@ -102,6 +115,27 @@ def save(data:dict= Body(),services: ServiceContainer = Depends(get_services)):
         logs.append("Không tìm thấy cấu trúc point/frame của sản phẩm.")
         return response_with_logs(Result.Fail(ErrorCode.FRAME_NOT_FOUND))
     logs.append("Đã kiểm tra cấu trúc point/frame.")
+
+    # Làm sạch payload: loại bỏ các frame_id hoặc point_id rác (như "-1") không thuộc cây định danh hợp lệ của sản phẩm
+    product_key = str(product_id)
+    if isinstance(payload, dict) and product_key in payload and isinstance(payload[product_key], dict) and product_key in tree.data:
+        valid_frames = tree.data[product_key]
+        cleaned_product_frames = {}
+        for f_id, f_data in payload[product_key].items():
+            str_f_id = str(f_id)
+            if str_f_id in valid_frames and isinstance(f_data, dict):
+                cleaned_points = {}
+                for p_id, p_data in f_data.items():
+                    str_p_id = str(p_id)
+                    if str_p_id in valid_frames[str_f_id]:
+                        cleaned_points[str_p_id] = p_data
+                    else:
+                        print(f"⚠️ [Master][Save] Bỏ qua point_id không hợp lệ: {p_id}")
+                cleaned_product_frames[str_f_id] = cleaned_points
+            else:
+                print(f"⚠️ [Master][Save] Bỏ qua frame_id không hợp lệ: {f_id}")
+        payload[product_key] = cleaned_product_frames
+
     converted = services.obj_law_regulation_service.convert_canvas_coordinates(
         payload,
         product_id,

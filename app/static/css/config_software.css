@@ -196,3 +196,112 @@ hr {
     border-top: 1px solid #2f2f2f;
     margin: 20px 0;
 }
+
+.software-information-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(18, 23, 33, 0.76);
+    backdrop-filter: blur(5px);
+}
+
+.software-information-overlay[hidden] {
+    display: none;
+}
+
+.software-information-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(680px, 100%);
+    max-height: min(82vh, 760px);
+    padding: 22px 24px 18px;
+    overflow: hidden;
+    color: #fff;
+    background: #121826;
+    border: 1px solid #3d4858;
+    border-radius: 12px;
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.3);
+}
+
+.software-information-panel > h2 {
+    margin: 0 0 14px;
+    text-align: center;
+    font-size: 21px;
+}
+
+.software-information-content {
+    overflow-y: auto;
+    padding: 0 4px 4px 0;
+}
+
+.software-information-group {
+    margin: 0 0 14px;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #414d5d;
+}
+
+.software-information-group h3 {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 15px;
+}
+
+.software-information-entry {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 7px 0;
+    font-size: 13px;
+}
+
+.software-information-entry strong {
+    font-weight: 600;
+}
+
+.software-information-entry code {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    color: #e1e8f0;
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.software-information-entry p {
+    margin: 0;
+    color: #e1e8f0;
+}
+
+#btn_exit_infor_software {
+    flex: 0 0 auto;
+    align-self: center;
+    min-width: 104px;
+    margin: 14px 0 0;
+    padding: 9px 22px;
+    color: #fff;
+    background: #e53935;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#btn_exit_infor_software:hover {
+    background: #c62828;
+}
+
+@media (max-width: 560px) {
+    .software-information-overlay {
+        padding: 12px;
+    }
+
+    .software-information-panel {
+        padding: 18px 16px 14px;
+    }
+}

@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from skimage.morphology import skeletonize
 from scipy.spatial.distance import cdist
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 from app.config import UnetCofigAutoDetectLineMaster
 import time
 from collections import defaultdict
@@ -217,7 +217,7 @@ class WeldMeamunetUnetService:
         lines = []
         if len(center_points) == 0:
             return lines
-        tree = cKDTree(center_points)
+        tree = KDTree(center_points)
         for item in polygon_points:
             p = item["point"].astype(np.float32)
             poly_idx = item["poly_idx"]

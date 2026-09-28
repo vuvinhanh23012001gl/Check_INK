@@ -1,1 +1,31 @@
-[]
+[
+  {
+    "run_id": "model_foreign_crop_20260928_091344_713369",
+    "created_at": "2026-09-28T09:13:54.711503+00:00",
+    "purpose": "train patchcore foreign object",
+    "status": "completed",
+    "model_root": "app/input/model/patch_core/1/1/0/model_foreign_crop_20260928_091344_713369",
+    "model_file": "app/input/model/patch_core/1/1/0/model_foreign_crop_20260928_091344_713369/the_first/patchcore.index",
+    "inference_result": "app/input/model/patch_core/1/1/0/model_foreign_crop_20260928_091344_713369/the_first/inference_result.png",
+    "runtime_images_root": "app/input/model/patch_core/1/1/0/model_foreign_crop_20260928_091344_713369/runtime",
+    "roi_list": [
+      "foreign"
+    ],
+    "crop_roi": {
+      "xStart": 1332,
+      "yStart": 36,
+      "xEnd": 1580,
+      "yEnd": 212
+    },
+    "train_config": {
+      "img_size": 256,
+      "batch_size": 32,
+      "coreset_ratio": 1.0,
+      "n_list": 32,
+      "n_probe": 8,
+      "num_workers": 0,
+      "seed": 42,
+      "device": "cpu"
+    }
+  }
+]

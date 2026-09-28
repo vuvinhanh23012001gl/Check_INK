@@ -15,6 +15,10 @@ export class Frame{
     toDict() {
         const itemsDict = {};
         for (const item of this.arr_items) {
+            // Bỏ qua các item rác có ID âm hoặc -1
+            if (Number(item.items_id) < 0 || String(item.items_id) === "-1") {
+                continue;
+            }
             Object.assign(itemsDict, item.toDict());
         }
         return {

@@ -2,143 +2,24 @@
     "1": {
         "0": {
             "0": {
-                "MeasurementWeldInspector": {
-                    "0": {
-                        "name_line": "1",
-                        "level1": 0.1,
-                        "level2": 0.11,
-                        "level3": 0.12,
-                        "level4": 4,
-                        "level5": 6,
-                        "xStart": 846,
-                        "yStart": 720,
-                        "xEnd": 824,
-                        "yEnd": 1082,
-                        "coordinateSpace": "image"
-                    }
-                },
-                "ArmSensorInspector": {
-                    "id": 0,
-                    "name": "ARM Sensor",
-                    "xStart": 740,
-                    "yStart": 292,
-                    "xEnd": 1840,
-                    "yEnd": 1236,
-                    "width": 550,
-                    "height": 472,
-                    "coordinateSpace": "image"
-                },
                 "MembraneInspector": {
                     "id": 0,
                     "name": "Màng bám thấm",
-                    "xStart": 648,
-                    "yStart": 664,
-                    "xEnd": 1500,
-                    "yEnd": 1366,
-                    "width": 426,
-                    "height": 351,
+                    "xStart": 818,
+                    "yStart": 388,
+                    "xEnd": 1828,
+                    "yEnd": 1220,
+                    "width": 505,
+                    "height": 416,
                     "coordinateSpace": "image"
-                },
-                "HoleItemInspector": {
-                    "id": 0,
-                    "name": "Lỗ thủng",
-                    "xStart": 662,
-                    "yStart": 564,
-                    "xEnd": 1716,
-                    "yEnd": 1234,
-                    "width": 527,
-                    "height": 335,
-                    "coordinateSpace": "image"
-                },
-                "ScratchedPipeItemInspector": {
-                    "id": 0,
-                    "name": "Vết trầy xước",
-                    "xStart": 810,
-                    "yStart": 558,
-                    "xEnd": 1768,
-                    "yEnd": 1092,
-                    "width": 479,
-                    "height": 267,
-                    "coordinateSpace": "image"
-                },
-                "AirBubblesItemInspector": {
-                    "0": {
-                        "id": 0,
-                        "name": "Bọt khí 1",
-                        "xStart": 778,
-                        "yStart": 362,
-                        "xEnd": 1712,
-                        "yEnd": 1160,
-                        "width": 467,
-                        "height": 399,
-                        "coordinateSpace": "image"
-                    }
                 }
             },
-            "1": {
-                "MeasurementWeldInspector": {
-                    "0": {
-                        "name_line": "2",
-                        "level1": 0.1,
-                        "level2": 0.4,
-                        "level3": 2.5,
-                        "level4": 4,
-                        "level5": 6,
-                        "xStart": 1044,
-                        "yStart": 1112,
-                        "xEnd": 1040,
-                        "yEnd": 1274,
-                        "coordinateSpace": "image"
-                    }
-                }
-            }
+            "1": {},
+            "2": {}
         },
         "1": {
-            "0": {
-                "MeasurementWeldInspector": {
-                    "0": {
-                        "name_line": "3",
-                        "level1": 0.1,
-                        "level2": 0.2,
-                        "level3": 2.5,
-                        "level4": 4,
-                        "level5": 6,
-                        "xStart": 1340,
-                        "yStart": 1224,
-                        "xEnd": 1380,
-                        "yEnd": 1380,
-                        "coordinateSpace": "image"
-                    }
-                },
-                "HoleItemInspector": {
-                    "id": 0,
-                    "name": "Lỗ thủng",
-                    "xStart": 928,
-                    "yStart": 432,
-                    "xEnd": 1682,
-                    "yEnd": 984,
-                    "width": 377,
-                    "height": 276,
-                    "coordinateSpace": "image"
-                }
-            },
-            "1": {
-                "MeasurementWeldInspector": {
-                    "0": {
-                        "name_line": "4",
-                        "level1": 0.1,
-                        "level2": 0.4,
-                        "level3": 2.5,
-                        "level4": 4,
-                        "level5": 6,
-                        "xStart": 680,
-                        "yStart": 1000,
-                        "xEnd": 674,
-                        "yEnd": 1212,
-                        "coordinateSpace": "image"
-                    }
-                }
-            }
+            "0": {},
+            "1": {}
         }
     }
 }

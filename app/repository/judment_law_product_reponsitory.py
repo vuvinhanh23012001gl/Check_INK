@@ -171,5 +171,9 @@ class JudmentLawProductRepository:
         if merge:
             self._deep_update(self.data, data)
         else:
-            self.data = data
+            if not isinstance(self.data, dict):
+                self.data = {}
+            # Cập nhật theo từng product_id để bảo toàn cấu hình của các sản phẩm khác
+            for prod_id, prod_data in data.items():
+                self.data[str(prod_id)] = prod_data
         self.save()

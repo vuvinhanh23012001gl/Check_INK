@@ -90,14 +90,22 @@ export function event_transition_items(){
 
 
 function func_callback_click_on_rect(data_shape){
+    if (!checkSelected(selected)) {
+        write_log_clear(log_permeable_membrane, "❌ Vui lòng chọn ảnh trước khi vẽ vùng màng bám thấm.");
+        canvasManager.clearShapeCanvas();
+        return;
+    }
     console.log("click vào khung",data_shape);
     console.log("boxContentPermeableMembrane",boxContentPermeableMembrane);
+    boxContentPermeableMembrane.innerHTML = "";
     boxContentPermeableMembrane.appendChild(createPermeableMembraneTable(data_shape)); 
 }
 
 function func_callback_click_mouse_right_into_line(coordinate){
+        if (!checkSelected(selected)) return;
         boxContentPermeableMembrane.innerHTML = ""; 
         let obj_permemble_membrane_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_PERMEABLE_MEMBRANE,PermeableMembraneInspector,"setPermeableMembraneItems");
+        if (!obj_permemble_membrane_item_inspector) return;
         let result_find_line  = obj_permemble_membrane_item_inspector.isPointOnMembraneBorder(coordinate.x,coordinate.y,ACTIVATION_DISTANCE_WHEN_CLICKING_THE_SQUARE);
         if (result_find_line){
                 console.log("Click trúng đường viền");
@@ -109,6 +117,7 @@ function func_callback_click_mouse_right_into_line(coordinate){
 }
 
 function func_callback_click_on_line_have_aready(coordinate){
+        if (!checkSelected(selected)) return;
         let obj_permemble_membrane_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_PERMEABLE_MEMBRANE,PermeableMembraneInspector,"setPermeableMembraneItems");
         if (!obj_permemble_membrane_item_inspector) return;
                 const rect = obj_permemble_membrane_item_inspector.getMembrane();
@@ -137,6 +146,9 @@ function createPermeableMembraneTable(data_shape = null) {
     let obj_permemble_membrane_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_PERMEABLE_MEMBRANE,PermeableMembraneInspector,"setPermeableMembraneItems");
     const wrapper = document.createElement("div");
     wrapper.id = "permeable-membrane-shape-wrapper";
+    if (!obj_permemble_membrane_item_inspector) {
+        return wrapper;
+    }
     
     const table = document.createElement("table");
     table.className = "measure-weld-width-config-table";
@@ -198,6 +210,13 @@ function createPermeableMembraneTable(data_shape = null) {
         
         if (resultValidate.isValid) {
             boxContentPermeableMembrane.innerHTML = "";
+            if (!obj_permemble_membrane_item_inspector) {
+                obj_permemble_membrane_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_PERMEABLE_MEMBRANE,PermeableMembraneInspector,"setPermeableMembraneItems");
+            }
+            if (!obj_permemble_membrane_item_inspector) {
+                write_log_clear(log_permeable_membrane, "❌ Vui lòng chọn ảnh trước khi lưu cấu hình màng bám thấm.");
+                return;
+            }
             console.log("Màng bám thấm", obj_permemble_membrane_item_inspector);
             // Sử dụng logic hàm đã đổi tên tương ứng với màng bán thấm
             obj_permemble_membrane_item_inspector.setMembrane(objRectangle);
