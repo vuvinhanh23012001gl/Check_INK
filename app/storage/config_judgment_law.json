@@ -5,21 +5,15 @@
                 "MembraneInspector": {
                     "id": 0,
                     "name": "Màng bám thấm",
-                    "xStart": 818,
-                    "yStart": 388,
-                    "xEnd": 1828,
-                    "yEnd": 1220,
-                    "width": 505,
-                    "height": 416,
+                    "xStart": 356,
+                    "yStart": 290,
+                    "xEnd": 1332,
+                    "yEnd": 1114,
+                    "width": 488,
+                    "height": 412,
                     "coordinateSpace": "image"
                 }
-            },
-            "1": {},
-            "2": {}
-        },
-        "1": {
-            "0": {},
-            "1": {}
+            }
         }
     }
 }

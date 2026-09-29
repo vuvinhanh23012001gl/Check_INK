@@ -4,6 +4,7 @@ import base64
 from pathlib import Path
 import cv2
 import faiss
+# pyrefly: ignore [missing-import]
 import torch
 
 from app.config import PATH_FOLDER_MODEL_DETECT_PATCH_CORE
@@ -115,7 +116,8 @@ class ForeignObjectPatchCoreService(PatchCoreInspectionService):
             )
             model = ModelPatchCore(config)
             model.load_model()
-            score, overlay_bgr = model.predict(image_rgb)
+            threshold_val = float(crop_roi.get("threshold", 0.1)) if isinstance(crop_roi, dict) and "threshold" in crop_roi else 0.1
+            score, overlay_bgr = model.predict(image_rgb, threshold=threshold_val)
             boxes = [
                 (int(x), int(y), int(width), int(height))
                 for x, y, width, height in model.get_bounding_boxes(image_rgb)
@@ -188,3 +190,91 @@ class ForeignObjectPatchCoreService(PatchCoreInspectionService):
                 "image": "data:image/png;base64," + base64.b64encode(bytes(encoded)).decode("ascii"),
             })
         return regions
+
+    def get_patchcore_frame(
+        self,
+        product_id: int | str,
+        frame_id: int | str,
+        item_id: int | str,
+    ) -> FrameModelPatchCore:
+        """Lấy hoặc nạp cached FrameModelPatchCore cho một point.
+
+        Args:
+            product_id: Mã sản phẩm.
+            frame_id: Mã frame.
+            item_id: Mã item/point.
+
+        Returns:
+            FrameModelPatchCore: Instance xử lý mô hình PatchCore.
+
+        Raises:
+            FileNotFoundError: Nếu không tìm thấy file index mô hình.
+        """
+        key = (str(product_id), str(frame_id), str(item_id))
+        model_root = (
+            Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
+            / str(product_id)
+            / str(frame_id)
+            / str(item_id)
+        )
+        model_file = self._find_latest_model(model_root)
+        if model_file is None:
+            raise FileNotFoundError(
+                f"Không tìm thấy mô hình PatchCore tại {model_root} "
+                f"cho sản phẩm {product_id}, frame {frame_id}, item {item_id}"
+            )
+
+        if not hasattr(self, "_patchcore_cache"):
+            self._patchcore_cache: dict[tuple[str, str, str], tuple[Path, FrameModelPatchCore]] = {}
+
+        if key in self._patchcore_cache:
+            cached_path, cached_frame = self._patchcore_cache[key]
+            if cached_path == model_file:
+                return cached_frame
+
+        # Nạp mô hình mới và lưu cache
+        index_probe = faiss.read_index(str(model_file))
+        try:
+            nlist = int(faiss.extract_index_ivf(index_probe).nlist)
+        except Exception:
+            nlist = getattr(index_probe, "nlist", 1)
+        config = PatchCoreAnomalyConfig(
+            index_path=str(model_file),
+            nprobe=max(1, nlist),
+            img_size=256,
+            device="cuda" if torch.cuda.is_available() else "cpu",
+        )
+        model = ModelPatchCore(config)
+        model.load_model()
+        model.warmup()
+        patchcore_frame = FrameModelPatchCore(model)
+        self._patchcore_cache[key] = (model_file, patchcore_frame)
+        return patchcore_frame
+
+    def get_detector_engine(
+        self,
+        product_id: int | str,
+        frame_id: int | str,
+        item_id: int | str,
+    ) -> FramePatchCoreObjectDetector:
+        """Lấy hoặc nạp FramePatchCoreObjectDetector cho một point.
+
+        Args:
+            product_id: Mã sản phẩm.
+            frame_id: Mã frame.
+            item_id: Mã item/point.
+
+        Returns:
+            FramePatchCoreObjectDetector: Detector kết hợp PatchCore và YOLO.
+
+        Raises:
+            ValueError: Nếu chưa cấu hình mô hình YOLO.
+            FileNotFoundError: Nếu không tìm thấy mô hình PatchCore.
+        """
+        if self.yolo_object_model is None:
+            raise ValueError("Chưa cấu hình model YOLO object cho foreign object")
+        patchcore_frame = self.get_patchcore_frame(product_id, frame_id, item_id)
+        return FramePatchCoreObjectDetector(
+            patch_core_frame=patchcore_frame,
+            yolo_object_model=self.yolo_object_model,
+        )

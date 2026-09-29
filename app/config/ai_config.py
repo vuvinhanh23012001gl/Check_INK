@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+# pyrefly: ignore [missing-import]
 import torch
 from app.config.path_config import PATH_FILE_DEFAULT_PATCHCORE_INDEX
 
@@ -66,6 +67,27 @@ class ClassNameObjectStructureDetectConfig(StrEnum):
 class ClassNameModelSurfaceConfig(StrEnum):
     AIR_BUBBLE = "air_bubble"
     SCRATCH = "scratch"
+
+
+
+
+
+
+
+class ClassNameForeignObjectConfig(StrEnum):
+    AIR_BUBBLE = "air_bubble"
+    SCRATCH = "scratch"
+
+# Từ điển ánh xạ tên class sang tiếng Việt để hiển thị log cho Dị vật
+FOREIGN_CLASS_NAME_VIETNAMESE_MAP = {
+    ClassNameForeignObjectConfig.AIR_BUBBLE: "Dị vật bọt khí",
+    ClassNameForeignObjectConfig.SCRATCH: "Dị vật vết xước",
+}
+
+
+
+
+
 
 @dataclass(slots=True)
 class PatchCoreAnomalyConfig:

@@ -27,7 +27,7 @@ choose_product.addEventListener("click",async function(){
           const new_div = document.createElement("div");
           new_div.className = "div-product";
           const img = document.createElement("img");
-          img.src = key?.image_src;
+          img.src = key?.image_src ? `${key.image_src}?t=${Date.now()}` : "";
           img.alt = `Ảnh sản phẩm ${key?.image_src}`;
           img.style.width = "100%";
           img.style.height = "250px";

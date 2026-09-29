@@ -140,15 +140,20 @@ btn_confirm_delete.addEventListener("click", async function () {
                 "Xóa thành công:",
                 selected_delete_id_current
             );
-            await UpDateTable();
+            overlay_accpet_delete_product.style.display = "none";
+            location.reload();
+            return;
         } else if (status_erase?.partial) {
             alert(status_erase.message);
-            await UpDateTable();
+            overlay_accpet_delete_product.style.display = "none";
+            location.reload();
+            return;
         } else {
             console.log(
                 "Xóa thất bại:",
                 status_erase?.message
             );
+            alert(status_erase?.message || "Xóa sản phẩm thất bại");
         }
     } catch (err) {
         console.error(err);
@@ -180,7 +185,7 @@ function createDataShowTable(data) {
         // console.log("item",item);
         if(item.image_src){ // nếu có trường image
             let img = document.createElement("img");
-            img.src = item.image_src; // đường dẫn ảnh
+            img.src = `${item.image_src}?t=${Date.now()}`; // đường dẫn ảnh chống cache
             // console.log("item.image_src;",item.image_src);
             img.alt = item.name || "Ảnh sản phẩm";
             img.style.width = "100px"; // chỉnh kích thước nhỏ vừa

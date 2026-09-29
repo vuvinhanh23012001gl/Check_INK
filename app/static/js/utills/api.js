@@ -31,8 +31,10 @@ export async function fetchGet(url, timeout = 10000) {
         const response = await fetch(url, {
             method: "GET",
             headers: {
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Cache-Control": "no-cache"
             },
+            cache: "no-store",
             signal: controller.signal
         });
 
@@ -60,8 +62,10 @@ export async function fetchGetSendData(url, data = {}) {
         const response = await fetch(fullUrl, {
             method: "GET",
             headers: {
-                "Accept": "application/json"
-            }
+                "Accept": "application/json",
+                "Cache-Control": "no-cache"
+            },
+            cache: "no-store"
         });
 
         if (!response.ok) {

@@ -82,8 +82,38 @@ class StageTransform:
                         raise
                     results.append(result)
                     self._send_client({"type": "judgment_item_result", "data": result})
-            if not self.services.obj_iai_control.move_to_point(0, 0, 0):
-                raise RuntimeError("IAI không về được vị trí 0,0,0 sau sản phẩm")
+
+            # Sau khi phán định xong toàn bộ point, đưa IAI về vị trí item đầu tiên (step 1)
+            first_point = None
+            if prepared.frames and prepared.frames[0].get("points"):
+                first_point = prepared.frames[0]["points"][0]
+
+            if first_point is not None:
+                first_frame_id = prepared.frames[0].get("frame_id", "0")
+                first_point_id = first_point.get("point_id", "0")
+                first_point_target = {
+                    "frame_id": first_frame_id,
+                    "point_id": first_point_id,
+                    "x": first_point["x"],
+                    "y": first_point["y"],
+                    "z": first_point["z"],
+                }
+                print(
+                    f"[STAGE2] Hoàn tất phán định sản phẩm, đưa IAI về vị trí item đầu tiên "
+                    f"(step 1: frame={first_frame_id}, item={first_point_id}) "
+                    f"tại X={first_point['x']}, Y={first_point['y']}, Z={first_point['z']}"
+                )
+                self.services.send_judgment_log(
+                    f"🔄 Đưa IAI về vị trí item đầu tiên (step 1: frame {first_frame_id}, point {first_point_id})."
+                )
+                if not self._move_with_retry(first_point_target):
+                    raise RuntimeError(
+                        f"IAI không về được vị trí item đầu tiên (step 1: frame {first_frame_id}, point {first_point_id}) sau sản phẩm"
+                    )
+            else:
+                if not self.services.obj_iai_control.move_to_point(0, 0, 0):
+                    raise RuntimeError("IAI không về được vị trí 0,0,0 sau sản phẩm")
+
             self.services.runtime_state.set_product_result(results)
             is_overall_ok = all(result.get("overall") is True for result in results)
             counts = self.services.obj_product_count_service.record_result(is_overall_ok)

@@ -1,4 +1,5 @@
 
+import cv2
 import numpy as np
 from app.engines.model_AI import ModelPatchCore
 from app.utils import Tool_OpenCv2
@@ -41,7 +42,8 @@ class FrameModelPatchCore:
         """
         self._validate_roi(image, x1, y1, x2, y2)
         image_crop, left, top = Tool_OpenCv2.crop_image(image, x1, y1, x2, y2)
-        boxes = self.model.get_bounding_boxes(image_crop)
+        image_crop_rgb = cv2.cvtColor(image_crop, cv2.COLOR_BGR2RGB)
+        boxes = self.model.get_bounding_boxes(image_crop_rgb)
         return self.convert_boxes_to_original_image(boxes, left, top)
 
     def predict(
@@ -61,7 +63,41 @@ class FrameModelPatchCore:
         """
         self._validate_roi(image, x1, y1, x2, y2)
         image_crop, _, _ = Tool_OpenCv2.crop_image(image, x1, y1, x2, y2)
-        return self.model.predict(image_crop)
+        image_crop_rgb = cv2.cvtColor(image_crop, cv2.COLOR_BGR2RGB)
+        return self.model.predict(image_crop_rgb)
+
+    def predict_with_anomaly_boxes(
+        self,
+        image: np.ndarray,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        threshold: float,
+        min_area: int = 50,
+    ) -> tuple[float, np.ndarray, list[tuple[int, int, int, int]]]:
+        """Tính anomaly score, heatmap overlay và các bounding box của vùng bất thường theo ảnh gốc.
+
+        Chỉ trích xuất bounding box cho các vùng trên anomaly map có giá trị vượt qua threshold cấu hình.
+        Tọa độ bounding box trả về được quy đổi về hệ tọa độ ảnh gốc.
+
+        Input:
+            image: Ảnh đầu vào dạng NumPy (BGR).
+            x1, y1, x2, y2: Tọa độ ROI trong ảnh gốc.
+            threshold: Ngưỡng điểm bất thường thực tế.
+            min_area: Diện tích tối thiểu (pixel) để coi là một vùng bất thường.
+
+        Output:
+            Tuple (score, overlay, anomaly_boxes_in_original_image).
+        """
+        self._validate_roi(image, x1, y1, x2, y2)
+        image_crop, left, top = Tool_OpenCv2.crop_image(image, x1, y1, x2, y2)
+        image_crop_rgb = cv2.cvtColor(image_crop, cv2.COLOR_BGR2RGB)
+        score, overlay, raw_boxes = self.model.predict_with_anomaly_boxes(
+            image_crop_rgb, threshold=threshold, min_area=min_area
+        )
+        converted_boxes = self.convert_boxes_to_original_image(raw_boxes, left, top)
+        return score, overlay, converted_boxes
 
     @staticmethod
     def convert_boxes_to_original_image(

@@ -23,6 +23,8 @@ from app.config import (
     PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
     PATH_FOLDER_IMG_COORDINATE_OUTPUT,
     PATH_FOLDER_OUTPUT_JUDGMENT,
+    PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST,
+    PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST,
 )
 
 class ProductService:
@@ -106,7 +108,7 @@ class ProductService:
 
     # =========================
     # ADD PRODUCT
-    # =========================
+    # =========================\
 
     def add_product(
         self,
@@ -237,6 +239,8 @@ class ProductService:
                     data = self.repository.read_config()
                     data.get("products", {}).pop(product_key, None)
                     self.repository.write_config(data)
+                elif item["kind"] == "patchcore_manifest":
+                    self._delete_patchcore_manifest_records(item["path"], product_key)
                 else:
                     path = Path(item["path"])
                     if path.is_dir():
@@ -275,11 +279,45 @@ class ProductService:
             {"label": "Ảnh master theo item", "path": str(master_folder), "kind": "path", "exists": master_folder.exists()},
             {"label": "Model PatchCore", "path": str(patchcore_folder), "kind": "path", "exists": patchcore_folder.exists()},
             {"label": "Output PatchCore", "path": str(patchcore_output), "kind": "path", "exists": patchcore_output.exists()},
+            {
+                "label": "Lịch sử manifest PatchCore Dị vật",
+                "path": str(PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST),
+                "kind": "patchcore_manifest",
+                "exists": self._has_patchcore_records(PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST, product_id),
+            },
+            {
+                "label": "Lịch sử manifest PatchCore Mẻ đầu ống",
+                "path": str(PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST),
+                "kind": "patchcore_manifest",
+                "exists": self._has_patchcore_records(PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST, product_id),
+            },
             *[
                 {"label": f"Judgment session: {path.parent.name}", "path": str(path), "kind": "path", "exists": True}
                 for path in session_judgment
             ],
         ]
+
+    @staticmethod
+    def _has_patchcore_records(manifest_path: str | Path, product_id: str) -> bool:
+        """Kiểm tra có bản ghi train thuộc product_id trong file manifest không."""
+        path = Path(manifest_path)
+        if not path.exists():
+            return False
+        from app.engines.train.patchcore_train_model.patchcore_train_record_repository import (
+            PatchCoreTrainRecordRepository,
+        )
+        return PatchCoreTrainRecordRepository(manifest_path=path).has_records_for_product(product_id)
+
+    @staticmethod
+    def _delete_patchcore_manifest_records(manifest_path: str | Path, product_id: str) -> int:
+        """Xóa các bản ghi train của product_id trong file manifest PatchCore."""
+        path = Path(manifest_path)
+        if not path.exists():
+            return 0
+        from app.engines.train.patchcore_train_model.patchcore_train_record_repository import (
+            PatchCoreTrainRecordRepository,
+        )
+        return PatchCoreTrainRecordRepository(manifest_path=path).delete_records_by_product_id(product_id)
 
     @staticmethod
     def _json_key_exists(path: str, key: str) -> bool:

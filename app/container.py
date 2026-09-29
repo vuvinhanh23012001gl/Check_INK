@@ -38,7 +38,7 @@ from app.services.log import Config_SoftWare, Infor_Software
 from app.validate import ValidateCaptureProduct
 
 from app.config import (PATH_FILE_UNET_DETECT_WELD_LINE,
-                        PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,PATH_FILE_MODEL_YOLO_SURFACE,
+                        PATH_FILE_UNET_DETECT_FILM_BORDER_LINE,PATH_FILE_MODEL_YOLO_STRUCTURE,PATH_FILE_MODEL_YOLO_SURFACE,PATH_FILE_MODEL_YOLO_FOREIGN,
                         PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_INER,PATH_FILE_MODEL_YOLO_PERMEABLE_MEMBRANE_BORDER)
 
 from app.config import YoloSegmentConfig
@@ -55,6 +55,8 @@ from app.judger import (
     ScratchThePipeDetector,
     SlitDetector,
     WeldSeamAirBubbles,
+    ForeignObjectDetector,
+    EndChippingDetector,
 )
 from app.config import YoloDetectObjectConfig,ClassNameObjectStructureDetectConfig,ClassNameModelSurfaceConfig
 from app.engines.service import StructureFrameYoloService,BorderFilmUnetService,PermeableMembraneService,SurfaceFrameYoloService,EndChippingPatchCoreService,ForeignObjectPatchCoreService
@@ -242,9 +244,14 @@ class ServiceContainer:
         self.obj_model_yolo_surface = ModelYoloObject(self.obj_yolo_surface_config)   
         self.obj_frame_model_yolo_surface = FrameModelYoloObject(self.obj_model_yolo_surface)
         self.obj_surface_model_service = SurfaceFrameYoloService(self.obj_frame_model_yolo_surface)
+
+        # Cấu hình riêng cho dị vật
+        self.obj_yolo_foreign_config = YoloDetectObjectConfig(path_model = PATH_FILE_MODEL_YOLO_FOREIGN)
+        self.obj_model_yolo_foreign = ModelYoloObject(self.obj_yolo_foreign_config)
+
         self.obj_foreign_object_patch_core_service = ForeignObjectPatchCoreService(
             self.obj_point_service,
-            self.obj_model_yolo_surface,
+            self.obj_model_yolo_foreign,
         )
         self.obj_scratch_detector = ScratchThePipeDetector(
             self.obj_frame_model_yolo_surface
@@ -286,6 +293,12 @@ class ServiceContainer:
             self.obj_unet_weld_line_model
         )
         self.obj_slit_detector = SlitDetector(self.obj_unet_weld_line_model)
+        self.obj_foreign_object_detector = ForeignObjectDetector(
+            foreign_service=self.obj_foreign_object_patch_core_service
+        )
+        self.obj_end_chipping_detector = EndChippingDetector(
+            end_chipping_service=self.obj_end_chipping_patch_core_service
+        )
         self.obj_judment = Judment({
             "ArmSensorInspector": self.obj_arm_sensor_detector,
             "ArmCoverInspector": self.obj_arm_cover_detector,
@@ -296,6 +309,8 @@ class ServiceContainer:
             "AirBubblesItemInspector": self.obj_weld_seam_air_bubbles_detector,
             "MeasurementWeldInspector": self.obj_measurement_welding_detector,
             "MembraneInspector": self.obj_membrane_detector,
+            "ForeignObjectInspector": self.obj_foreign_object_detector,
+            "EndChippingInspector": self.obj_end_chipping_detector,
         })
         self.obj_deployment_Unet = WeldMeamunetUnetService(
             self.obj_unet_config_line_master,

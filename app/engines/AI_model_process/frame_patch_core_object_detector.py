@@ -63,10 +63,11 @@ class FramePatchCoreObjectDetector:
 
         for box in anomaly_boxes:
             patch_x, patch_y, patch_w, patch_h = (int(value) for value in box)
-            roi_x1 = max(0, patch_x)
-            roi_y1 = max(0, patch_y)
-            roi_x2 = min(image.shape[1], patch_x + patch_w)
-            roi_y2 = min(image.shape[0], patch_y + patch_h)
+            padding = 15
+            roi_x1 = max(0, patch_x - padding)
+            roi_y1 = max(0, patch_y - padding)
+            roi_x2 = min(image.shape[1], patch_x + patch_w + padding)
+            roi_y2 = min(image.shape[0], patch_y + patch_h + padding)
 
             if roi_x2 <= roi_x1 or roi_y2 <= roi_y1:
                 continue
@@ -119,21 +120,42 @@ class FramePatchCoreObjectDetector:
         y1: int,
         x2: int,
         y2: int,
+        threshold: float,
     ) -> dict:
-        """Trả về score PatchCore, heatmap và danh sách đối tượng YOLO trên vùng bất thường.
+        """Trả về score PatchCore, heatmap và danh sách đối tượng YOLO chỉ trên các vùng bất thường.
+
+        Vùng đưa vào YOLO nhận diện đối tượng là những vùng bất thường (vùng heatmap vượt ngưỡng),
+        chứ không phải toàn bộ vùng ảnh kiểm tra ROI ban đầu.
 
         Input:
             image: Ảnh gốc dạng NumPy.
-            x1, y1, x2, y2: Vùng ROI cần kiểm tra.
+            x1, y1, x2, y2: Vùng ROI cần kiểm tra sự bất thường.
+            threshold: Ngưỡng điểm bất thường để xác định các vùng bất thường và quyết định chạy YOLO.
         Output:
-            dict chứa ``score``, ``heatmap``, ``detections``.
+            dict chứa ``score``, ``heatmap``, ``detections``, ``anomaly_boxes``.
         Errors:
             ``ValueError`` nếu ROI không hợp lệ; lỗi model được truyền ra ngoài.
         """
-        score, heatmap = self.patch_core_frame.predict(image, x1, y1, x2, y2)
-        detections = self.detect_anomaly_objects(image, x1, y1, x2, y2)
+        if hasattr(self.patch_core_frame, "predict_with_anomaly_boxes"):
+            score, heatmap, anomaly_boxes = self.patch_core_frame.predict_with_anomaly_boxes(
+                image, x1, y1, x2, y2, threshold=threshold
+            )
+        else:
+            score, heatmap = self.patch_core_frame.predict(image, x1, y1, x2, y2)
+            anomaly_boxes = []
+
+        score_float = float(score)
+
+        if score_float <= threshold or not anomaly_boxes:
+            detections = []
+        else:
+            detections = self.detect_anomaly_objects(
+                image, x1, y1, x2, y2, anomaly_boxes=anomaly_boxes
+            )
+
         return {
-            "score": float(score),
+            "score": score_float,
             "heatmap": heatmap,
             "detections": detections,
+            "anomaly_boxes": anomaly_boxes,
         }

@@ -89,10 +89,56 @@ class ModelPatchCore(BaseAI):
 
         return feat.squeeze(0).cpu().numpy()
 
-    def predict(self, image: np.ndarray) -> tuple[float, np.ndarray]:
+    def _generate_threshold_heatmap(
+        self,
+        anomaly_map: np.ndarray,
+        target_shape: tuple[int, int],
+        threshold: float | None = None,
+    ) -> np.ndarray:
+        """Sinh ảnh bản đồ nhiệt màu JET chuẩn hóa theo ngưỡng phát hiện bất thường (Threshold-anchored).
+
+        Nguyên lý trực quan công nghiệp:
+        - Vùng có điểm < threshold (bình thường/OK): Ánh xạ vào dải màu lạnh (Cool: Xanh dương -> Lục lam, uint8 0..120).
+          Tránh hiện tượng Relative Min-Max thổi phồng điểm nhiễu cực nhỏ (ví dụ 0.013) thành màu đỏ rực.
+        - Vùng có điểm >= threshold (bất thường/NG): Ánh xạ vào dải màu nóng (Hot: Vàng -> Cam -> Đỏ, uint8 120..255).
+
+        Args:
+            anomaly_map (np.ndarray): Bản đồ bất thường thô (14x14) từ FAISS.
+            target_shape (tuple[int, int]): Kích thước (height, width) ảnh đích cần resize.
+            threshold (float | None): Ngưỡng phán định bất thường. Nếu None, mặc định là 0.1.
+
+        Returns:
+            np.ndarray: Ảnh heatmap màu JET hệ màu BGR kích thước target_shape.
+        """
+        th = float(threshold) if threshold is not None and threshold > 0 else 0.1
+        norm_map = np.zeros_like(anomaly_map, dtype=np.float32)
+
+        under_thresh = anomaly_map < th
+        over_thresh = ~under_thresh
+
+        # Điểm dưới ngưỡng th: ánh xạ 0..th vào dải màu lạnh 0..120 (Cool: Blue -> Cyan -> Green)
+        norm_map[under_thresh] = (anomaly_map[under_thresh] / max(th, 1e-6)) * 120.0
+
+        # Điểm vượt ngưỡng th: ánh xạ th..max vào dải màu nóng 120..255 (Hot: Yellow -> Orange -> Red)
+        max_val = max(th * 1.5, float(anomaly_map.max()), 1e-6)
+        if max_val > th:
+            norm_map[over_thresh] = 120.0 + ((anomaly_map[over_thresh] - th) / (max_val - th)) * 135.0
+        else:
+            norm_map[over_thresh] = 120.0
+
+        norm_map = np.clip(norm_map, 0, 255).astype(np.uint8)
+        norm_map_resized = cv2.resize(norm_map, (target_shape[1], target_shape[0]))
+        return cv2.applyColorMap(norm_map_resized, cv2.COLORMAP_JET)
+
+    def predict(
+        self,
+        image: np.ndarray,
+        threshold: float | None = None,
+    ) -> tuple[float, np.ndarray]:
         """Thực hiện tính toán độ bất thường tổng thể và sinh bản đồ nhiệt (Heatmap Overlay) đổ màu JET lên ảnh gốc.
         Args:
             image (np.ndarray): Ảnh gốc đầu vào hệ màu RGB.
+            threshold (float | None): Ngưỡng bất thường dùng để neo dải màu heatmap (mặc định 0.1).
         Returns:
             tuple[float, np.ndarray]: Cặp giá trị gồm điểm bất thường tối đa (score) 
                 và ảnh kết quả đã đè bản đồ nhiệt (overlay_heatmap) hệ màu BGR.
@@ -109,16 +155,78 @@ class ModelPatchCore(BaseAI):
         anomaly_map = D.reshape(14, 14)
         score = float(anomaly_map.max())
         
-        h_max, h_min = anomaly_map.max(), anomaly_map.min()
-        heatmap = (anomaly_map - h_min) / (h_max - h_min + 1e-6)
+        heatmap_color = self._generate_threshold_heatmap(
+            anomaly_map,
+            (image.shape[0], image.shape[1]),
+            threshold=threshold,
+        )
         
-        heatmap = cv2.resize(heatmap, (image.shape[1], image.shape[0]))
-        heatmap = np.uint8(255 * heatmap)
-        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-        
-        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        overlay = cv2.addWeighted(image_bgr, self.config.overlay_alpha, heatmap, 1 - self.config.overlay_alpha, 0)
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) if image.ndim == 3 else image
+        overlay = cv2.addWeighted(image_bgr, self.config.overlay_alpha, heatmap_color, 1 - self.config.overlay_alpha, 0)
         return score, overlay
+
+    def predict_with_anomaly_boxes(
+        self,
+        image: np.ndarray,
+        threshold: float,
+        min_area: int = 50,
+    ) -> tuple[float, np.ndarray, list[tuple[int, int, int, int]]]:
+        """Dự đoán anomaly score, tạo heatmap overlay và trích xuất bounding boxes theo ngưỡng bất thường thực tế.
+
+        Args:
+            image (np.ndarray): Ảnh ROI đầu vào (RGB hoặc BGR).
+            threshold (float): Ngưỡng điểm bất thường dùng để trích xuất các vùng heatmap bất thường.
+            min_area (int): Diện tích tối thiểu (pixel) của vùng bất thường để tạo bounding box.
+
+        Returns:
+            tuple[float, np.ndarray, list[tuple[int, int, int, int]]]:
+                - score (float): Điểm bất thường cao nhất trên ảnh ROI.
+                - overlay (np.ndarray): Ảnh overlay heatmap trực quan.
+                - bounding_boxes (list[tuple[int, int, int, int]]): Danh sách các box (x, y, w, h) của vùng bất thường.
+        """
+        if self.index is None or self.resnet is None:
+            raise RuntimeError("Mô hình chưa được load. Vui lòng gọi hàm load_model() trước khi predict.")
+
+        img_tensor = self.preprocess(image)
+        feats = self._extract_features(img_tensor)
+
+        D, _ = self.index.search(feats.astype(np.float32), 1)
+        anomaly_map = D.reshape(14, 14)
+        score = float(anomaly_map.max())
+
+        heatmap_color = self._generate_threshold_heatmap(
+            anomaly_map,
+            (image.shape[0], image.shape[1]),
+            threshold=threshold,
+        )
+
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) if image.ndim == 3 else image
+        overlay = cv2.addWeighted(
+            image_bgr,
+            self.config.overlay_alpha,
+            heatmap_color,
+            1 - self.config.overlay_alpha,
+            0,
+        )
+
+        bounding_boxes: list[tuple[int, int, int, int]] = []
+        if score > threshold:
+            anomaly_map_resized = cv2.resize(anomaly_map, (image.shape[1], image.shape[0]))
+            binary_mask = (anomaly_map_resized >= threshold).astype(np.uint8) * 255
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            binary_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_CLOSE, kernel)
+
+            contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            raw_boxes = []
+            for contour in contours:
+                if cv2.contourArea(contour) >= min_area:
+                    bx, by, bw, bh = cv2.boundingRect(contour)
+                    raw_boxes.append((bx, by, bw, bh))
+
+            if raw_boxes:
+                bounding_boxes = self._merge_overlapping_boxes(raw_boxes)
+
+        return score, overlay, bounding_boxes
 
     def warmup(self):
         """Chạy thử nghiệm mô hình (Warmup) với một ảnh đen (dummy image) giúp khởi tạo cấu trúc bộ nhớ thiết bị."""

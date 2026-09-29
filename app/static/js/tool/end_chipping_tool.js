@@ -313,6 +313,7 @@ btn_judment_end_chipping.addEventListener("click", async () => {
                 yStart: rect.yStart,
                 xEnd: rect.xEnd,
                 yEnd: rect.yEnd,
+                threshold: inspector.getThreshold(),
             },
             width_canvas: WIDTH_IMG_SHAPE,
         });
@@ -433,17 +434,20 @@ export function event_transition_items(){
         runtimeImagesPanel.innerHTML = "";
         runtimeImagesPanel.hidden = true;
     }
+    clearPatchCoreResult();
     obj_region_end_chipping_canvas.reset();
-     canvasManager.clearShapeCanvas();
-     get_obj_product().highlightItems(scroll_container, ItemsInspector.TYPE_END_CHIPPING, "cropRoi");  
+    canvasManager.clearShapeCanvas();
+    get_obj_product().highlightItems(scroll_container, ItemsInspector.TYPE_END_CHIPPING, "cropRoi");  
     let obj_end_chipping_inspector = create_obj_cross_item(ItemsInspector.TYPE_END_CHIPPING,EndChippingInspector,"setEndChippingItems");
     if (obj_end_chipping_inspector){
         const rect = obj_end_chipping_inspector.getCropRoi();
         if (rect) {
             obj_region_end_chipping_canvas.setCurrentRectangle(rect);
             obj_end_chipping_inspector.drawAll(canvasManager, COLOR_RECT_SHAPE_REGION_DETECT);
+            boxContentEndChipping.innerHTML = "";
+            boxContentEndChipping.appendChild(createEndChipping(rect));
+            activateEndChippingPanel(boxContentEndChipping);
         }
-        console.log("Không tạo đc dữ liệu obj_end_chipping_inspector");
         return;
     }
 }
@@ -528,8 +532,21 @@ function createEndChipping(data_end_chipping = null) {
     enableSaveRuntimeImages.checked = savedRuntimeImages;
     saveRuntimeImagesToggle.checked = savedRuntimeImages;
     saveRuntimeImagesToggle.disabled = !enableSaveRuntimeImages.checked;
-    enableSaveRuntimeImages.addEventListener("change", () => {
+
+    let isRadioChecked = enableSaveRuntimeImages.checked;
+    enableSaveRuntimeImages.addEventListener("mousedown", () => {
+        isRadioChecked = enableSaveRuntimeImages.checked;
+    });
+    enableSaveRuntimeImages.addEventListener("click", () => {
+        if (isRadioChecked) {
+            enableSaveRuntimeImages.checked = false;
+            isRadioChecked = false;
+        } else {
+            enableSaveRuntimeImages.checked = true;
+            isRadioChecked = true;
+        }
         saveRuntimeImagesToggle.disabled = !enableSaveRuntimeImages.checked;
+        saveRuntimeImagesToggle.checked = enableSaveRuntimeImages.checked;
     });
     saveRuntimeImagesControl.append(enableSaveRuntimeImages, saveRuntimeImagesToggle, saveRuntimeImagesSwitch);
     saveRuntimeImagesValue.appendChild(saveRuntimeImagesControl);
@@ -604,7 +621,10 @@ function createEndChipping(data_end_chipping = null) {
         const saveRuntimeImagesToggle = document.getElementById("save-runtime-images-end-chipping");
         if (inpName) inpName.value = "";
         if (inpThreshold) inpThreshold.value = "";
-        if (enableSaveRuntimeImages) enableSaveRuntimeImages.checked = false;
+        if (enableSaveRuntimeImages) {
+            enableSaveRuntimeImages.checked = false;
+            isRadioChecked = false;
+        }
         if (saveRuntimeImagesToggle) {
             saveRuntimeImagesToggle.checked = false;
             saveRuntimeImagesToggle.disabled = true;

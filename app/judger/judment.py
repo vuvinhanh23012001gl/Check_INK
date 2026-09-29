@@ -157,12 +157,15 @@ class Judment:
         config: Mapping[str, Any],
         inspector_registry: Mapping[str, BaseJudgerAI],
         scale_mm_per_pixel: float,
+        context: Mapping[str, Any] | None = None,
     ) -> list[InspectorTask]:
         """Chuyển object config thành danh sách task có thể thực thi.
 
         Input:
             config: Object judgment của một frame, key là tên inspector.
             inspector_registry: Detector đã khởi tạo theo từng tên key.
+            scale_mm_per_pixel: Hệ số tỷ lệ mm trên pixel.
+            context: Ngữ cảnh point hiện tại (product_id, frame_id, item_id).
         Output: Danh sách ``InspectorTask`` theo thứ tự config.
         Errors: ``ValueError`` nếu config inspector chưa có detector hoặc
             dữ liệu ROI/line không đúng cấu trúc.
@@ -245,6 +248,28 @@ class Judment:
             except (KeyError, TypeError, ValueError) as error:
                 raise ValueError(f"Cấu hình ROI của {name} thiếu tọa độ") from error
 
+            if name in {"ForeignObjectInspector", "EndChippingInspector"}:
+                threshold = float(inspector_config.get("threshold", 0.2))
+                define_kwargs: dict[str, Any] = {
+                    "threshold": threshold,
+                    "saveRuntimeImages": inspector_config.get("saveRuntimeImages", False),
+                }
+                if context:
+                    define_kwargs.update(context)
+                tasks.append(
+                    InspectorTask(
+                        inspector=inspector,
+                        standard_data={"threshold": threshold, name: dict(inspector_config)},
+                        define_args=(x1, y1, x2, y2),
+                        define_kwargs=define_kwargs,
+                        overlay_labels=(str(
+                            inspector_config.get("name")
+                            or Judment.ROI_DISPLAY_NAMES.get(name, name)
+                        ),),
+                    )
+                )
+                continue
+
             define_args: tuple[Any, ...] = (x1, y1, x2, y2)
             tasks.append(
                 InspectorTask(
@@ -313,6 +338,7 @@ class Judment:
                 inspectors,
                 registry,
                 float(scale_mm_per_pixel),
+                context=training_context,
             )
         if not tasks:
             raise ValueError("inspectors phải chứa ít nhất một inspector")
@@ -394,10 +420,18 @@ class Judment:
                 )
                 inspector_images[name] = inspector_image
                 overlay_data[name] = inspector_overlay
+                has_custom_image = (
+                    isinstance(runtime_data, dict)
+                    and isinstance(runtime_data.get("image"), np.ndarray)
+                )
                 overlay_alpha = (
-                    0.85
-                    if inspector_overlay.get("standard", {}).get("boxes")
-                    else 0.45
+                    1.0
+                    if has_custom_image
+                    else (
+                        0.85
+                        if inspector_overlay.get("standard", {}).get("boxes")
+                        else 0.45
+                    )
                 )
                 judgment_image = self._blend_overlay_image(
                     judgment_image,
@@ -564,11 +598,35 @@ class Judment:
         overlay: dict[str, Any] = {"standard": {}, "runtime": {}, "status": result.status}
         config = standard_data.get(name, standard_data) if isinstance(standard_data, dict) else standard_data
 
-        if isinstance(config, dict):
+        coordinate_keys = ("xStart", "yStart", "xEnd", "yEnd")
+        if isinstance(config, dict) and all(key in config for key in coordinate_keys):
+            shape = [
+                int(config["xStart"]), int(config["yStart"]),
+                int(config["xEnd"]), int(config["yEnd"]),
+            ]
+            raw_label = str(
+                config.get("name")
+                or (roi_labels[0] if roi_labels else cls.ROI_DISPLAY_NAMES.get(name, name))
+            )
+            status_tag = "OK" if result.ok else "NG"
+            score_val = runtime_source.get("score")
+            if score_val is not None:
+                display_label = f"{raw_label} [{status_tag} {float(score_val):.3f}]"
+            else:
+                display_label = f"{raw_label} [{status_tag}]"
+            roi_color = (0, 255, 0) if result.ok else (0, 0, 255)
+            Tool_OpenCv2.draw_labeled_roi(
+                output,
+                tuple(shape),
+                display_label,
+                roi_color,
+            )
+            overlay["standard"].setdefault("labels", []).append(raw_label)
+            overlay["standard"].setdefault("boxes", []).append(shape)
+        elif isinstance(config, dict):
             for config_key, value in config.items():
                 if not isinstance(value, dict):
                     continue
-                coordinate_keys = ("xStart", "yStart", "xEnd", "yEnd")
                 if not all(key in value for key in coordinate_keys):
                     continue
                 shape = [
@@ -657,19 +715,38 @@ class Judment:
         if lines:
             overlay["runtime"]["lines"] = lines
 
-        objects = runtime_source.get("objects") or comparison_source.get("objects")
+        objects = (
+            runtime_source.get("objects")
+            or comparison_source.get("objects")
+            or runtime_source.get("detections")
+        )
         if isinstance(objects, list):
             boxes = []
             for obj in objects:
                 if not isinstance(obj, dict):
                     continue
                 box = obj.get("box") or obj.get("bbox")
-                if isinstance(box, (list, tuple)) and len(box) == 4:
+                if isinstance(box, dict):
+                    bx1 = int(round(float(box.get("x1", 0))))
+                    by1 = int(round(float(box.get("y1", 0))))
+                    bx2 = int(round(float(box.get("x2", 0))))
+                    by2 = int(round(float(box.get("y2", 0))))
+                    boxes.append([bx1, by1, bx2, by2])
+                elif isinstance(box, (list, tuple)) and len(box) == 4:
                     x1, y1, x2, y2 = [int(float(value)) for value in box]
-                    cv2.rectangle(output, (x1, y1), (x2, y2), (0, 0, 255), 3)
                     boxes.append([x1, y1, x2, y2])
             if boxes:
                 overlay["runtime"]["boxes"] = boxes
+
+        anomaly_boxes = runtime_source.get("anomaly_boxes")
+        if isinstance(anomaly_boxes, list) and anomaly_boxes:
+            converted_anomaly_boxes = []
+            for abox in anomaly_boxes:
+                if isinstance(abox, (list, tuple)) and len(abox) == 4:
+                    ax, ay, aw, ah = [int(float(v)) for v in abox]
+                    converted_anomaly_boxes.append([ax, ay, ax + aw, ay + ah])
+            if converted_anomaly_boxes:
+                overlay["runtime"]["anomaly_boxes"] = converted_anomaly_boxes
 
         return output, overlay
 

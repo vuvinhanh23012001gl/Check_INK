@@ -654,7 +654,22 @@ function createForeignObjectConfig(rectData = null) {
     enableRadio.checked = inspector.getSaveRuntimeImages();
     toggle.checked = enableRadio.checked;
     toggle.disabled = !enableRadio.checked;
-    enableRadio.addEventListener("change", () => { toggle.disabled = !enableRadio.checked; });
+
+    let isForeignRadioChecked = enableRadio.checked;
+    enableRadio.addEventListener("mousedown", () => {
+        isForeignRadioChecked = enableRadio.checked;
+    });
+    enableRadio.addEventListener("click", () => {
+        if (isForeignRadioChecked) {
+            enableRadio.checked = false;
+            isForeignRadioChecked = false;
+        } else {
+            enableRadio.checked = true;
+            isForeignRadioChecked = true;
+        }
+        toggle.disabled = !enableRadio.checked;
+        toggle.checked = enableRadio.checked;
+    });
     controls.append(enableRadio, toggle, switchLabel);
     saveCell.appendChild(controls);
     saveRow.append(saveLabel, saveCell);
@@ -700,6 +715,7 @@ function createForeignObjectConfig(rectData = null) {
         document.getElementById("foreign-object-input-0").value = "";
         document.getElementById("foreign-object-input-1").value = "";
         enableRadio.checked = false;
+        isForeignRadioChecked = false;
         toggle.checked = false;
         toggle.disabled = true;
     });

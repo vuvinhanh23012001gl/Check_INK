@@ -153,6 +153,15 @@ def save(data:dict= Body(),services: ServiceContainer = Depends(get_services)):
     else:
         logs.append(f"Lưu dữ liệu master thất bại: {result_save.message()}.")
     return response_with_logs(result_save)
+
+@router.post("/delete_product")
+def delete_product(payload: dict = Body(...), services: ServiceContainer = Depends(get_services)):
+    print("---API delete product---")
+    product_id = payload.get("product_id")
+    if product_id is not None:
+        result = services.obj_law_regulation_service.delete_product_data(str(product_id))
+        return result.to_dict()
+    return Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
    
 
 

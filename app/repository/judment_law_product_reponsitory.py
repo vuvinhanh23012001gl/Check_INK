@@ -84,6 +84,20 @@ class JudmentLawProductRepository:
         except KeyError:
             return False
 
+    def delete_product(self, product_id: str) -> bool:
+        """Xóa toàn bộ Product.
+        Args:
+            product_id: ID sản phẩm.
+        Returns:
+            bool: True nếu xóa thành công.
+        """
+        try:
+            del self.data[str(product_id)]
+            self.save()
+            return True
+        except KeyError:
+            return False
+
     def get_product(self, product_id: str) -> dict:
         """Lấy dữ liệu Product.
         Args:

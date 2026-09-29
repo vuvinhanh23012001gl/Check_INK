@@ -44,6 +44,16 @@ def erase_product(
             "message": "Không thể xóa sản phẩm khi pipeline đang chạy hoặc đang phán định.",
         }
     report = services.obj_products_service.delete_product_data(ID_Erase)
+    try:
+        services.obj_point_service.delete_product(ID_Erase)
+    except Exception as error:
+        print(f"[Cảnh báo] Lỗi dọn RAM PointService khi xóa sản phẩm: {error}")
+
+    try:
+        services.obj_law_regulation_service.delete_product_data(str(ID_Erase))
+    except Exception as error:
+        print(f"[Cảnh báo] Lỗi dọn RAM LawRegulationService khi xóa sản phẩm: {error}")
+
     if services.obj_choose_product.is_choose_product(ID_Erase):
         services.obj_choose_product.reset_choose_product()
     if report["failed"]:

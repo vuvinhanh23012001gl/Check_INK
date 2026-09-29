@@ -266,5 +266,116 @@ class PatchCoreTrainRecordRepository:
             self.save_manifest(retained)
         return deleted_count
 
+    @classmethod
+    def is_record_belonging_to_product(
+        cls,
+        record: dict,
+        product_id: int | str,
+        base_patchcore_folder: str | Path | None = None,
+    ) -> bool:
+        """Kiểm tra một record trong manifest có thuộc về product_id hay không.
+
+        Tránh xóa nhầm bằng cách:
+        1. Kiểm tra trường 'product_id' trực tiếp nếu tồn tại trong record.
+        2. Tách và phân tích các phân đoạn đường dẫn (path segments) của model_root,
+           model_file, runtime_images_root, inference_result để xác định chính xác
+           giá trị nằm ngay sau phân đoạn 'patch_core'.
+        3. Kiểm tra tính quan hệ thư mục (relative_to) với thư mục gốc PatchCore của product.
+
+        Args:
+            record: Dict chứa metadata của một phiên huấn luyện PatchCore.
+            product_id: ID sản phẩm cần kiểm tra (int hoặc str).
+            base_patchcore_folder: Đường dẫn gốc lưu model PatchCore (mặc định lấy từ config).
+
+        Returns:
+            bool: True nếu record thuộc về product_id, ngược lại False.
+        """
+        target_pid = str(product_id).strip()
+        if not target_pid:
+            return False
+
+        # 1. Trường hợp record có lưu product_id trực tiếp
+        if "product_id" in record and record["product_id"] is not None:
+            return str(record["product_id"]).strip() == target_pid
+
+        # 2. Kiểm tra các đường dẫn có trong record
+        candidate_paths = [
+            record.get("model_root"),
+            record.get("model_file"),
+            record.get("runtime_images_root"),
+            record.get("inference_result"),
+        ]
+
+        if base_patchcore_folder is None:
+            from app.config.path_config import PATH_FOLDER_MODEL_DETECT_PATCH_CORE
+            base_patchcore_folder = PATH_FOLDER_MODEL_DETECT_PATCH_CORE
+
+        product_target_dir = (Path(base_patchcore_folder) / target_pid).resolve()
+
+        for raw_path in candidate_paths:
+            if not raw_path:
+                continue
+            path_str = str(raw_path).replace("\\", "/")
+            parts = [seg.strip() for seg in path_str.split("/") if seg.strip()]
+            if "patch_core" in parts:
+                idx = parts.index("patch_core")
+                if idx + 1 < len(parts):
+                    # So sánh chính xác phân đoạn id sản phẩm ngay sau thư mục patch_core
+                    return parts[idx + 1] == target_pid
+
+            # Kiểm tra dự phòng bằng Path relative_to
+            try:
+                p = Path(raw_path).expanduser()
+                if not p.is_absolute():
+                    p = (WORKSPACE_DIR / p).resolve()
+                else:
+                    p = p.resolve()
+                p.relative_to(product_target_dir)
+                return True
+            except (ValueError, Exception):
+                pass
+
+        return False
+
+    def has_records_for_product(self, product_id: int | str) -> bool:
+        """Kiểm tra manifest có chứa record thuộc về product_id hay không.
+
+        Args:
+            product_id: ID sản phẩm cần kiểm tra.
+
+        Returns:
+            bool: True nếu có ít nhất 1 record thuộc product_id, ngược lại False.
+        """
+        manifest = self.load_manifest()
+        return any(self.is_record_belonging_to_product(record, product_id) for record in manifest)
+
+    def delete_records_by_product_id(self, product_id: int | str) -> int:
+        """Xóa toàn bộ các record thuộc về một product_id cụ thể trong manifest.
+
+        Đảm bảo chỉ xóa các record khớp chính xác với product_id chỉ định,
+        bảo toàn nguyên vẹn dữ liệu của các sản phẩm khác.
+
+        Args:
+            product_id: ID sản phẩm cần xóa.
+
+        Returns:
+            int: Số lượng record đã được loại bỏ.
+
+        Raises:
+            OSError: Nếu không thể ghi lại file manifest.
+        """
+        manifest = self.load_manifest()
+        retained = []
+        deleted_count = 0
+        for record in manifest:
+            if self.is_record_belonging_to_product(record, product_id):
+                deleted_count += 1
+                continue
+            retained.append(record)
+        if deleted_count > 0:
+            self.save_manifest(retained)
+        return deleted_count
+
 
 PatchCoreTrainRecordManager = PatchCoreTrainRecordRepository
+

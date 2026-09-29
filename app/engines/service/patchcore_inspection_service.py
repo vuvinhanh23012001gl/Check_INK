@@ -4,6 +4,7 @@ import shutil
 import base64
 import threading
 import cv2
+# pyrefly: ignore [missing-import]
 import torch
 import faiss
 import numpy as np
@@ -124,20 +125,52 @@ class PatchCoreInspectionService:
             "deleted_records": deleted_records,
         }).to_dict()
 
+    def save_runtime_image_for_training(
+        self,
+        product_id: int,
+        frame_id: int,
+        item_id: int,
+        cropped_image: np.ndarray,
+    ) -> None:
+        """Lưu ảnh crop vào thư mục runtime/good của session hiện tại để phục vụ train lại mô hình.
+
+        Args:
+            product_id (int): Mã định danh sản phẩm.
+            frame_id (int): Mã frame kiểm tra.
+            item_id (int): Mã point/item kiểm tra.
+            cropped_image (np.ndarray): Ảnh ROI đã crop để phục vụ huấn luyện PatchCore.
+        """
+        session_root = self._get_record_session_root(product_id, frame_id, item_id)
+        if session_root is None:
+            return  # Không có session model nào để lưu (có thể chưa train The First)
+
+        good_dir = session_root / "runtime" / "good"
+        good_dir.mkdir(parents=True, exist_ok=True)
+
+        from datetime import datetime
+        now = datetime.now()
+        filename = good_dir / f"runtime_{now.strftime('%Y%m%d_%H%M%S_%f')}.png"
+        cv2.imwrite(str(filename), cropped_image)
+        print(f"[PATCHCORE] Đã lưu ảnh runtime train tại: {filename}")
+
     def _get_record_session_root(self, product_id: int, frame_id: int, item_id: int) -> Path | None:
         """Resolve đúng session từ record mới nhất của Point."""
-        record = self.record_repository.get_latest_run()
-        if not record or not record.get("model_root"):
-            return None
-        model_root = Path(record["model_root"])
-        if not model_root.is_absolute():
-            model_root = WORKSPACE_DIR / model_root
         expected_root = (
             Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE)
             / str(product_id) / str(frame_id) / str(item_id)
         ).resolve()
-        model_root = model_root.resolve()
-        return model_root if model_root.parent == expected_root else None
+
+        manifest = self.record_repository.load_manifest()
+        for record in manifest:
+            if not record or not record.get("model_root"):
+                continue
+            model_root = Path(record["model_root"])
+            if not model_root.is_absolute():
+                model_root = WORKSPACE_DIR / model_root
+            model_root = model_root.resolve()
+            if model_root.parent == expected_root:
+                return model_root
+        return None
 
     def create_model(
         self,
@@ -292,7 +325,8 @@ class PatchCoreInspectionService:
             )
             model = ModelPatchCore(config)
             model.load_model()
-            score, overlay_bgr = model.predict(image_rgb)
+            threshold_val = float(crop_roi.get("threshold", 0.1)) if isinstance(crop_roi, dict) and "threshold" in crop_roi else 0.1
+            score, overlay_bgr = model.predict(image_rgb, threshold=threshold_val)
             boxes = [
                 {"x": int(x), "y": int(y), "width": int(w), "height": int(h)}
                 for x, y, w, h in model.get_bounding_boxes(image_rgb)

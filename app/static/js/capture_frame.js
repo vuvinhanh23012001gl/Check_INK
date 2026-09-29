@@ -207,6 +207,24 @@ function generateNewId(arr) {
     return Math.max(...arr) + 1;
 }
 
+function getCoordinatesOfPreviousPoint(frame_box) {
+    const items = Array.from(frame_box.querySelectorAll(".img-item"));
+    if (items.length > 0) {
+        // Tìm item cuối cùng (bỏ qua icon add mới nếu có)
+        for (let i = items.length - 1; i >= 0; i--) {
+            const lastItem = items[i];
+            if (!lastItem.dataset.has_icon_add_new && lastItem.dataset.x !== undefined && lastItem.dataset.y !== undefined && lastItem.dataset.z !== undefined) {
+                return {
+                    x: Number(lastItem.dataset.x),
+                    y: Number(lastItem.dataset.y),
+                    z: Number(lastItem.dataset.z)
+                };
+            }
+        }
+    }
+    return null;
+}
+
 function container_driver(selected, Max_X, Max_Y, Max_Z, x = null, y = null, z = null) {
 
     const input_x = document.getElementById(`input-x-${selected.point_id}`); input_x.type = "number";

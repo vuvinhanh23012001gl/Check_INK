@@ -59,9 +59,19 @@
 #overlay-delete-product .delete-box p{
     margin: 0;
     margin-bottom: 22px;
-    font-size: 18px;
+    font-size: 14px;
     line-height: 1.5;
     color: #c2c5ca;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    text-align: left;
+    padding-right: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #2d3748;
 }
 
 /* =========================

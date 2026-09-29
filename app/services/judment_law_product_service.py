@@ -14,6 +14,11 @@ class JudmentLawProductSevice:
             return Result.Ok()
         else:
             return Result.Fail(ErrorCode.DATA_IS_NOT_CORRECT_FROMAT)
+            
+    def delete_product_data(self, product_id: str) -> Result:
+        if self.repo.delete_product(str(product_id)):
+            return Result.Ok()
+        return Result.Fail(ErrorCode.PRODUCT_NOT_FOUND)
 
     def convert_canvas_coordinates(
         self,

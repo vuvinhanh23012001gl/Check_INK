@@ -317,6 +317,31 @@ class PointService:
         self._save_points()
         return Result.Ok(frame_id)
 
+    def delete_product(self, product_id: int) -> Result:
+        """
+        Chức năng: Xóa toàn bộ dữ liệu frame và point của sản phẩm khỏi bộ nhớ RAM và lưu lại file points.json.
+        Input: product_id (int)
+        Output: Result.Ok(bool) True nếu đã xóa, ngược lại Result.Fail nếu ID không hợp lệ.
+        """
+        try:
+            product_id = int(product_id)
+        except (ValueError, TypeError):
+            return Result.Fail(ErrorCode.PRODUCT_ID_INVALID)
+
+        if product_id in self.points:
+            del self.points[product_id]
+            self._save_points()
+            return Result.Ok(True)
+        return Result.Ok(False)
+
+    def reload_points(self) -> None:
+        """
+        Chức năng: Tải lại toàn bộ dữ liệu điểm từ file points.json vào bộ nhớ RAM.
+        Input: None
+        Output: None
+        """
+        self.points = self._load_points()
+
     def get_xyz_by_product_frame(self, product_id: int, frame_id: int) -> Result:
         """
         Chức năng: Truy xuất nhanh bản đồ tọa độ không gian (x, y, z) của mọi điểm có trong Frame chỉ định.
