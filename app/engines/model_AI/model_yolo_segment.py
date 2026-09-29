@@ -6,6 +6,7 @@ from app.config import YoloSegmentConfig
 from app.model import BaseAI
 import numpy as np
 import gc
+# pyrefly: ignore [missing-import]
 import torch
 from typing import Any
 import cv2

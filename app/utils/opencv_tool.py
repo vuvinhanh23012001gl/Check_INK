@@ -178,8 +178,8 @@ class Tool_OpenCv2:
         cv2.imshow(win_name, img)
         cv2.waitKey(wait)
         cv2.destroyAllWindows()
-
-    def convert_frame_to_base64(self,frame):
+    @staticmethod
+    def convert_frame_to_base64(frame):
         """
         Convert OpenCV frame sang base64 để gửi cho client
         """
@@ -214,7 +214,7 @@ class Tool_OpenCv2:
                 f"bytes_to_ndarray error: {e}"
             )
             return None
-        
+    @staticmethod
     def crop_image(image: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> tuple[np.ndarray, int, int]:
         """Cắt ảnh theo hai điểm chéo.
         Args:

@@ -1,21 +1,21 @@
 [
   {
-    "run_id": "model_end_chipping_crop_20260928_084237_639594",
-    "created_at": "2026-09-28T08:42:50.138132+00:00",
+    "run_id": "model_end_chipping_crop_20260928_113805_376509",
+    "created_at": "2026-09-28T11:38:18.717977+00:00",
     "purpose": "train patchcore end chipping",
     "status": "completed",
-    "model_root": "app/input/model/patch_core/1/0/0/model_end_chipping_crop_20260928_084237_639594",
-    "model_file": "app/input/model/patch_core/1/0/0/model_end_chipping_crop_20260928_084237_639594/the_first/patchcore.index",
-    "inference_result": "app/input/model/patch_core/1/0/0/model_end_chipping_crop_20260928_084237_639594/the_first/inference_result.png",
-    "runtime_images_root": "app/input/model/patch_core/1/0/0/model_end_chipping_crop_20260928_084237_639594/runtime",
+    "model_root": "app/input/model/patch_core/1/0/2/model_end_chipping_crop_20260928_113805_376509",
+    "model_file": "app/input/model/patch_core/1/0/2/model_end_chipping_crop_20260928_113805_376509/the_first/patchcore.index",
+    "inference_result": "app/input/model/patch_core/1/0/2/model_end_chipping_crop_20260928_113805_376509/the_first/inference_result.png",
+    "runtime_images_root": "app/input/model/patch_core/1/0/2/model_end_chipping_crop_20260928_113805_376509/runtime",
     "roi_list": [
       "end_chipping"
     ],
     "crop_roi": {
-      "xStart": 754,
-      "yStart": 424,
-      "xEnd": 1352,
-      "yEnd": 904
+      "xStart": 676,
+      "yStart": 384,
+      "xEnd": 1602,
+      "yEnd": 988
     },
     "train_config": {
       "img_size": 256,

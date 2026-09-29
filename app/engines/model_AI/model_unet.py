@@ -2,6 +2,7 @@ from app.model import BaseAI
 from app.config import UnetConfig
 from app.utils import Folder
 import segmentation_models_pytorch as smp
+# pyrefly: ignore [missing-import]
 import torch
 import gc
 import  numpy as np 

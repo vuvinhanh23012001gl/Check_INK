@@ -1,6 +1,5 @@
 from app.engines.AI_model_process import FrameModelYoloSegment
-import shapely
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon
 import cv2
 import numpy as np
 from typing import Optional, List, Tuple, Dict
@@ -184,14 +183,19 @@ class SemiPermeableMembrane(BaseJudgerAI):
             if is_inside:
                 return True, None
             intersection_line = poly_border.boundary.intersection(poly_inner.boundary)
-            intersection_points: List[Tuple[float, float]] = []
+            intersection_points = []
 
             if not intersection_line.is_empty:
-                # Trích xuất toàn bộ tọa độ các điểm giao an toàn bằng shapely.get_coordinates
-                # Tự động hỗ trợ mọi loại hình học (Point, MultiPoint, LineString, GeometryCollection),
-                # khắc phục triệt để lỗi truy cập thuộc tính .x, .y trên lớp BaseGeometry.
-                coords = shapely.get_coordinates(intersection_line)
-                intersection_points = [(float(pt[0]), float(pt[1])) for pt in coords]
+                if hasattr(intersection_line, "geoms"):
+                    for geom in intersection_line.geoms:
+                        if geom.geom_type == "Point":
+                            intersection_points.append((geom.x, geom.y))
+                        elif hasattr(geom, "coords"):
+                            intersection_points.extend(list(geom.coords))
+                elif intersection_line.geom_type == "Point":
+                    intersection_points.append((intersection_line.x, intersection_line.y))
+                elif hasattr(intersection_line, "coords"):
+                    intersection_points.extend(list(intersection_line.coords))
 
             unique_points = list(dict.fromkeys(intersection_points))
             return False, unique_points

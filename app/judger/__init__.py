@@ -8,5 +8,4 @@ from .weld_seam_air_bubbles_detector import WeldSeamAirBubbles
 from .border_detector import BorderDetector
 from .measurement_welding_detector import MeasurementWeldingDetector
 from .slit_detector import SlitDetector
-from .foreign_object_detector import ForeignObjectDetector
 from .judment import InspectorTask, Judment

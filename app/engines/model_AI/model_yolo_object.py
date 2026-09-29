@@ -3,6 +3,7 @@ from app.config import YoloDetectObjectConfig
 from ultralytics import YOLO
 import numpy as np
 import gc
+# pyrefly: ignore [missing-import]
 import torch
 
 class ModelYoloObject(BaseAI):

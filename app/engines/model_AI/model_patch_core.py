@@ -1,8 +1,12 @@
 from app.model import BaseAI
 from app.config import PatchCoreAnomalyConfig
+# pyrefly: ignore [missing-import]
 import torch
+# pyrefly: ignore [missing-import]
 import torchvision.transforms as T
+# pyrefly: ignore [missing-import]
 from torchvision.models import resnet18, ResNet18_Weights
+# pyrefly: ignore [missing-import]
 import torch.nn.functional as F
 import numpy as np
 import faiss
