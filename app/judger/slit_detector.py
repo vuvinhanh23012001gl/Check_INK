@@ -59,7 +59,7 @@ class SlitDetector(BorderDetector):
 			)
 			comparisons.append({
 				"line_index": line_index,
-				"name_line": standard.get("nameLine", str(line_index)),
+				"name_line": standard.get("nameLine") or standard.get("name_line") or str(line_index),
 				"standard_line": dict(standard),
 				"width_min": width_min,
 				"width_max": width_max,
@@ -90,16 +90,23 @@ class SlitDetector(BorderDetector):
 		errors = []
 		for item in comparisons:
 			if not item["is_valid"]:
-				if item["intersection_count"] != 2:
-					errors.append(
-						f"Line {item['name_line']} NG: "
-						f"có {item['intersection_count']} giao điểm, yêu cầu đúng 2"
-					)
-				else:
-					errors.append(
-						f"Line {item['name_line']} NG: đo={item['distance_mm']} mm, "
-						f"chuẩn={item['width_min']}..{item['width_max']} mm"
-					)
+				runtime = item.get("runtime")
+				measured = bool(
+					runtime
+					and runtime.get("is_valid")
+					and item["intersection_count"] == 2
+					and item["distance_mm"] is not None
+				)
+				actual = (
+					f"{float(item['distance_mm']):g} mm"
+					if measured
+					else f"Không đo được ({item['intersection_count']} giao điểm)"
+				)
+				errors.append(
+					f"[Khoảng cách khe hàn] NG - \"{item['name_line']}\" - "
+					f"Quy định:\"{float(item['width_min']):g} mm - "
+					f"{float(item['width_max']):g} mm\" - Thực tế :\"{actual}\""
+				)
 		return JudgmentResult(
 			ok=ok,
 			status="OK" if ok else "NG",

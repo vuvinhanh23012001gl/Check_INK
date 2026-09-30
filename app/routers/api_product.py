@@ -18,6 +18,7 @@ def get_product(services: ServiceContainer = Depends(get_services)):
 @router.get("/select_product_new")
 def select_product_new(services: ServiceContainer = Depends(get_services),ID_Choose:int = Query(...,description="San pham chon")):
     print(ID_Choose)
+    services.obj_products_service.reload_products()
     result = services.obj_choose_product.set_choose_product(ID_Choose)
     # print(data)
     return {"success": True} if result.ok else {"success": False}
@@ -91,8 +92,20 @@ async def add_product(
     id: int = Form(...),
     name: str = Form(...),
     description: str = Form(""),
+    limit_x_max: int = Form(1),
+    limit_y_max: int = Form(1),
+    limit_z_max: int = Form(1),
+    home_x: float = Form(0.0),
+    home_y: float = Form(0.0),
+    home_z: float = Form(0.0),
     images: UploadFile | None = File(None)
 ):
+    if id <= 0:
+        return {"success": False, "message": "ID sản phẩm phải là số nguyên dương."}
+    
+    if limit_x_max <= 0 or limit_y_max <= 0 or limit_z_max <= 0:
+        return {"success": False, "message": "Giới hạn IAI (X, Y, Z) phải là số nguyên lớn hơn 0."}
+
     img_np = None
     if images:
         contents = await images.read()
@@ -104,7 +117,13 @@ async def add_product(
     product = Product(
         id=id,
         name=name,
-        description=description
+        description=description,
+        limit_x_max=limit_x_max,
+        limit_y_max=limit_y_max,
+        limit_z_max=limit_z_max,
+        home_x=home_x,
+        home_y=home_y,
+        home_z=home_z
     )
     result = (
         services.obj_products_service

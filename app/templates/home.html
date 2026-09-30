@@ -696,6 +696,21 @@
                 <label>Mô tả</label>
                 <textarea name="description" placeholder="Nhập mô tả sản phẩm" required></textarea>
 
+                <label>Giới hạn IAI X (Max)</label>
+                <input type="number" step="1" min="1" name="limit_x_max"
+                    value="{{ (iai_config.get('limit_x_max_default') or iai_config.get('limit_x_max', 223)) | int }}"
+                    required>
+
+                <label>Giới hạn IAI Y (Max)</label>
+                <input type="number" step="1" min="1" name="limit_y_max"
+                    value="{{ (iai_config.get('limit_y_max_default') or iai_config.get('limit_y_max', 52)) | int }}"
+                    required>
+
+                <label>Giới hạn IAI Z (Max)</label>
+                <input type="number" step="1" min="1" name="limit_z_max"
+                    value="{{ (iai_config.get('limit_z_max_default') or iai_config.get('limit_z_max', 49)) | int }}"
+                    required>
+
                 <!-- Upload image -->
                 <div class="file-input">
                     <label>Ảnh sản phẩm (Vui lòng chọn file ảnh)</label>
@@ -711,13 +726,17 @@
                 </button>
             </form>
 
-            <button type="button" class="btn btn-exit" id="close-add-product">
+            <button type="button" class="btn btn-exit" id="close-add-product" style="display: none;">
                 ❌ Thoát
             </button>
         </div>
 
         <!-- ===== RIGHT PANEL ===== -->
-        <div class="right-panel">
+        <div class="right-panel" style="position: relative;">
+            <span id="close-right-panel"
+                style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-weight: 900; font-size: 32px; color: #f87171; transition: all 0.2s ease; line-height: 1; z-index: 10;"
+                onmouseover="this.style.color='#ff4d4d'; this.style.transform='scale(1.2)';"
+                onmouseout="this.style.color='#f87171'; this.style.transform='scale(1)';">X</span>
             <h2>📦 Sản phẩm hiện có</h2>
 
             <table id="table-product-list">
@@ -725,6 +744,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Tên</th>
+                        <th>Giới hạn X</th>
+                        <th>Giới hạn Y</th>
+                        <th>Giới hạn Z</th>
                         <th>Mô tả</th>
                         <th>Ảnh mẫu</th>
                         <th>Hành động</th>

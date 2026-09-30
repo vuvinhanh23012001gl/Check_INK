@@ -85,7 +85,11 @@ class ScratchThePipeDetector(BaseJudgerAI):
             comparison_data["scratch_forbidden"] is True
             and comparison_data["runtime_clean"] is True
         )
-        errors = [] if ok else ["Phát hiện Scratch trên bề mặt sản phẩm"]
+        errors = []
+        if not ok:
+            errors.append(
+                f"[Vết xước ống] NG - \"Vết xước\" - Quy định:\"Không có vết xước\" - Thực tế :\"Có vết xước\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",
@@ -96,9 +100,9 @@ class ScratchThePipeDetector(BaseJudgerAI):
             },
             comparison_data=comparison_data,
             message=(
-                "Không phát hiện Scratch"
-                if ok
-                else "Phát hiện Scratch, kết quả NG"
+                "Không có vết xước"
+                if comparison_data.get("runtime_clean")
+                else "Có vết xước"
             ),
             errors=errors,
         )

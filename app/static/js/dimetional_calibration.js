@@ -510,6 +510,11 @@ header_dimetional_calibration.addEventListener("click", async () => {
     }
     console.log("Bạn nhấn vào hiệu chỉnh kích thước.");
     console.log("Data header dimesion calibration", head_data);
+    
+    if (!head_data?.data?.product) {
+        write_log_calibration_clear("❌ Chưa có sản phẩm nào được chọn!\n✅ Hướng dẫn quy trình:\n1. Vào mục 'Sản phẩm' để tạo sản phẩm mới.\n2. Chọn sản phẩm đó làm sản phẩm hiện tại.\n3. Cấu hình các thông số cần thiết.\n4. Thực hiện 'Lấy ảnh mẫu' (Master) trước.\n5. Vào lại tab này để Hiệu chỉnh kích thước.");
+    }
+    
     let data_point = head_data?.data?.data_point;
     let id_product_choose_now = head_data?.data?.product?._id;
     id_product_selecting_now = id_product_choose_now;

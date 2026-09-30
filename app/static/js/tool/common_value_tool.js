@@ -128,7 +128,13 @@ export function write_log_clear(logElement, text = "") {
 export function write_log_append(logElement, text = "") {
     if (!logElement) return;
     logElement.style.whiteSpace = "pre-line"; 
-    logElement.textContent += text + "\n";
+    
+    let userText = text;
+    if (userText.includes("Mã lỗi: 8000 (LABEL_NOT_FOUND)")) {
+        userText = "\n💡 Gợi ý: Hãy thử khoanh vùng lại hoặc kiểm tra ảnh mẫu.";
+    }
+    
+    logElement.textContent += userText + "\n";
 }
 
 export function create_obj_cross_item(typeInspector, InspectorClass, setterMethodName) {

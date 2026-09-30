@@ -18,14 +18,14 @@ class StageTransform:
     INSPECTOR_DISPLAY_NAMES = {
         "AirBubblesItemInspector": "Bọt khí đường hàn",
         "MeasurementWeldInspector": "Độ rộng đường hàn",
-        "SlitWeldInspector": "Đường xẻ mối hàn",
+        "SlitWeldInspector": "Khoảng cách khe hàn",
         "ArmSensorInspector": "ARM Sensor",
         "ArmCoverInspector": "ARM Cover",
         "BorderFilmInspector": "Biên film",
         "MembraneInspector": "Màng bán thấm",
         "HoleItemInspector": "Lỗ thủng",
-        "ScratchedPipeItemInspector": "Vết trầy xước",
-        "EndChippingInspector": "Mẻ cạnh",
+        "ScratchedPipeItemInspector": "Vết xước ống",
+        "EndChippingInspector": "Mẻ đầu ống",
         "ForeignObjectInspector": "Dị vật",
     }
 
@@ -196,7 +196,6 @@ class StageTransform:
                 "inspectors": {},
                 "message": "Không có dữ liệu master phán định.",
             }
-        self.services.send_judgment_log(f"▶ Đang chạy frame {frame_id}, point {point_id}")
         print(f"[STAGE2] Di chuyển IAI đến frame={frame_id}, item={point_id}: {point['x']},{point['y']},{point['z']}")
         if not self._move_with_retry(point):
             raise RuntimeError(f"IAI di chuyển thất bại tại frame {frame_id}, point {point_id}")
@@ -246,17 +245,28 @@ class StageTransform:
             summary,
         )
         summary["judgment_path"] = judgment_path
-        weld_result = summary.get("inspectors", {}).get("MeasurementWeldInspector")
-        if weld_result and weld_result.get("ok") is False:
-            weld_errors = weld_result.get("errors") or [
-                weld_result.get("message", "Hạng mục đo đường hàn không đạt.")
-            ]
-            for weld_error in weld_errors:
-                self.services.send_judgment_log(str(weld_error))
-        elif summary.get("overall") is False:
-            self.services.send_judgment_log(
-                f"❌ Frame {frame_id}, point {point_id}: NG"
-            )
+        # Ghi log judgment theo chuẩn: chỉ ghi khi có hạng mục NG
+        ng_errors: list[str] = []
+        for inspector_name, inspector_result in summary.get("inspectors", {}).items():
+            if inspector_result.get("ok") is False:
+                errs = inspector_result.get("errors")
+                if errs and isinstance(errs, list):
+                    for err in errs:
+                        err_str = str(err).strip()
+                        if not err_str.startswith("🔵"):
+                            err_str = f"🔵{err_str}"
+                        ng_errors.append(err_str)
+                else:
+                    msg = inspector_result.get("message") or "Không đạt chuẩn"
+                    display_name = inspector_result.get("display_name", inspector_name)
+                    ng_errors.append(
+                        f"🔵[{display_name}] NG - \"{display_name}\" - Quy định:\"Đạt chuẩn\" - Thực tế :\"{msg}\""
+                    )
+
+        if ng_errors:
+            log_lines = [f"🔻Frame: {frame_id} Ảnh thứ: {point_id}"]
+            log_lines.extend(ng_errors)
+            self.services.send_judgment_log("\n".join(log_lines))
         return summary
 
     def _send_client(self, payload: dict) -> None:

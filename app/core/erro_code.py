@@ -169,7 +169,7 @@ ERROR_MESSAGE = {
     #law regulation
     ErrorCode.DATA_IS_NOT_CORRECT_FROMAT : "Dữ liệu không đúng khung",
     ErrorCode.DATA_NOT_FOUND : "Không tìm thấy ID yêu cầu",
-    ErrorCode.LABEL_NOT_FOUND:  "[Lỗi] Không tìm thấy label yêu cầu trong kết quả nhận diện.",
+    ErrorCode.LABEL_NOT_FOUND:  "Không tìm thấy đối tượng trong vùng đã chọn.",
 
     ErrorCode.BOX_DATA_INVALID: "[Lỗi] Thông tin vùng nhận diện (box) không hợp lệ hoặc thiếu trường bắt buộc",
     ErrorCode.BOX_COORDINATE_INVALID: "[Lỗi] Tọa độ hoặc kích thước của vùng nhận diện (box) phải là số nguyên dương",

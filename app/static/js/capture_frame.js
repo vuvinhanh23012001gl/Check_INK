@@ -119,6 +119,9 @@ header_btn_function_capture_product.addEventListener("click", function () {
     active_sceen_show_video();
     postData("/captureproduct", { "status": "UI_Capture" }).then(data => {
         console.log("Data Receive:", data.data);
+        if (!data?.data?.product) {
+            write_log_capture_clear("❌ Chưa có sản phẩm nào được chọn!\n✅ Hướng dẫn quy trình:\n1. Vào mục 'Sản phẩm' để tạo sản phẩm mới.\n2. Chọn sản phẩm đó làm sản phẩm hiện tại.\n3. Cấu hình các thông số cần thiết.\n4. Vào lại tab này để lấy ảnh mẫu (Master).");
+        }
         renderMaster(data?.data);
         // console.log("data moi vao",data?.data);
     });
@@ -171,22 +174,21 @@ function process_table_product(data) {
     }
     tbody.innerHTML = "";
     let product = data?.product;
-    let infor_iai = data?.infor_iai;
-    let id = product?._id;
+    // Cấu hình từ iai.json đóng vai trò là giá trị mặc định (default_iai)
+    let default_iai = data?.default_iai || data?.infor_iai;
+    let id = product?.id ?? product?._id;
     id_product_selecting_now = id;
-    let name = `${id}.${product?._name}`;
-    let x = infor_iai?.limit_x_max;
+    let name = `${id}.${product?.name ?? product?._name}`;
+    
+    // Giới hạn trục lấy theo sản phẩm hiện tại trong products_data.json, nếu thiếu thì lấy mặc định từ default_iai (iai.json)
+    let x = product?.limit_x_max ?? default_iai?.limit_x_max_default ?? default_iai?.limit_x_max;
     max_point_run.x = x;
-    let y = infor_iai?.limit_y_max;
+    let y = product?.limit_y_max ?? default_iai?.limit_y_max_default ?? default_iai?.limit_y_max;
     max_point_run.y = y;
-    let z = infor_iai?.limit_z_max;
+    let z = product?.limit_z_max ?? default_iai?.limit_z_max_default ?? default_iai?.limit_z_max;
     max_point_run.z = z;
     console.log(`Sản phẩm ${id}:${name}, max X:${x}, max Y:${y}, max Z:${z}`);
-    //    console.log(data)
-    //    console.log(name)
-    //    console.log(x)
-    //    console.log(y)
-    //    console.log(z)
+
     const row = document.createElement("tr");
     row.innerHTML =
         `<td>${name}</td>

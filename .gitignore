@@ -3,6 +3,7 @@ venv-project-width-line/
 .vscode/
 model_air_bubble/
 model_patch_core/
+app/input/model/patch_core/
 output/
 train17/
 train38/

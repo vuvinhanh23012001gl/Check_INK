@@ -5,6 +5,7 @@ const overlay_new_product =  document.getElementById("overlay-new-product");
 const overlay_accpet_delete_product = document.getElementById("overlay-delete-product");
 
 const close_add_product = document.getElementById("close-add-product");
+const close_right_panel = document.getElementById("close-right-panel");
 const form_add_new_product = document.getElementById("form-add-new-product");
 const previewImg = document.getElementById("previewImg");
 const imageInput = document.getElementById("imageInput");
@@ -23,6 +24,13 @@ close_add_product.addEventListener("click", function() {
     console.log("Close add new product");
 });
 
+if (close_right_panel) {
+    close_right_panel.addEventListener("click", function() {
+        overlay_new_product.style.display = "none";
+        console.log("Close add new product from right panel");
+    });
+}
+
 
 add_product.addEventListener("click",function() {
     console.log("Add new product clicked");
@@ -33,7 +41,12 @@ async function UpDateTable(){
     overlay_new_product.style.display = "flex";
     let get_data_product = await fetchGet("/product");
     console.log(get_data_product);
-    table_product_list.innerHTML = "";
+    
+    // Clear only rows that are not in the header
+    while (table_product_list.rows.length > 1) {
+        table_product_list.deleteRow(1);
+    }
+    
     createDataShowTable(get_data_product);
 }
 
@@ -75,6 +88,20 @@ form_add_new_product.addEventListener("submit", function(e) {
         alert("ID không hợp lệ. Vui lòng nhập số nguyên dương.");
         return;
     }
+    
+    let limit_x = Number(formData.get("limit_x_max"));
+    let limit_y = Number(formData.get("limit_y_max"));
+    let limit_z = Number(formData.get("limit_z_max"));
+
+    if (
+        !Number.isInteger(limit_x) || limit_x <= 0 || 
+        !Number.isInteger(limit_y) || limit_y <= 0 || 
+        !Number.isInteger(limit_z) || limit_z <= 0
+    ) {
+        alert("Giới hạn IAI (X, Y, Z) không hợp lệ. Vui lòng nhập số nguyên lớn hơn 0.");
+        return;
+    }
+    
     fetch(form_add_new_product.action, {
       method: "POST",
       body: formData
@@ -205,9 +232,22 @@ function createDataShowTable(data) {
             show_box_warning_accept(cellId.textContent,cellName.textContent);
             selected_delete_id_current = item.id;            
         });
+        
+        let cellLimitX = document.createElement("td");
+        cellLimitX.textContent = item.limit_x_max ?? 0;
+        
+        let cellLimitY = document.createElement("td");
+        cellLimitY.textContent = item.limit_y_max ?? 0;
+
+        let cellLimitZ = document.createElement("td");
+        cellLimitZ.textContent = item.limit_z_max ?? 0;
+
         // Append cells to row
         row.appendChild(cellId);
         row.appendChild(cellName);
+        row.appendChild(cellLimitX);
+        row.appendChild(cellLimitY);
+        row.appendChild(cellLimitZ);
         row.appendChild(cellDesc);
         row.appendChild(cellImg);
         row.appendChild(cellAction);

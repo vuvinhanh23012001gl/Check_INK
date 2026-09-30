@@ -212,22 +212,10 @@ class EndChippingDetector(BaseJudgerAI):
         # Áp dụng logic phán định
         if runtime_score <= threshold:
             ok = True
-            message = (
-                f"Điểm mẻ đầu ống ({runtime_score:.4f}) <= ngưỡng ({threshold:.4f}): ĐẠT chuẩn"
-            )
+            message = "Không phát hiện sự bất thường"
         else:
             ok = False
-            count_box = len(anomaly_boxes)
-            if count_box > 0:
-                message = (
-                    f"Điểm mẻ đầu ống ({runtime_score:.4f}) > ngưỡng ({threshold:.4f}): "
-                    f"Phát hiện {count_box} vùng mẻ đầu ống"
-                )
-            else:
-                message = (
-                    f"Điểm mẻ đầu ống ({runtime_score:.4f}) > ngưỡng ({threshold:.4f}): "
-                    f"Phát hiện bất thường mẻ đầu ống"
-                )
+            message = "Phát hiện sự bất thường"
 
         return {
             "standard_threshold": threshold,
@@ -258,8 +246,12 @@ class EndChippingDetector(BaseJudgerAI):
             raise ValueError("comparison_data thiếu các trường bắt buộc")
 
         ok: bool = bool(comparison_data["ok"])
-        message: str = str(comparison_data["message"])
-        errors: List[str] = [] if ok else [message]
+        message: str = "Không phát hiện sự bất thường" if ok else "Phát hiện sự bất thường"
+        errors: List[str] = []
+        if not ok:
+            errors.append(
+                f"[Mẻ đầu ống] NG - \"Mẻ đầu ống\" - Quy định:\"Không phát hiện sự bất thường\" - Thực tế :\"Phát hiện sự bất thường\""
+            )
 
         return JudgmentResult(
             ok=ok,

@@ -79,9 +79,13 @@ class ArmSensorDetector(BaseJudgerAI):
         if not required_keys.issubset(comparison_data):
             raise ValueError("comparison_data thiếu dữ liệu Arm Sensor bắt buộc")
         ok = comparison_data["standard_exists"] == comparison_data["runtime_exists"]
-        errors = [] if ok else [
-            "Trạng thái tồn tại Arm Sensor không phù hợp cấu hình"
-        ]
+        errors = []
+        if not ok:
+            quy_dinh = "Có ARM Sensor" if comparison_data["standard_exists"] else "Không có ARM Sensor"
+            thuc_te = "Có ARM Sensor" if comparison_data["runtime_exists"] else "Không có ARM Sensor"
+            errors.append(
+                f"[ARM Sensor] NG - \"ARM Sensor\" - Quy định:\"{quy_dinh}\" - Thực tế :\"{thuc_te}\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",
@@ -94,9 +98,9 @@ class ArmSensorDetector(BaseJudgerAI):
             },
             comparison_data=comparison_data,
             message=(
-                "Arm Sensor đúng theo cấu hình"
+                "Có ARM Sensor"
                 if ok
-                else "Arm Sensor không đúng theo cấu hình"
+                else "Không có ARM Sensor"
             ),
             errors=errors,
         )

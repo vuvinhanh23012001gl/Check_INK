@@ -102,9 +102,21 @@ class SemiPermeableMembrane(BaseJudgerAI):
             comparison_data["required_inside"] is True
             and comparison_data["runtime_inside"] is True
         )
-        errors = [] if ok else [
-            "Polygon inner không nằm hoàn toàn trong polygon border"
-        ]
+        errors = []
+        if not ok:
+            intersection_points = comparison_data.get("intersection_points")
+            if intersection_points and len(intersection_points) > 0:
+                thuc_te = f"Đường viền trong cắt ra ngoài đường viền ngoài ({len(intersection_points)} điểm giao)"
+            elif intersection_points is None:
+                thuc_te = "Không xác định đủ đường viền trong và ngoài"
+            else:
+                thuc_te = "Đường viền trong nằm ngoài đường viền ngoài"
+
+            errors.append(
+                f"[Màng bán thấm] NG - \"Màng\" - "
+                f"Quy định:\"Đường viền trong nằm trong đường viền ngoài\" - "
+                f"Thực tế :\"{thuc_te}\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",
@@ -115,9 +127,9 @@ class SemiPermeableMembrane(BaseJudgerAI):
             },
             comparison_data=comparison_data,
             message=(
-                "Polygon inner nằm hoàn toàn trong polygon border"
+                "Màng bám thấm đạt chuẩn"
                 if ok
-                else "Polygon inner đè lên hoặc nằm ngoài polygon border"
+                else "Màng bám thấm không đạt chuẩn"
             ),
             errors=errors,
         )

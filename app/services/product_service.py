@@ -54,7 +54,13 @@ class ProductService:
             sp = Product(
                 id=item.get("id"),
                 name=item.get("name"),
-                description=item.get("description")
+                description=item.get("description"),
+                limit_x_max=int(item.get("limit_x_max", 1)),
+                limit_y_max=int(item.get("limit_y_max", 1)),
+                limit_z_max=int(item.get("limit_z_max", 1)),
+                home_x=float(item.get("home_x", 0)),
+                home_y=float(item.get("home_y", 0)),
+                home_z=float(item.get("home_z", 0)),
             )
 
             sp.created_at = item.get(
@@ -68,6 +74,11 @@ class ProductService:
             products[int(product_id)] = sp
 
         return products
+
+    def reload_products(self):
+        """Tải lại danh sách sản phẩm từ file cấu hình products_data.json vào bộ nhớ."""
+        self.products = self._load_products()
+        return self.products
 
     # =========================
     # SAVE

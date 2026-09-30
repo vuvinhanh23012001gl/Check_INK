@@ -79,9 +79,13 @@ class HoleDetector(BaseJudgerAI):
         if not required_keys.issubset(comparison_data):
             raise ValueError("comparison_data thiếu dữ liệu Hole bắt buộc")
         ok = comparison_data["standard_exists"] == comparison_data["runtime_exists"]
-        errors = [] if ok else [
-            "Trạng thái tồn tại Hole không phù hợp cấu hình"
-        ]
+        errors = []
+        if not ok:
+            quy_dinh = "Có lỗ thủng" if comparison_data["standard_exists"] else "Không có lỗ thủng"
+            thuc_te = "Có lỗ thủng" if comparison_data["runtime_exists"] else "Không có lỗ thủng"
+            errors.append(
+                f"[Lỗ thủng] NG - \"Lỗ thủng\" - Quy định:\"{quy_dinh}\" - Thực tế :\"{thuc_te}\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",
@@ -94,9 +98,9 @@ class HoleDetector(BaseJudgerAI):
             },
             comparison_data=comparison_data,
             message=(
-                "Hole đúng theo cấu hình"
+                "Có lỗ thủng"
                 if ok
-                else "Hole không đúng theo cấu hình"
+                else "Không có lỗ thủng"
             ),
             errors=errors,
         )

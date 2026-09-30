@@ -25,20 +25,20 @@ class IAIConfig(BaseConfig):
     def __init__(self):
         self.path_config_iai = PATH_FILE_DATA_CONFIG_IAI
         # =========================
-        # LIMIT X
+        # LIMIT X DEFAULT
         # =========================
-        self.limit_x_min = 0
-        self.limit_x_max = 1000
+        self.limit_x_min_default = 0
+        self.limit_x_max_default = 1000
         # =========================
-        # LIMIT Y
+        # LIMIT Y DEFAULT
         # =========================
-        self.limit_y_min = 0
-        self.limit_y_max = 1000
+        self.limit_y_min_default = 0
+        self.limit_y_max_default = 1000
         # =========================
-        # LIMIT Z
+        # LIMIT Z DEFAULT
         # =========================
-        self.limit_z_min = 0
-        self.limit_z_max = 1000
+        self.limit_z_min_default = 0
+        self.limit_z_max_default = 1000
         # =========================
         # HOME POSITION
         # =========================
@@ -60,6 +60,57 @@ class IAIConfig(BaseConfig):
         self.capture_timeout = 1.0
         self.load()
 
+    # =========================
+    # BACKWARD COMPATIBLE PROPERTIES
+    # =========================
+    @property
+    def limit_x_min(self):
+        return self.limit_x_min_default
+
+    @limit_x_min.setter
+    def limit_x_min(self, value):
+        self.limit_x_min_default = value
+
+    @property
+    def limit_x_max(self):
+        return self.limit_x_max_default
+
+    @limit_x_max.setter
+    def limit_x_max(self, value):
+        self.limit_x_max_default = value
+
+    @property
+    def limit_y_min(self):
+        return self.limit_y_min_default
+
+    @limit_y_min.setter
+    def limit_y_min(self, value):
+        self.limit_y_min_default = value
+
+    @property
+    def limit_y_max(self):
+        return self.limit_y_max_default
+
+    @limit_y_max.setter
+    def limit_y_max(self, value):
+        self.limit_y_max_default = value
+
+    @property
+    def limit_z_min(self):
+        return self.limit_z_min_default
+
+    @limit_z_min.setter
+    def limit_z_min(self, value):
+        self.limit_z_min_default = value
+
+    @property
+    def limit_z_max(self):
+        return self.limit_z_max_default
+
+    @limit_z_max.setter
+    def limit_z_max(self, value):
+        self.limit_z_max_default = value
+
     # ==========================================================
     # LOAD CONFIG
     # ==========================================================
@@ -76,40 +127,40 @@ class IAIConfig(BaseConfig):
         # =========================
         # LIMIT X
         # =========================
-        self.limit_x_min = data.get(
-            "limit_x_min",
-            self.limit_x_min
+        self.limit_x_min_default = data.get(
+            "limit_x_min_default",
+            data.get("limit_x_min", self.limit_x_min_default)
         )
 
-        self.limit_x_max = data.get(
-            "limit_x_max",
-            self.limit_x_max
+        self.limit_x_max_default = data.get(
+            "limit_x_max_default",
+            data.get("limit_x_max", self.limit_x_max_default)
         )
 
         # =========================
         # LIMIT Y
         # =========================
-        self.limit_y_min = data.get(
-            "limit_y_min",
-            self.limit_y_min
+        self.limit_y_min_default = data.get(
+            "limit_y_min_default",
+            data.get("limit_y_min", self.limit_y_min_default)
         )
 
-        self.limit_y_max = data.get(
-            "limit_y_max",
-            self.limit_y_max
+        self.limit_y_max_default = data.get(
+            "limit_y_max_default",
+            data.get("limit_y_max", self.limit_y_max_default)
         )
 
         # =========================
         # LIMIT Z
         # =========================
-        self.limit_z_min = data.get(
-            "limit_z_min",
-            self.limit_z_min
+        self.limit_z_min_default = data.get(
+            "limit_z_min_default",
+            data.get("limit_z_min", self.limit_z_min_default)
         )
 
-        self.limit_z_max = data.get(
-            "limit_z_max",
-            self.limit_z_max
+        self.limit_z_max_default = data.get(
+            "limit_z_max_default",
+            data.get("limit_z_max", self.limit_z_max_default)
         )
 
         self.move_retry_count = data.get(
@@ -166,20 +217,20 @@ class IAIConfig(BaseConfig):
             # =========================
             # LIMIT X
             # =========================
-            "limit_x_min": self.limit_x_min,
-            "limit_x_max": self.limit_x_max,
+            "limit_x_min_default": self.limit_x_min_default,
+            "limit_x_max_default": self.limit_x_max_default,
 
             # =========================
             # LIMIT Y
             # =========================
-            "limit_y_min": self.limit_y_min,
-            "limit_y_max": self.limit_y_max,
+            "limit_y_min_default": self.limit_y_min_default,
+            "limit_y_max_default": self.limit_y_max_default,
 
             # =========================
             # LIMIT Z
             # =========================
-            "limit_z_min": self.limit_z_min,
-            "limit_z_max": self.limit_z_max,
+            "limit_z_min_default": self.limit_z_min_default,
+            "limit_z_max_default": self.limit_z_max_default,
 
             # =========================
             # HOME POSITION
@@ -214,22 +265,28 @@ class IAIConfig(BaseConfig):
         return {
 
             # =========================
-            # LIMIT X
+            # LIMIT X DEFAULT
             # =========================
-            "limit_x_min": self.limit_x_min,
-            "limit_x_max": self.limit_x_max,
+            "limit_x_min_default": self.limit_x_min_default,
+            "limit_x_max_default": self.limit_x_max_default,
+            "limit_x_min": self.limit_x_min_default,
+            "limit_x_max": self.limit_x_max_default,
 
             # =========================
-            # LIMIT Y
+            # LIMIT Y DEFAULT
             # =========================
-            "limit_y_min": self.limit_y_min,
-            "limit_y_max": self.limit_y_max,
+            "limit_y_min_default": self.limit_y_min_default,
+            "limit_y_max_default": self.limit_y_max_default,
+            "limit_y_min": self.limit_y_min_default,
+            "limit_y_max": self.limit_y_max_default,
 
             # =========================
-            # LIMIT Z
+            # LIMIT Z DEFAULT
             # =========================
-            "limit_z_min": self.limit_z_min,
-            "limit_z_max": self.limit_z_max,
+            "limit_z_min_default": self.limit_z_min_default,
+            "limit_z_max_default": self.limit_z_max_default,
+            "limit_z_min": self.limit_z_min_default,
+            "limit_z_max": self.limit_z_max_default,
 
             # =========================
             # HOME POSITION

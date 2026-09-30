@@ -103,10 +103,13 @@ async def erase_item_img(services: ServiceContainer = Depends(get_services),payl
     status_data = ValidateCaptureProduct.validate_erase_item_img(id_product_selecting_now,frame_id,point_id)
     if status_data:
         services.obj_point_service.delete_point(id_product_selecting_now,frame_id,point_id)
-        infor_iai = services.obj_iai_config.get_dict()
+        default_iai_config = services.obj_iai_config.get_dict()
         product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
         return Result.Ok({
-            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,"infor_iai":infor_iai,"product":product.data
+            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,
+            "default_iai": default_iai_config,
+            "infor_iai": default_iai_config,
+            "product": product.data
         }).to_dict()
 
 
@@ -124,10 +127,13 @@ async def erase_frame(services: ServiceContainer = Depends(get_services),payload
     status_data = ValidateCaptureProduct.validate_erase_frame(id_product_selecting_now,frame_id)
     if status_data:
         services.obj_point_service.delete_frame(id_product_selecting_now,frame_id)
-        infor_iai = services.obj_iai_config.get_dict()
+        default_iai_config = services.obj_iai_config.get_dict()
         product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
         return Result.Ok({
-            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,"infor_iai":infor_iai,"product":product.data
+            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,
+            "default_iai": default_iai_config,
+            "infor_iai": default_iai_config,
+            "product": product.data
         }).to_dict()
 
 
@@ -145,6 +151,7 @@ async def captureproduct_load(
     print("--------------Vào UI capture----------------")
     status = payload.get("status")
     print("Status:", status)
+    services.obj_products_service.reload_products()
     choose_product_current = services.obj_choose_product.get_choose_product()
     print("choose_product_current",choose_product_current)
     if not choose_product_current.ok:
@@ -154,11 +161,12 @@ async def captureproduct_load(
     if not product_result.ok:
         return Result.Fail(product_result.error).to_dict()
     product = product_result.data
-    infor_iai = services.obj_iai_config.get_dict()
+    default_iai_config = services.obj_iai_config.get_dict()
     points_result = services.obj_point_service.get_points_by_product_id(product_id)
     return Result.Ok({
         "product": product,
-        "infor_iai": infor_iai,
+        "default_iai": default_iai_config,
+        "infor_iai": default_iai_config,
         "data_point": points_result.data if points_result.ok else [],
     }).to_dict()
 
@@ -189,14 +197,17 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
         print("status camera",status_cam)
         status_check_point = services.obj_point_service.is_exists_product_frame_point_id(product_selecting,id_frame,id_point)
         product = services.obj_products_service.get_product_by_id(product_selecting)
-        infor_iai = services.obj_iai_config.get_dict()
+        default_iai_config = services.obj_iai_config.get_dict()
         if not status_check_point:
                 point = Point(id_point,x,y,z)
                 result_add_point = services.obj_point_service.add_point(product_selecting,id_frame,point,img)
                 if result_add_point.ok:
                         print("Tạo điểm mới thành công.")
                         return Result.Ok({
-                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,"infor_iai":infor_iai,"product":product.data
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,
+                            "default_iai": default_iai_config,
+                            "infor_iai": default_iai_config,
+                            "product": product.data
                         }).to_dict()
                 print("Tạo điểm mới thất bại")
                 return {
@@ -210,7 +221,10 @@ async def capture(services: ServiceContainer = Depends(get_services),data: dict 
                 if result_update.ok:
                         print("update điểm cũ thành công.")  
                         return Result.Ok({
-                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,"infor_iai":infor_iai,"product":product.data
+                            "data_point": services.obj_point_service.get_points_by_product_id(product_selecting).data,
+                            "default_iai": default_iai_config,
+                            "infor_iai": default_iai_config,
+                            "product": product.data
                         }).to_dict()
                 print("Update điểm cũ thất bại.Hãy kiễm tra lại nguyên nhân lỗi")
                 return {

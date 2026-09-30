@@ -113,6 +113,7 @@ class BorderDetector(BaseJudgerAI):
             )
             comparisons.append({
                 "line_index": line_index,
+                "name_line": standard.get("nameLine") or standard.get("name_line") or str(line_index),
                 "width_min": width_min,
                 "width_max": width_max,
                 "distance_pixel": distance_pixel,
@@ -141,11 +142,26 @@ class BorderDetector(BaseJudgerAI):
         errors = []
         for item in comparisons:
             if not item["is_valid"]:
+                runtime = item.get("runtime")
+                intersection_count = (
+                    0 if runtime is None else int(runtime.get("intersection_count", 0))
+                )
+                measured = bool(
+                    runtime
+                    and runtime.get("is_valid")
+                    and intersection_count == 2
+                    and item["distance_mm"] is not None
+                )
+                actual = (
+                    f"{float(item['distance_mm']):g} mm"
+                    if measured
+                    else f"Không đo được ({intersection_count} giao điểm)"
+                )
+                name_line = item.get("name_line", str(item.get("line_index")))
                 errors.append(
-                    f"Line {item['line_index']} không đạt: "
-                    f"đo={item['distance_mm']} mm "
-                    f"({item['distance_pixel']} px), "
-                    f"chuẩn={item['width_min']}..{item['width_max']} mm"
+                    f"[Biên film] NG - \"{name_line}\" - "
+                    f"Quy định:\"{float(item['width_min']):g} mm - "
+                    f"{float(item['width_max']):g} mm\" - Thực tế :\"{actual}\""
                 )
         return JudgmentResult(
             ok=ok,

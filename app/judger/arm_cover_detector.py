@@ -71,9 +71,13 @@ class ArmCoverDetector(BaseJudgerAI):
         if not required_keys.issubset(comparison_data):
             raise ValueError("comparison_data thiếu dữ liệu Cover Arm bắt buộc")
         ok = comparison_data["standard_exists"] == comparison_data["runtime_exists"]
-        errors = [] if ok else [
-            "Trạng thái tồn tại Cover Arm không phù hợp cấu hình"
-        ]
+        errors = []
+        if not ok:
+            quy_dinh = "Có ARM Cover" if comparison_data["standard_exists"] else "Không có ARM Cover"
+            thuc_te = "Có ARM Cover" if comparison_data["runtime_exists"] else "Không có ARM Cover"
+            errors.append(
+                f"[ARM Cover] NG - \"ARM Cover\" - Quy định:\"{quy_dinh}\" - Thực tế :\"{thuc_te}\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",
@@ -86,9 +90,9 @@ class ArmCoverDetector(BaseJudgerAI):
             },
             comparison_data=comparison_data,
             message=(
-                "Cover Arm đúng theo cấu hình"
+                "Có ARM Cover"
                 if ok
-                else "Cover Arm không đúng theo cấu hình"
+                else "Không có ARM Cover"
             ),
             errors=errors,
         )

@@ -251,32 +251,31 @@ class ForeignObjectDetector(BaseJudgerAI):
         detections: List[Dict[str, Any]] = runtime_data.get("detections", [])
         detections_count = len(detections)
 
-        # Áp dụng logic phán định
+        # Lấy danh sách tên dị vật nếu có
+        detected_names = []
+        if detections_count > 0:
+            for d in detections:
+                c_name = d.get("class_name", "Không rõ")
+                vn_name = FOREIGN_CLASS_NAME_VIETNAMESE_MAP.get(c_name, c_name)
+                detected_names.append(vn_name)
+        names_str = ", ".join(detected_names)
+
+        # Áp dụng logic phán định 4 trường hợp
         if runtime_score <= threshold:
-            ok = True
-            message = (
-                f"Điểm bất thường ({runtime_score:.4f}) <= ngưỡng ({threshold:.4f}): ĐẠT chuẩn"
-            )
+            if detections_count == 0:
+                ok = True
+                message = "Không phát hiện sự bất thường."
+            else:
+                # TH4: Điểm PatchCore nhỏ hơn ngưỡng nhưng YOLO lại phát hiện dị vật
+                ok = False
+                message = f"Không phát hiện sự bất thường nhưng phát hiện đối tượng bất thường ({names_str})."
         else:
             if detections_count > 0:
                 ok = False
-                detected_names = []
-                for d in detections:
-                    c_name = d.get("class_name", "Không rõ")
-                    vn_name = FOREIGN_CLASS_NAME_VIETNAMESE_MAP.get(c_name, c_name)
-                    detected_names.append(vn_name)
-                names_str = ", ".join(detected_names)
-                
-                message = (
-                    f"Điểm bất thường ({runtime_score:.4f}) > ngưỡng ({threshold:.4f}) "
-                    f"và phát hiện {detections_count} dị vật bất thường ({names_str})"
-                )
+                message = f"Phát hiện sự bất thường và phát hiện đối tượng bất thường ({names_str})."
             else:
                 ok = True
-                message = (
-                    f"Điểm bất thường ({runtime_score:.4f}) > ngưỡng ({threshold:.4f}) "
-                    f"nhưng không phát hiện dị vật YOLO: ĐẠT chuẩn"
-                )
+                message = "Phát hiện sự bất thường và không phát hiện đối tượng bất thường."
 
         return {
             "standard_threshold": threshold,
@@ -310,7 +309,19 @@ class ForeignObjectDetector(BaseJudgerAI):
 
         ok: bool = bool(comparison_data["ok"])
         message: str = str(comparison_data["message"])
-        errors: List[str] = [] if ok else [message]
+        errors: List[str] = []
+        if not ok:
+            threshold = float(comparison_data.get("standard_threshold", 0.2))
+            detections_count = int(comparison_data.get("detections_count", 0))
+            runtime_score = float(comparison_data.get("runtime_score", 0.0))
+            thuc_te = (
+                f"Phát hiện {detections_count} dị vật (điểm {runtime_score:.4f})"
+                if detections_count > 0
+                else f"Điểm bất thường {runtime_score:.4f}"
+            )
+            errors.append(
+                f"[Dị vật] NG - \"Dị vật\" - Quy định:\"Không có dị vật\" - Thực tế :\"{thuc_te}\""
+            )
 
         return JudgmentResult(
             ok=ok,

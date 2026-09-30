@@ -2,10 +2,16 @@
     "products": {
         "1": {
             "id": 1,
-            "name": "23",
-            "description": "3232",
-            "created_at": "2026-09-29 17:14:26.450729",
-            "updated_at": "2026-09-29 17:14:26.450729"
+            "name": "VinhAnh",
+            "description": "Sinhngay 23-01-2001",
+            "limit_x_max": 223,
+            "limit_y_max": 52,
+            "limit_z_max": 49,
+            "home_x": 0.0,
+            "home_y": 0.0,
+            "home_z": 0.0,
+            "created_at": "2026-09-30 12:53:33.514845",
+            "updated_at": "2026-09-30 12:53:33.514845"
         }
     }
 }

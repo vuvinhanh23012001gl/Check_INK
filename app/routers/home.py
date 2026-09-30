@@ -1,9 +1,10 @@
+import json
 from fastapi import APIRouter, Request,Body,Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.core.dependencies import get_services
 from app.container import ServiceContainer
-from app.config.path_config import PATH_FOLDER_TEMPLATES
+from app.config.path_config import PATH_FOLDER_TEMPLATES, PATH_FILE_DATA_CONFIG_IAI
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(PATH_FOLDER_TEMPLATES))
@@ -26,12 +27,22 @@ def home(request: Request):
                 selected_product_name = product_result.data.name
     except (AttributeError, KeyError, RuntimeError):
         pass
+        
+    iai_default_config = {}
+    try:
+        with open(PATH_FILE_DATA_CONFIG_IAI, 'r', encoding='utf-8') as f:
+            iai_default_config = json.load(f)
+    except Exception:
+        pass
+
     return templates.TemplateResponse(
         "home.html",
         {
             "request": request,
             "msg": "Xin chào Ánh 👋",
             "selected_product_name": selected_product_name,
+            "iai_default_config": iai_default_config,
+            "iai_config": iai_default_config,
         }
     )
 

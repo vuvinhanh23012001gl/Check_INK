@@ -98,7 +98,13 @@ class WeldSeamAirBubbles(BaseJudgerAI):
             comparison_data["air_bubble_forbidden"] is True
             and comparison_data["runtime_clean"] is True
         )
-        errors = [] if ok else ["Phát hiện bọt khí tại vùng đường hàn"]
+        errors = []
+        if not ok:
+            messages = comparison_data.get("messages", [])
+            actual = ", ".join(messages) if messages else "Phát hiện bọt khí"
+            errors.append(
+                f"[Bọt khí đường hàn] NG - \"Bọt khí\" - Quy định:\"Không có bọt khí\" - Thực tế :\"{actual}\""
+            )
         return JudgmentResult(
             ok=ok,
             status="OK" if ok else "NG",

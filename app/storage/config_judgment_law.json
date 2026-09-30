@@ -2,16 +2,31 @@
     "1": {
         "0": {
             "0": {
-                "MembraneInspector": {
+                "ForeignObjectInspector": {
                     "id": 0,
-                    "name": "Màng bám thấm",
-                    "xStart": 356,
-                    "yStart": 290,
-                    "xEnd": 1332,
-                    "yEnd": 1114,
-                    "width": 488,
-                    "height": 412,
+                    "name": "Dị vật",
+                    "xStart": 1432,
+                    "yStart": 160,
+                    "xEnd": 1876,
+                    "yEnd": 452,
+                    "width": 222,
+                    "height": 146,
+                    "threshold": 0.1,
+                    "saveRuntimeImages": false,
                     "coordinateSpace": "image"
+                },
+                "AirBubblesItemInspector": {
+                    "0": {
+                        "id": 0,
+                        "name": "Bọt khí 1",
+                        "xStart": 1218,
+                        "yStart": 50,
+                        "xEnd": 2036,
+                        "yEnd": 582,
+                        "width": 409,
+                        "height": 266,
+                        "coordinateSpace": "image"
+                    }
                 }
             }
         }
