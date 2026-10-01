@@ -9,6 +9,7 @@ from app.config.path_config import PATH_FOLDER_OUTPUT_RETRAIN
 from .base_ai import BaseJudgerAI, JudgmentResult
 from .border_detector import BorderDetector
 from app.utils.opencv_tool import Tool_OpenCv2
+from app.services.weld_reference_service import weld_reference_service
 
 
 @dataclass
@@ -102,7 +103,6 @@ class Judment:
                 object JSON; nếu bỏ qua sẽ dùng registry trong constructor.
             scale_mm_per_pixel: Hệ số calibration dùng cho Border khi config
                 không truyền task thủ công.
-        Output:
             Dictionary có key là ``INSPECTOR_NAME`` và value là
             ``JudgmentResult`` tương ứng.
         Errors:
@@ -171,6 +171,7 @@ class Judment:
             dữ liệu ROI/line không đúng cấu trúc.
         """
         tasks: list[InspectorTask] = []
+        deferred_air_bubble_tasks: list[InspectorTask] = []
         for name, inspector_config in config.items():
             inspector = inspector_registry.get(name)
             if inspector is None:
@@ -213,9 +214,22 @@ class Judment:
             if name == "AirBubblesItemInspector":
                 regions = []
                 labels = []
-                for index, region in enumerate(inspector_config.values(), start=1):
+                define_kwargs: dict[str, Any] = {}
+                weld_reference_id = inspector_config.get("weld_reference_id")
+                if isinstance(weld_reference_id, str) and weld_reference_id.strip():
+                    reference = weld_reference_service.get_reference(weld_reference_id.strip())
+                    if isinstance(reference, dict):
+                        polygon = reference.get("polygon")
+                        skeleton = reference.get("skeleton")
+                        if isinstance(polygon, list) and polygon:
+                            define_kwargs["weld_polygon"] = polygon
+                        if isinstance(skeleton, list) and skeleton:
+                            define_kwargs["weld_skeleton_points"] = skeleton
+                for key, region in inspector_config.items():
+                    if key == "weld_reference_id":
+                        continue
                     if not isinstance(region, Mapping):
-                        raise ValueError(f"Cấu hình vùng của {name} không hợp lệ")
+                        continue
                     try:
                         x1 = int(region["xStart"])
                         y1 = int(region["yStart"])
@@ -228,17 +242,20 @@ class Judment:
                     regions.append((x1, y1, x2 - x1, y2 - y1))
                     labels.append(str(
                         region.get("name")
-                        or f"{Judment.ROI_DISPLAY_NAMES[name]} {index}"
+                        or f"{Judment.ROI_DISPLAY_NAMES[name]} {len(regions)}"
                     ))
-                tasks.append(
+
+                deferred_air_bubble_tasks.append(
                     InspectorTask(
                         inspector=inspector,
                         standard_data=True,
                         define_args=(regions,),
+                        define_kwargs=define_kwargs,
                         overlay_labels=tuple(labels),
                     )
                 )
                 continue
+
 
             try:
                 x1 = int(inspector_config["xStart"])
@@ -282,6 +299,7 @@ class Judment:
                     ),),
                 )
             )
+        tasks.extend(deferred_air_bubble_tasks)
         return tasks
 
     def evaluate(
@@ -348,6 +366,8 @@ class Judment:
         inspector_images: dict[str, np.ndarray] = {}
         overlay_data: dict[str, dict[str, Any]] = {}
         shared_polygons: dict[tuple[int, tuple[str, ...], tuple[tuple[str, str], ...]], Any] = {}
+        shared_runtime_weld_polygon: list | None = None
+        shared_runtime_skeleton_points: list[list[int]] = []
         judgment_image = image.copy()
         for index, task in enumerate(tasks, start=1):
             if not isinstance(task, InspectorTask):
@@ -379,19 +399,32 @@ class Judment:
                             for key, value in task.define_kwargs.items()
                         )),
                     )
+                define_kwargs = dict(task.define_kwargs)
+                if (
+                    name == "AirBubblesItemInspector"
+                    and "weld_polygon" not in define_kwargs
+                    and shared_runtime_weld_polygon
+                ):
+                    define_kwargs["weld_polygon"] = shared_runtime_weld_polygon
+                if (
+                    name == "AirBubblesItemInspector"
+                    and "weld_skeleton_points" not in define_kwargs
+                    and shared_runtime_skeleton_points
+                ):
+                    define_kwargs["weld_skeleton_points"] = shared_runtime_skeleton_points
                 if polygon_key is not None and polygon_key in shared_polygons:
                     runtime_data = task.inspector.define_with_polygon(
                         image,
                         task.define_args[0],
                         shared_polygons[polygon_key],
                         *task.define_args[1:],
-                        **task.define_kwargs,
+                        **define_kwargs,
                     )
                 else:
                     runtime_data = task.inspector.define(
                         image,
                         *task.define_args,
-                        **task.define_kwargs,
+                        **define_kwargs,
                     )
                     if (
                         polygon_key is not None
@@ -404,6 +437,18 @@ class Judment:
                     runtime_data,
                     **task.compare_kwargs,
                 )
+                runtime_polygon = self._extract_runtime_weld_polygon(
+                    runtime_data,
+                    comparison_data,
+                )
+                if runtime_polygon:
+                    shared_runtime_weld_polygon = runtime_polygon
+                runtime_skeleton_points = self._extract_runtime_skeleton_points(
+                    runtime_data,
+                    comparison_data,
+                )
+                if runtime_skeleton_points:
+                    shared_runtime_skeleton_points = runtime_skeleton_points
                 result = task.inspector.judge(comparison_data)
                 if not isinstance(result, JudgmentResult):
                     raise TypeError("detector phải trả về JudgmentResult")
@@ -459,14 +504,26 @@ class Judment:
         overall = not errors and all(
             result.get("ok") is True for result in inspector_results.values()
         )
+        missing_judgment_data = any(
+            isinstance(result, dict)
+            and isinstance(result.get("runtime_data"), dict)
+            and bool(result["runtime_data"].get("missing_judgment_data"))
+            for result in inspector_results.values()
+        )
+        if overall:
+            status = "OK"
+            message = "Tất cả hạng mục kiểm tra đạt"
+        else:
+            status = "NO_DATA" if missing_judgment_data else "NG"
+            message = (
+                "Thiếu dữ liệu phán định ở một hoặc nhiều hạng mục"
+                if missing_judgment_data
+                else f"Có {len(errors)} hạng mục kiểm tra không đạt"
+            )
         return {
             "overall": overall,
-            "status": "OK" if overall else "NG",
-            "message": (
-                "Tất cả hạng mục kiểm tra đạt"
-                if overall
-                else f"Có {len(errors)} hạng mục kiểm tra không đạt"
-            ),
+            "status": status,
+            "message": message,
             "image": {
                 "height": int(image.shape[0]),
                 "width": int(image.shape[1]),
@@ -479,6 +536,63 @@ class Judment:
             "judgment_image": judgment_image,
             "inspector_images": inspector_images,
         }
+
+    @staticmethod
+    def _extract_runtime_weld_polygon(
+        runtime_data: Any,
+        comparison_data: Any,
+    ) -> list | None:
+        """Lấy polygon runtime hợp lệ để chia sẻ giữa các inspector cùng item.
+
+        Input: ``runtime_data`` và ``comparison_data`` của inspector vừa chạy.
+        Output: Polygon list chuẩn hóa hoặc ``None`` nếu không hợp lệ.
+        Errors: Không phát sinh.
+        """
+        polygon_candidate = None
+        if isinstance(runtime_data, dict) and runtime_data.get("polygon") is not None:
+            polygon_candidate = runtime_data.get("polygon")
+        elif isinstance(comparison_data, dict) and comparison_data.get("polygon") is not None:
+            polygon_candidate = comparison_data.get("polygon")
+        if polygon_candidate is None:
+            return None
+        if isinstance(polygon_candidate, np.ndarray):
+            points = np.asarray(polygon_candidate, dtype=np.float32).reshape(-1, 2)
+            if len(points) < 3:
+                return None
+            return [points.astype(np.int32).tolist()]
+        if isinstance(polygon_candidate, list):
+            points = Judment._points_array(polygon_candidate)
+            if points is None or len(points) < 3:
+                return None
+            return polygon_candidate
+        return None
+
+    @staticmethod
+    def _extract_runtime_skeleton_points(
+        runtime_data: Any,
+        comparison_data: Any,
+    ) -> list[list[int]]:
+        """Lấy skeleton points runtime hợp lệ để chia sẻ giữa các inspector.
+
+        Input: ``runtime_data`` và ``comparison_data`` của inspector vừa chạy.
+        Output: Danh sách điểm ``[x, y]`` kiểu int hoặc danh sách rỗng.
+        Errors: Không phát sinh.
+        """
+        candidate = None
+        if isinstance(runtime_data, dict) and runtime_data.get("skeleton_points") is not None:
+            candidate = runtime_data.get("skeleton_points")
+        elif isinstance(comparison_data, dict) and comparison_data.get("skeleton_points") is not None:
+            candidate = comparison_data.get("skeleton_points")
+        if candidate is None:
+            return []
+        normalized: list[list[int]] = []
+        try:
+            points = np.asarray(candidate, dtype=np.float32).reshape(-1, 2)
+        except (TypeError, ValueError):
+            return []
+        for x_raw, y_raw in points:
+            normalized.append([int(round(float(x_raw))), int(round(float(y_raw)))])
+        return normalized
 
     @classmethod
     def _save_training_inputs(
@@ -644,6 +758,12 @@ class Judment:
                     or config_key
                 )
                 if is_measurement_line:
+                    display_label = cls._build_line_display_label(
+                        inspector_name=name,
+                        base_label=label,
+                        config_key=config_key,
+                        comparison_source=comparison_source,
+                    )
                     cv2.line(
                         output,
                         (shape[0], shape[1]),
@@ -651,7 +771,13 @@ class Judment:
                         (255, 200, 0),
                         2,
                     )
-                    cls._draw_overlay_label(output, label, shape[0], shape[1], (255, 200, 0))
+                    cls._draw_overlay_label(
+                        output,
+                        display_label,
+                        shape[0],
+                        shape[1],
+                        (255, 200, 0),
+                    )
                     overlay["standard"].setdefault("lines", []).append(shape)
                 else:
                     Tool_OpenCv2.draw_labeled_roi(
@@ -687,11 +813,29 @@ class Judment:
         polygon = runtime_source.get("polygon")
         if polygon is None:
             polygon = comparison_source.get("polygon")
-        if polygon is not None:
+        should_draw_polygon = bool(
+            comparison_source.get("draw_polygon_for_air_bubble", True)
+        )
+        if polygon is not None and should_draw_polygon:
             polygon_points = cls._points_array(polygon)
             if polygon_points is not None and len(polygon_points) >= 3:
                 cv2.polylines(output, [polygon_points], True, (0, 255, 0), 3)
                 overlay["runtime"]["polygons"] = [polygon_points.reshape(-1, 2).tolist()]
+
+        skeleton_points = runtime_source.get("skeleton_points")
+        if skeleton_points is None:
+            skeleton_points = comparison_source.get("skeleton_points")
+        if isinstance(skeleton_points, list) and skeleton_points:
+            valid_points = []
+            for point in skeleton_points:
+                if not isinstance(point, (list, tuple)) or len(point) < 2:
+                    continue
+                x = int(round(float(point[0])))
+                y = int(round(float(point[1])))
+                cv2.circle(output, (x, y), 1, (0, 255, 255), -1)
+                valid_points.append([x, y])
+            if valid_points:
+                overlay["runtime"]["skeleton_points"] = valid_points
 
         lines = []
         for item in comparison_source.get("comparisons", []):
@@ -758,24 +902,68 @@ class Judment:
         y: int,
         color: tuple[int, int, int],
     ) -> None:
-        """Vẽ nhãn ngắn, dễ đọc tại góc trên-trái của line hoặc rectangle.
+        """Vẽ nhãn Unicode ngắn, dễ đọc tại góc trên-trái của line/rectangle.
 
         Input: Ảnh OpenCV, nội dung nhãn, tọa độ neo và màu BGR.
         Output: Không trả về; nhãn được vẽ trực tiếp lên ``image``.
         Errors: Không phát sinh; nhãn rỗng được thay bằng chuỗi mặc định.
         """
         text = label.strip() or "Unnamed"
-        origin = (max(0, int(x)), max(16, int(y) - 6))
-        cv2.putText(
+        origin_x = max(0, int(x))
+        origin_y = max(0, int(y) - 6)
+        Tool_OpenCv2.draw_labeled_roi(
             image,
+            (origin_x, origin_y, origin_x + 2, origin_y + 2),
             text,
-            origin,
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
             color,
-            2,
-            cv2.LINE_AA,
+            thickness=1,
+            draw_border=False,
         )
+
+    @classmethod
+    def _build_line_display_label(
+        cls,
+        inspector_name: str,
+        base_label: str,
+        config_key: str,
+        comparison_source: dict[str, Any],
+    ) -> str:
+        """Tạo nhãn line hiển thị theo định dạng tiếng Việt cho inspector đo.
+
+        Input: Tên inspector, nhãn line gốc, key line trong config và dữ liệu
+            comparison đã có runtime distance.
+        Output: ``Tên Line <xx.yy mm>`` nếu line đo được; nếu không giữ nhãn gốc.
+        Errors: Không phát sinh; dữ liệu thiếu sẽ fallback về ``base_label``.
+        """
+        if inspector_name not in cls.LINE_BASED_INSPECTORS:
+            return base_label
+        comparisons = comparison_source.get("comparisons")
+        if not isinstance(comparisons, list):
+            return base_label
+        try:
+            target_index = int(config_key)
+        except (TypeError, ValueError):
+            return base_label
+
+        for item in comparisons:
+            if not isinstance(item, dict):
+                continue
+            try:
+                line_index = int(item.get("line_index"))
+            except (TypeError, ValueError):
+                continue
+            if line_index != target_index:
+                continue
+
+            runtime = item.get("runtime")
+            if not isinstance(runtime, dict) or not runtime.get("is_valid"):
+                return base_label
+            intersection_count = int(item.get("intersection_count", runtime.get("intersection_count", 0)))
+            distance_mm = item.get("distance_mm")
+            if intersection_count >= 2 and isinstance(distance_mm, (int, float)):
+                return f"{base_label} <{float(distance_mm):.2f} mm>"
+            return base_label
+        return base_label
 
     @staticmethod
     def _points_array(value: Any) -> np.ndarray | None:

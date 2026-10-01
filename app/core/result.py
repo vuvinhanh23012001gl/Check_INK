@@ -16,7 +16,9 @@ class Result:
     def message(self):
         if self.error is None:
             return None
-        return ERROR_MESSAGE.get(self.error, "Unknown error")
+        if isinstance(self.error, str):
+            return self.error
+        return ERROR_MESSAGE.get(self.error, str(self.error))
 
     def __repr__(self):
         if self.ok:
@@ -24,10 +26,11 @@ class Result:
         return f"<Result FAIL error={self.error}>"
     
     def to_dict(self):
+        is_enum = hasattr(self.error, "value")
         return {
             "ok": self.ok,
             "data": self.data,
-            "error_code": self.error.value if self.error else None,
-            "error_name": self.error.name if self.error else None,
+            "error_code": self.error.value if is_enum else None,
+            "error_name": self.error.name if is_enum else None,
             "message": self.message()
         }

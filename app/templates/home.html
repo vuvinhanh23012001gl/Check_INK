@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../static/css/adjust_master.css">
     <link rel="stylesheet" href="../static/css/camera_config_panel.css">
     <link rel="stylesheet" href="../static/css/config_com.css">
+    <link rel="stylesheet" href="../static/css/barcode_config.css">
     <script src="../static/cnd/cnd_lybrary.js"></script>
     <title>Kiểm tra độ rộng hộp mực</title>
 </head>
@@ -46,6 +47,7 @@
                 <ul>
                     <li id="btn-open-camera-config">Cấu hình camera</li>
                     <li id="btn-open-com-config">Cấu hình cổng COM</li>
+                    <li id="btn-open-barcode-config">Cấu hình Barcode</li>
                     <li id="btn-open-software-config">Cấu hình phần mềm</li>
                 </ul>
             </li>
@@ -479,11 +481,19 @@
                 </div>
 
                 <div id="panner-region-air-bubbles" class="tool-content">
-                    <div id="log-air-bubbles" class="log-tool-content"></div>
+                    <div id="log-air-bubbles" class="log-tool-content" role="status" aria-live="polite"></div>
                     <div class="cof-and-inf-tool-content">
                         <div id="table-cof-air-bubbles" class="table-cof-tool-content"></div>
                     </div>
                     <div class="controler-tool">
+                        <button id="btn-identify-weld-seam" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/welding (2).png" alt="Xác định đường hàn">
+                            Xác định tâm đường hàn
+                        </button>
+                        <button id="btn-delete-weld-seam" class="tool-btn btn-controler-mesure-weld-width">
+                            <img src="../static/img/eraser (5).png" alt="Xóa dữ liệu đường hàn">
+                            Xóa tâm đường hàn
+                        </button>
                         <button id="btn-judment-air-bubbles" class="tool-btn btn-controler-mesure-weld-width">
                             <img src="../static/img/target.png" alt="Chạy model bọt khí">
                             Chạy model
@@ -756,6 +766,72 @@
         </div>
     </div>
 
+    <!-- OVERLAY: Barcode Config -->
+    <div class="overlay-new-product" id="overlay-barcode-config" style="display: none;">
+        <!-- ===== LEFT PANEL ===== -->
+        <div class="left-panel">
+            <h2>➕ Tạo tài khoản Barcode</h2>
+
+            <form method="post" id="form-add-barcode">
+                <label>Tên người thao tác</label>
+                <input type="text" id="barcode-operator" placeholder="Nhập tên người thao tác (vd: Nguyen Van A)" required>
+
+                <label>Nhà máy</label>
+                <input type="text" id="barcode-factory" placeholder="Nhập tên nhà máy (vd: Nhà máy 1)" required>
+
+                <label>Chuyền</label>
+                <input type="text" id="barcode-line" placeholder="Nhập tên chuyền (vd: Line A)" required>
+
+                <label>Loại tài khoản</label>
+                <select id="barcode-role" required>
+                    <option value="User">User</option>
+                    <option value="Manager">Manager</option>
+                </select>
+
+                <label>Mã barcode</label>
+                <input type="text" id="barcode-code" placeholder="Quét hoặc nhập mã barcode" required>
+
+                <button type="submit" class="btn btn-create" id="btn-create-barcode">
+                    Tạo tài khoản
+                </button>
+                <div id="barcode-status-msg"></div>
+            </form>
+        </div>
+
+        <!-- ===== RIGHT PANEL ===== -->
+        <div class="right-panel" style="position: relative;">
+            <span id="close-barcode-config"
+                style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-weight: 900; font-size: 32px; color: #f87171; transition: all 0.2s ease; line-height: 1; z-index: 10;"
+                onmouseover="this.style.color='#ff4d4d'; this.style.transform='scale(1.2)';"
+                onmouseout="this.style.color='#f87171'; this.style.transform='scale(1)';">X</span>
+            <h2>📋 Danh sách tài khoản Barcode</h2>
+
+            <table id="table-barcode-list">
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Nhà máy</th>
+                        <th>Chuyền</th>
+                        <th>Quyền</th>
+                        <th>Mã barcode</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="barcode-list-body">
+                    <!-- Sample row to show the user the table structure visually -->
+                    <tr>
+                        <td>Nguyen Van A</td>
+                        <td>Nhà máy 1</td>
+                        <td>Line A</td>
+                        <td><span style="padding: 2px 8px; border-radius: 4px; font-weight: bold; background: #1e3a8a; color: #bfdbfe;">User</span></td>
+                        <td><code>123456789</code></td>
+                        <td><button type="button" class="btn_erase btn-delete-barcode">🗑️ Xóa</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- ===== OVERLAY XÁC NHẬN XÓA ===== -->
     <div class="overlay-delete-product" id="overlay-delete-product" style="display: none;">
         <div class="delete-box">
@@ -832,97 +908,599 @@
         </section>
     </div>
 
-    <!-- OVERLAY: Software Configurations -->
+    <!-- OVERLAY: Software Configurations (Preferences Industrial Dialog) -->
     <div id="overlay_config_software" style="display: none;">
-        <div id="settings-box">
-            <div id="config-log">
-                Cấu hình Log
+        <div class="preferences-window">
+            <!-- Header -->
+            <div class="pref-header">
+                <div class="pref-header-title">
+                    <span class="pref-icon-gear">⚙️</span>
+                    <span>Preferences — Cấu hình phần mềm</span>
+                </div>
+                <span id="close-settings" class="pref-close-btn" title="Đóng cửa sổ (Esc)">✕</span>
             </div>
 
-            <h2 id="settings-title">
-                ⚙️ Cấu hình phần mềm
-                <span id="infor-log-config-software"></span>
-            </h2>
+            <!-- Body: 2 Columns (Sidebar + Content) -->
+            <div class="pref-body">
+                <!-- Sidebar Tree Menu -->
+                <div class="pref-sidebar">
+                    <div class="pref-search-box">
+                        <span class="pref-search-icon">🔍</span>
+                        <input type="text" id="pref-search-input" placeholder="Search..." autocomplete="off">
+                    </div>
 
-            <!-- ⚙️ Các tùy chọn log -->
-            <div class="log-setting">
-                <span>Thời gian lưu log hình ảnh</span>
-                <input type="number" id="set-time-save-log-img" placeholder="Số ngày">
-            </div>
+                    <div class="pref-tree-container" id="pref-tree-menu">
+                        <!-- Node 1: System -->
+                        <div class="pref-tree-group" data-group="system">
+                            <div class="pref-tree-node active" data-tab="tab-system-general">
+                                <span class="pref-tree-arrow expanded">▶</span>
+                                <span>🖥️ System</span>
+                            </div>
+                            <div class="pref-tree-sublist open">
+                                <div class="pref-tree-subitem active" data-tab="tab-system-general">General & View</div>
+                                <div class="pref-tree-subitem" data-tab="tab-system-logs">Log & Retention</div>
+                            </div>
+                        </div>
 
-            <div id="setting-log-image">
-                <span>Log hình ảnh</span>
-                <label id="switch-sound">
-                    <input type="checkbox" id="set-sound">
-                    <span id="slider-sound"></span>
-                </label>
-            </div>
+                        <!-- Node 2: Camera & Imaging -->
+                        <div class="pref-tree-group" data-group="camera">
+                            <div class="pref-tree-node" data-tab="tab-camera-device">
+                                <span class="pref-tree-arrow">▶</span>
+                                <span>📷 Camera & Imaging</span>
+                            </div>
+                            <div class="pref-tree-sublist">
+                                <div class="pref-tree-subitem" data-tab="tab-camera-device">Device & Exposure</div>
+                                <div class="pref-tree-subitem" data-tab="tab-camera-trigger">Trigger & Stream</div>
+                            </div>
+                        </div>
 
-            <div class="log-setting">
-                <span>Thời gian lưu log Excel</span>
-                <input type="number" id="set-time-save-log-excell" placeholder="Số ngày">
-            </div>
+                        <!-- Node 3: Communication -->
+                        <div class="pref-tree-group" data-group="com">
+                            <div class="pref-tree-node" data-tab="tab-com-serial">
+                                <span class="pref-tree-arrow">▶</span>
+                                <span>🔌 Communication</span>
+                            </div>
+                            <div class="pref-tree-sublist">
+                                <div class="pref-tree-subitem" data-tab="tab-com-serial">Serial COM & Baudrate</div>
+                                <div class="pref-tree-subitem" data-tab="tab-com-plc">PLC & IAI Limits</div>
+                            </div>
+                        </div>
 
-            <div id="setting-log-product">
-                <span>Log sản phẩm Excell</span>
-                <label id="switch-notification">
-                    <input type="checkbox" id="set-notification">
-                    <span id="slider-notification"></span>
-                </label>
-            </div>
+                        <!-- Node 4: AI & Judgment -->
+                        <div class="pref-tree-group" data-group="ai">
+                            <div class="pref-tree-node" data-tab="tab-ai-weld">
+                                <span class="pref-tree-arrow">▶</span>
+                                <span>🧠 AI & Judgment</span>
+                            </div>
+                            <div class="pref-tree-sublist">
+                                <div class="pref-tree-subitem" data-tab="tab-ai-weld">Weld Line & Skeleton</div>
+                                <div class="pref-tree-subitem" data-tab="tab-ai-bubbles">Air Bubbles & Defects</div>
+                                <div class="pref-tree-subitem" data-tab="tab-ai-film">Film Border & Slit</div>
+                            </div>
+                        </div>
 
-            <div class="log-setting">
-                <span>Thời gian lưu log phần mềm</span>
-                <input type="number" id="set-time-save-log-software" placeholder="Số ngày">
-            </div>
+                        <!-- Node 5: Storage & Data -->
+                        <div class="pref-tree-group" data-group="storage">
+                            <div class="pref-tree-node" data-tab="tab-storage-paths">
+                                <span class="pref-tree-arrow">▶</span>
+                                <span>💾 Storage & Files</span>
+                            </div>
+                            <div class="pref-tree-sublist">
+                                <div class="pref-tree-subitem" data-tab="tab-storage-paths">Directory Paths</div>
+                                <div class="pref-tree-subitem" data-tab="tab-storage-cleanup">Auto Cleanup</div>
+                            </div>
+                        </div>
 
-            <div id="setting-log-software">
-                <span>Log phần mềm</span>
-                <label id="switch-darkmode">
-                    <input type="checkbox" id="set-darkmode" checked>
-                    <span id="slider-darkmode"></span>
-                </label>
-            </div>
-
-            <div id="setting-log-cosole">
-                <span>Log cosole</span>
-                <label id="switch-cosole">
-                    <input type="checkbox" id="set-cosole">
-                    <span id="slider-cosole"></span>
-                </label>
-            </div>
-
-            <div id="setting-img-retraining">
-                <span>Image retraining</span>
-                <label id="switch-img-retraining">
-                    <input type="checkbox" id="set-img-retraining">
-                    <span id="slider-img-retraining"></span>
-                </label>
-            </div>
-
-            <!-- 🔘 Nút điều khiển -->
-            <hr>
-
-            <div id="config-img-process">
-                <div class="img-setting">
-                    <label for="threshold">Ngưỡng nhận diện</label>
-                    <input type="number" id="threshold">
+                        <!-- Node 6: Barcode & Security -->
+                        <div class="pref-tree-group" data-group="barcode">
+                            <div class="pref-tree-node" data-tab="tab-barcode-scanner">
+                                <span class="pref-tree-arrow">▶</span>
+                                <span>🏷️ Barcode & User</span>
+                            </div>
+                            <div class="pref-tree-sublist">
+                                <div class="pref-tree-subitem" data-tab="tab-barcode-scanner">Scanner Settings</div>
+                                <div class="pref-tree-subitem" data-tab="tab-barcode-auth">User & Roles</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="img-setting">
-                    <label for="config_weight">Cấu hình chiều cao vật</label>
-                    <input type="number" id="config_weight">
+                <!-- Content Area (Right Panel) -->
+                <div class="pref-content" id="pref-content-container">
+                    <!-- Top Category Header -->
+                    <div class="pref-content-header">
+                        <div class="pref-content-header-icon" id="pref-header-icon">🖥️</div>
+                        <div class="pref-content-header-text">
+                            <h3 id="pref-header-title">System — General & View</h3>
+                            <p id="pref-header-desc">Cấu hình các tham số vận hành chung, hiển thị và giao diện hệ thống</p>
+                        </div>
+                    </div>
+
+                    <!-- TAB: System - General -->
+                    <div class="pref-tab-panel" id="tab-system-general">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">⚙️ Tùy chọn hệ thống chung</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ngôn ngữ giao diện</span>
+                                    <small>Chọn ngôn ngữ hiển thị trên phần mềm</small>
+                                </label>
+                                <select class="pref-select" id="pref-system-language">
+                                    <option value="vi">Tiếng Việt</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Giao diện tối (Dark Mode)</span>
+                                    <small>Sử dụng bảng màu tối cho môi trường công nghiệp</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="set-darkmode" checked>
+                                    <span class="pref-slider" id="slider-darkmode"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Tự động phát hiện lỗi</span>
+                                    <small>Cảnh báo âm thanh khi phát hiện sản phẩm NG</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="set-sound" checked>
+                                    <span class="pref-slider" id="slider-sound"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thông báo trên thanh trạng thái</span>
+                                    <small>Hiển thị popup kết quả đo và phán định</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="set-notification" checked>
+                                    <span class="pref-slider" id="slider-notification"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">📊 Xử lý & Thuật toán</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ngưỡng nhận diện (Threshold)</span>
+                                    <small>Ngưỡng nhị phân mặc định cho xử lý ảnh</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="threshold" value="128" min="0" max="255">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Cấu hình chiều cao vật mẫu (mm)</span>
+                                    <small>Tiêu chuẩn độ cao phôi phục vụ đo lường</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="config_weight" value="50" min="1" max="500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: System - Logs -->
+                    <div class="pref-tab-panel" id="tab-system-logs" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">📁 Lưu trữ File Log & Dữ liệu</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thời gian lưu log hình ảnh (Ngày)</span>
+                                    <small>Hình ảnh phán định OK/NG lưu trong thư mục log</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="set-time-save-log-img" placeholder="Số ngày" min="1" value="30">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Lưu trữ hình ảnh phán định</span>
+                                    <small>Cho phép ghi lại ảnh chụp sau mỗi lần kiểm tra</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-toggle-img" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thời gian lưu log Excel (Ngày)</span>
+                                    <small>File bảng tính kết quả kiểm tra theo ca làm việc</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="set-time-save-log-excell" placeholder="Số ngày" min="1" value="30">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Xuất log sản phẩm Excel (CSV)</span>
+                                    <small>Tự động tổng hợp kết quả chi tiết từng sản phẩm</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-toggle-csv" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thời gian lưu log phần mềm (Ngày)</span>
+                                    <small>Nhật ký hệ thống và mã lỗi vận hành</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="set-time-save-log-software" placeholder="Số ngày" min="1" value="30">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ghi nhật ký phần mềm (TXT)</span>
+                                    <small>Lưu log sự kiện vận hành vào ổ cứng</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-toggle-txt" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>In nhật ký ra Console (Terminal)</span>
+                                    <small>Hiển thị log chi tiết trên cửa sổ dòng lệnh</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="set-cosole" checked>
+                                    <span class="pref-slider" id="slider-cosole"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thu thập ảnh huấn luyện lại (Retraining)</span>
+                                    <small>Tự động lưu ảnh bất thường cho việc đào tạo thêm AI</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="set-img-retraining">
+                                    <span class="pref-slider" id="slider-img-retraining"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Camera - Device -->
+                    <div class="pref-tab-panel" id="tab-camera-device" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">📷 Thông số thiết bị Camera</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Tên Camera kết nối</span>
+                                    <small>Camera Basler / Industrial USB</small>
+                                </label>
+                                <select class="pref-select" id="pref-camera-select">
+                                    <option value="0">Camera 0 (Basler daA2500-14uc)</option>
+                                    <option value="1">Camera 1 (Secondary)</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thời gian phơi sáng (Exposure Time - µs)</span>
+                                    <small>Điều chỉnh độ sáng khi chụp ảnh công nghiệp</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-cam-exposure" value="15000" min="500" max="100000">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Độ khuếch đại (Gain - dB)</span>
+                                    <small>Tăng cường tín hiệu ảnh trong điều kiện thiếu sáng</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-cam-gain" value="0" min="0" max="24">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Tốc độ khung hình (FPS)</span>
+                                    <small>Khung hình truyền trực tiếp tối đa</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-cam-fps" value="30" min="5" max="60">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Camera - Trigger -->
+                    <div class="pref-tab-panel" id="tab-camera-trigger" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">⚡ Chế độ Kích hoạt (Trigger Mode)</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Nguồn kích hoạt chụp (Trigger Source)</span>
+                                    <small>Chụp liên tục (Free Run) hoặc Kích hoạt phần cứng (Hardware Line 1)</small>
+                                </label>
+                                <select class="pref-select" id="pref-cam-trigger-source">
+                                    <option value="software">Software Trigger</option>
+                                    <option value="line1">Hardware Trigger Line 1</option>
+                                    <option value="continuous">Continuous Streaming</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Độ trễ chụp (Trigger Delay - µs)</span>
+                                    <small>Thời gian chờ ổn định sau khi nhận tín hiệu PLC</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-cam-trigger-delay" value="200" min="0" max="10000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: COM Serial -->
+                    <div class="pref-tab-panel" id="tab-com-serial" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🔌 Cấu hình Cổng nối tiếp COM</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Cổng COM PLC</span>
+                                    <small>Cổng truyền thông với bộ điều khiển PLC</small>
+                                </label>
+                                <select class="pref-select" id="pref-com-plc-port">
+                                    <option value="COM1">COM1</option>
+                                    <option value="COM2">COM2</option>
+                                    <option value="COM3" selected>COM3</option>
+                                    <option value="COM4">COM4</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Baud Rate</span>
+                                    <small>Tốc độ truyền dữ liệu nối tiếp</small>
+                                </label>
+                                <select class="pref-select" id="pref-com-baudrate">
+                                    <option value="9600">9600 bps</option>
+                                    <option value="19200">19200 bps</option>
+                                    <option value="38400">38400 bps</option>
+                                    <option value="115200" selected>115200 bps</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thời gian chờ phản hồi (Timeout - ms)</span>
+                                    <small>Ngưỡng cảnh báo mất kết nối tín hiệu</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-com-timeout" value="500" min="100" max="5000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: COM PLC & IAI -->
+                    <div class="pref-tab-panel" id="tab-com-plc" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🦾 Giới hạn an toàn cánh tay Robot IAI</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Giới hạn trục X Max (mm)</span>
+                                    <small>Hành trình an toàn tối đa của trục X</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-iai-limit-x" value="223" min="10" max="500">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Giới hạn trục Y Max (mm)</span>
+                                    <small>Hành trình an toàn tối đa của trục Y</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-iai-limit-y" value="52" min="10" max="200">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Giới hạn trục Z Max (mm)</span>
+                                    <small>Hành trình an toàn tối đa của trục Z</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-iai-limit-z" value="49" min="10" max="200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: AI Weld Line -->
+                    <div class="pref-tab-panel" id="tab-ai-weld" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🔍 Mô hình U-Net & Trích xuất tâm đường hàn</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ngưỡng phân đoạn đường hàn (U-Net Threshold)</span>
+                                    <small>Giá trị xác suất tối thiểu xem là pixel đường hàn (0.1 - 0.9)</small>
+                                </label>
+                                <input type="number" step="0.05" class="pref-input pref-input-number" id="pref-ai-weld-thresh" value="0.5" min="0.1" max="0.9">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Kích thước bộ lọc mịn Skeleton (Pixel)</span>
+                                    <small>Làm mượt đường tâm đường hàn chống gấp khúc</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-ai-smooth-window" value="5" min="3" max="21" step="2">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thiết bị tính toán AI (Device)</span>
+                                    <small>Ưu tiên GPU NVIDIA CUDA để tăng tốc độ suy luận</small>
+                                </label>
+                                <select class="pref-select" id="pref-ai-device">
+                                    <option value="cuda">GPU NVIDIA (CUDA)</option>
+                                    <option value="cpu">CPU Intel/AMD</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: AI Air Bubbles -->
+                    <div class="pref-tab-panel" id="tab-ai-bubbles" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🫧 Phán định Bọt khí & Dị vật đường hàn</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Diện tích bọt khí tối thiểu (Min Area - px)</span>
+                                    <small>Bỏ qua các vết nhiễu có kích thước nhỏ hơn</small>
+                                </label>
+                                <input type="number" class="pref-input pref-input-number" id="pref-bubble-min-area" value="10" min="1" max="500">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Độ tin cậy nhận diện bọt khí (Confidence)</span>
+                                    <small>Ngưỡng tin cậy của mô hình PatchCore / YOLO</small>
+                                </label>
+                                <input type="number" step="0.05" class="pref-input pref-input-number" id="pref-bubble-conf" value="0.65" min="0.1" max="0.99">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Phán định nghiêm ngặt vị trí bọt khí</span>
+                                    <small>Bọt khí nằm bất kỳ vị trí nào trên đường hàn đều báo lỗi NG</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-bubble-strict-mode" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: AI Film & Slit -->
+                    <div class="pref-tab-panel" id="tab-ai-film" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">📐 Mô hình Viền màng Film & Khe Slit</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ngưỡng phân đoạn viền Film</span>
+                                    <small>Mô hình U-Net nhận diện biên màng</small>
+                                </label>
+                                <input type="number" step="0.05" class="pref-input pref-input-number" id="pref-ai-film-thresh" value="0.5" min="0.1" max="0.9">
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Dung sai khe hở Slit (mm)</span>
+                                    <small>Độ lệch chuẩn cho phép trước khi báo NG</small>
+                                </label>
+                                <input type="number" step="0.1" class="pref-input pref-input-number" id="pref-ai-slit-tol" value="0.3" min="0.05" max="2.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Storage Paths -->
+                    <div class="pref-tab-panel" id="tab-storage-paths" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">📁 Thư mục lưu trữ hệ thống</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ổ đĩa chính lưu trữ Log</span>
+                                    <small>Chọn phân vùng lưu dữ liệu lớn</small>
+                                </label>
+                                <select class="pref-select" id="pref-storage-disk">
+                                    <option value="C:\">Ổ C:\ (Hệ thống)</option>
+                                    <option value="D:\" selected>Ổ D:\ (Dữ liệu dự án)</option>
+                                    <option value="E:\">Ổ E:\</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thư mục lưu ảnh phán định</span>
+                                    <small>Đường dẫn: app/storage/output_judgment</small>
+                                </label>
+                                <input type="text" class="pref-input" style="width: 280px;" value="app/storage/output_judgment" readonly>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Thư mục mô hình AI</span>
+                                    <small>Đường dẫn chứa trọng số YOLO & U-Net</small>
+                                </label>
+                                <input type="text" class="pref-input" style="width: 280px;" value="app/models_ai" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Storage Cleanup -->
+                    <div class="pref-tab-panel" id="tab-storage-cleanup" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🧹 Tự động dọn dẹp bộ nhớ</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ngưỡng cảnh báo dung lượng đĩa trống</span>
+                                    <small>Cảnh báo khi ổ đĩa còn dưới mức quy định</small>
+                                </label>
+                                <div class="pref-input-wrapper">
+                                    <input type="number" class="pref-input pref-input-number" id="pref-disk-warn-gb" value="10" min="2" max="100">
+                                    <span>GB</span>
+                                </div>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Tự động xóa ảnh cũ quá hạn</span>
+                                    <small>Xóa các tệp ảnh vượt quá số ngày lưu cấu hình</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-auto-clean-old" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Barcode Scanner -->
+                    <div class="pref-tab-panel" id="tab-barcode-scanner" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">🏷️ Máy quét mã vạch (Barcode Scanner)</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Chế độ đọc Barcode</span>
+                                    <small>Đọc qua Cổng COM Serial hoặc Bàn phím ảo (USB HID)</small>
+                                </label>
+                                <select class="pref-select" id="pref-barcode-mode">
+                                    <option value="serial">Cổng COM Serial</option>
+                                    <option value="hid">USB HID Keyboard</option>
+                                </select>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Ký tự kết thúc (Suffix)</span>
+                                    <small>Ký hiệu kết thúc chuỗi mã quét</small>
+                                </label>
+                                <select class="pref-select" id="pref-barcode-suffix">
+                                    <option value="CRLF">CR + LF (\r\n)</option>
+                                    <option value="CR">CR (\r)</option>
+                                    <option value="LF">LF (\n)</option>
+                                    <option value="NONE">None</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Barcode User & Roles -->
+                    <div class="pref-tab-panel" id="tab-barcode-auth" style="display: none;">
+                        <div class="pref-section-card">
+                            <div class="pref-section-title">👤 Phân quyền & Tài khoản người dùng</div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Chế độ người vận hành (Operator Mode)</span>
+                                    <small>Khóa các cài đặt nâng cao khi ở ca sản xuất</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-operator-lock" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                            <div class="pref-form-row">
+                                <label>
+                                    <span>Yêu cầu mật khẩu khi sửa Master</span>
+                                    <small>Bảo vệ dữ liệu chuẩn mẻ ống và đường hàn</small>
+                                </label>
+                                <label class="pref-switch">
+                                    <input type="checkbox" id="pref-auth-master" checked>
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div id="buttons">
-                <button id="save-settings">
-                    💾 Lưu cấu hình
-                </button>
-
-                <button id="close-settings">
-                    ✖ Thoát
-                </button>
+            <!-- Footer Toolbar: Buttons -->
+            <div class="pref-footer">
+                <div class="pref-footer-left">
+                    <button type="button" class="pref-btn-secondary" id="btn-pref-defaults">Set To Defaults ▾</button>
+                    <button type="button" class="pref-btn-secondary" id="btn-pref-save-template">Save... ▾</button>
+                    <button type="button" class="pref-btn-secondary" id="btn-pref-load-template">Load... ▾</button>
+                    <button type="button" class="pref-btn-secondary" id="btn-pref-import">Import From... ▾</button>
+                </div>
+                <div class="pref-footer-right">
+                    <button type="button" class="pref-btn-action pref-btn-ok" id="save-settings">OK</button>
+                    <button type="button" class="pref-btn-action pref-btn-cancel" id="btn-pref-cancel">Cancel</button>
+                    <button type="button" class="pref-btn-action pref-btn-apply" id="btn-pref-apply">Apply</button>
+                </div>
             </div>
         </div>
     </div>

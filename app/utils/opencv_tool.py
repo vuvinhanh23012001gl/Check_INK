@@ -52,10 +52,12 @@ class Tool_OpenCv2:
         label: str,
         color: tuple[int, int, int] = (255, 0, 0),
         thickness: int | None = None,
+        draw_border: bool = True,
     ) -> np.ndarray:
         """Vẽ ROI có nhãn Unicode dễ đọc trực tiếp lên ảnh BGR.
 
         Input: Ảnh BGR, box (x1, y1, x2, y2), nhãn và màu BGR.
+            ``draw_border=False`` cho phép chỉ vẽ nhãn mà không vẽ viền ROI.
         Output: Chính ảnh đầu vào sau khi đã vẽ khung và nhãn.
         Errors: ``ValueError`` nếu ảnh không hợp lệ hoặc box không có bốn tọa độ.
         """
@@ -64,8 +66,9 @@ class Tool_OpenCv2:
         if len(box) != 4:
             raise ValueError("box phải gồm x1, y1, x2, y2")
         x1, y1, x2, y2 = (int(value) for value in box)
-        line_width = thickness or max(4, min(image.shape[:2]) // 300)
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, line_width)
+        if draw_border:
+            line_width = thickness or max(4, min(image.shape[:2]) // 300)
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, line_width)
         if image.ndim != 3 or image.shape[2] != 3 or not label.strip():
             return image
 

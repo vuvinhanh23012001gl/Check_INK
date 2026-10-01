@@ -831,7 +831,9 @@ function create_items_img(id, index, data_point = null, frame_box = null, frame_
     img_item.appendChild(img_text);
     if (frame_box) {
         frame_box.appendChild(img_item);
-        img_item.addEventListener("click", () => {
+        img_item.addEventListener("click", (event) => {
+            // Tránh bubble lên frame box làm mất lựa chọn item hiện tại.
+            event.stopPropagation();
             config_calibration.innerHTML = "";
             obj_draw_calibration.reset();
             canvasManager.clearShapeCanvas();
@@ -915,12 +917,16 @@ function create_box(box_id, index) {
     div_text_box_frame.className = "text_inf_frame";
     const div_img_box = document.createElement("div");
     div_img_box.className = "img-box";
-    div_box_frame.addEventListener("click", () => {
+    div_box_frame.addEventListener("click", (event) => {
+        // Nếu click vào item con, handler của item đã xử lý đầy đủ.
+        if (event.target instanceof Element && event.target.closest(".img-item")) {
+            return;
+        }
         scroll_container.querySelectorAll(".box-frame").forEach(frame => { frame.classList.remove("box-frame-selected"); });
         const id = div_box_frame.dataset.frameId;
         div_box_frame.classList.add("box-frame-selected");
         console.log("Click vào frame thứ:", id);
-        selected.frame_id = id;
+        selected.frame_id = Number(id);
         selected.items_id = -1;
         render_selected_calibration_result();
         current_frame_box = div_img_box; // lưu frame hiện tại

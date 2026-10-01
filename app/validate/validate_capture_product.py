@@ -5,7 +5,7 @@ class ValidateCaptureProduct:
             id = int(id)
             frame_id = int(frame_id)
             point_id = int(point_id)
-            return id >= 0 and point_id >= 0 and point_id >= 0
+            return id >= 0 and frame_id >= 0 and point_id >= 0
         except (ValueError, TypeError):
             return False
         

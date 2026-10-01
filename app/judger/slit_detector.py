@@ -53,7 +53,7 @@ class SlitDetector(BorderDetector):
 			is_valid = bool(
 				runtime
 				and runtime.get("is_valid")
-				and intersection_count == 2
+				and intersection_count >= 2
 				and distance_mm is not None
 				and width_min <= distance_mm <= width_max
 			)
@@ -94,7 +94,7 @@ class SlitDetector(BorderDetector):
 				measured = bool(
 					runtime
 					and runtime.get("is_valid")
-					and item["intersection_count"] == 2
+					and item["intersection_count"] >= 2
 					and item["distance_mm"] is not None
 				)
 				actual = (

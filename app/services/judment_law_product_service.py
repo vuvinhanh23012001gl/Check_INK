@@ -1,6 +1,17 @@
 from app.core import Result, ErrorCode
 from app.repository import JudmentLawProductRepository
+from app.services.weld_reference_service import weld_reference_service
+from app.engines.train.patchcore_train_model.patchcore_train_record_repository import (
+    PatchCoreTrainRecordRepository,
+)
+from app.config import (
+    PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST,
+    PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST,
+    PATH_FOLDER_MODEL_DETECT_PATCH_CORE,
+    PATH_FOLDER_IMG_COORDINATE_OUTPUT,
+)
 from pathlib import Path
+import shutil
 import copy
 import cv2
 class JudmentLawProductSevice:
@@ -10,15 +21,187 @@ class JudmentLawProductSevice:
     def save_data(self,data:dict,data_frame:dict):
         if self.compare_structure(data=data,data_frame=data_frame):
             print("So sánh thuộc cấu trúc cây tiến hành lưu")
-            self.repo.update_data(data,False)
+            # Trích xuất và lưu các bản ghi đường hàn nếu có dữ liệu weld_data từ client
+            cleaned_data = copy.deepcopy(data)
+            for prod_id, frames in cleaned_data.items():
+                if not isinstance(frames, dict):
+                    continue
+                for frame_id, items in frames.items():
+                    if not isinstance(items, dict):
+                        continue
+                    for item_id, inspectors in items.items():
+                        if not isinstance(inspectors, dict):
+                            continue
+                        air_bubbles_insp = inspectors.get("AirBubblesItemInspector")
+                        if isinstance(air_bubbles_insp, dict) and "weld_data" in air_bubbles_insp:
+                            weld_data = air_bubbles_insp.pop("weld_data", None)
+                            if isinstance(weld_data, dict):
+                                record_id = weld_reference_service.generate_record_id(prod_id, frame_id, item_id)
+                                weld_reference_service.save_reference(
+                                    record_id=record_id,
+                                    product_id=prod_id,
+                                    frame_id=frame_id,
+                                    item_id=item_id,
+                                    polygon=weld_data.get("polygon", []),
+                                    skeleton=weld_data.get("skeleton", []),
+                                    width=weld_data.get("width", 0),
+                                    height=weld_data.get("height", 0),
+                                )
+                                air_bubbles_insp["weld_reference_id"] = record_id
+            self.repo.update_data(cleaned_data,False)
             return Result.Ok()
         else:
             return Result.Fail(ErrorCode.DATA_IS_NOT_CORRECT_FROMAT)
             
     def delete_product_data(self, product_id: str) -> Result:
-        if self.repo.delete_product(str(product_id)):
-            return Result.Ok()
+        """Xóa dữ liệu master của product trong law + PatchCore + weld reference.
+
+        Input: ``product_id`` là ID sản phẩm cần reset dữ liệu master.
+        Output: ``Result.Ok`` chứa báo cáo xóa nếu có ít nhất một nhóm dữ liệu
+            được xử lý thành công hoặc có dữ liệu để xóa.
+        Errors: ``Result.Fail(PRODUCT_NOT_FOUND)`` khi không có dữ liệu nào liên
+            quan tới product và không thực hiện được thao tác xóa nào.
+        """
+        product_key = str(product_id)
+        report = {
+            "product_id": product_key,
+            "law_deleted": False,
+            "patchcore": {
+                "deleted_paths": [],
+                "deleted_manifest_records": {},
+                "errors": [],
+            },
+            "weld_reference": {
+                "deleted_count": 0,
+                "failed_ids": [],
+            },
+        }
+
+        report["law_deleted"] = bool(self.repo.delete_product(product_key))
+        self._cleanup_patchcore_product(product_key, report)
+        self._cleanup_weld_reference_product(product_key, report)
+
+        patch_deleted = bool(report["patchcore"]["deleted_paths"]) or any(
+            int(value) > 0
+            for value in report["patchcore"]["deleted_manifest_records"].values()
+        )
+        weld_deleted = report["weld_reference"]["deleted_count"] > 0
+        has_errors = bool(report["patchcore"]["errors"] or report["weld_reference"]["failed_ids"])
+
+        if report["law_deleted"] or patch_deleted or weld_deleted or has_errors:
+            return Result.Ok(report)
         return Result.Fail(ErrorCode.PRODUCT_NOT_FOUND)
+
+    @staticmethod
+    def _cleanup_patchcore_product(product_id: str, report: dict) -> None:
+        """Dọn thư mục model/output PatchCore và manifest của một product.
+
+        Input: ``product_id`` và ``report`` để ghi nhận thao tác dọn dẹp.
+        Output: Không trả về; kết quả được ghi vào ``report['patchcore']``.
+        Errors: Không ném lỗi; lỗi file hệ thống được append vào ``errors``.
+        """
+        patch_report = report["patchcore"]
+        target_paths = [
+            Path(PATH_FOLDER_MODEL_DETECT_PATCH_CORE) / product_id,
+            Path(PATH_FOLDER_IMG_COORDINATE_OUTPUT) / product_id,
+        ]
+        for path in target_paths:
+            try:
+                if path.exists():
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                    else:
+                        path.unlink()
+                    patch_report["deleted_paths"].append(str(path).replace("\\", "/"))
+            except OSError as error:
+                patch_report["errors"].append(f"{path}: {error}")
+
+        manifest_paths = {
+            "end_chipping": Path(PATH_FILE_END_CHIPPING_PATCHCORE_TRAIN_MANIFEST),
+            "foreign_object": Path(PATH_FILE_FOREIGN_PATCHCORE_TRAIN_MANIFEST),
+        }
+        for key, manifest_path in manifest_paths.items():
+            try:
+                repo = PatchCoreTrainRecordRepository(manifest_path=manifest_path)
+                deleted_count = repo.delete_records_by_product_id(product_id)
+                patch_report["deleted_manifest_records"][key] = int(deleted_count)
+            except OSError as error:
+                patch_report["errors"].append(f"{manifest_path}: {error}")
+
+    @staticmethod
+    def _cleanup_weld_reference_product(product_id: str, report: dict) -> None:
+        """Dọn toàn bộ weld reference của product và ghi kết quả vào report.
+
+        Input: ``product_id`` và ``report`` hiện hành.
+        Output: Không trả về; cập nhật ``report['weld_reference']``.
+        Errors: Không ném lỗi; bản ghi lỗi được ghi vào ``failed_ids``.
+        """
+        deleted_count, failed_ids = weld_reference_service.delete_references_by_product(
+            product_id
+        )
+        report["weld_reference"]["deleted_count"] = int(deleted_count)
+        report["weld_reference"]["failed_ids"] = list(failed_ids)
+
+    def delete_weld_reference(
+        self,
+        product_id: int | str,
+        frame_id: int | str,
+        item_id: int | str,
+    ) -> Result:
+        """Xóa weld reference của một item nhưng giữ nguyên các vùng bọt khí.
+
+        Args:
+            product_id: ID sản phẩm sở hữu item.
+            frame_id: ID frame chứa item.
+            item_id: ID item cần xóa polygon và skeleton đường hàn.
+        Returns:
+            Result: Kết quả xóa, gồm cờ ``deleted`` và ``changed``.
+        Errors:
+            Result.Fail nếu không thể xóa file/catalog hoặc lưu cấu hình.
+        """
+        product_key = str(product_id)
+        frame_key = str(frame_id)
+        item_key = str(item_id)
+        item_data = self.repo.get(product_key, frame_key, item_key)
+        if not isinstance(item_data, dict):
+            return Result.Ok({"deleted": False, "changed": False})
+
+        inspector = item_data.get("AirBubblesItemInspector")
+        if not isinstance(inspector, dict):
+            return Result.Ok({"deleted": False, "changed": False})
+
+        record_id = inspector.get("weld_reference_id")
+        has_inline_data = "weld_data" in inspector
+        if not record_id and not has_inline_data:
+            return Result.Ok({"deleted": False, "changed": False})
+
+        original_inspector = copy.deepcopy(inspector)
+        inspector.pop("weld_reference_id", None)
+        inspector.pop("weld_data", None)
+        if not inspector:
+            item_data.pop("AirBubblesItemInspector", None)
+
+        try:
+            self.repo.save()
+        except Exception as error:
+            item_data["AirBubblesItemInspector"] = original_inspector
+            return Result.Fail(f"Không thể cập nhật cấu hình item: {error}")
+
+        if record_id and not weld_reference_service.delete_reference(str(record_id)):
+            item_data["AirBubblesItemInspector"] = original_inspector
+            try:
+                self.repo.save()
+            except Exception as error:
+                return Result.Fail(
+                    f"Không thể xóa weld reference và khôi phục cấu hình: {error}"
+                )
+            return Result.Fail("Không thể xóa dữ liệu weld reference trên ổ đĩa.")
+
+        return Result.Ok({
+            "deleted": bool(record_id),
+            "changed": True,
+            "record_id": str(record_id) if record_id else None,
+        })
 
     def convert_canvas_coordinates(
         self,
@@ -80,7 +263,7 @@ class JudmentLawProductSevice:
                     )
                     for coordinate_item in coordinate_items:
                         if not isinstance(coordinate_item, dict):
-                            return Result.Fail(ErrorCode.DATA_INVALID)
+                            continue
                         if coordinate_item.get("coordinateSpace") == "image":
                             continue
                         if not all(

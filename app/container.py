@@ -25,6 +25,7 @@ from app.repository import (
 )
 from app.services import (
     CalibrationService,
+    CaptureItemDeleteService,
     ChooseProductService,
     ComService,
     IAIService,
@@ -220,6 +221,13 @@ class ServiceContainer:
         )
         print("✔ Calibration Service init")
 
+        self.obj_capture_item_delete_service = CaptureItemDeleteService(
+            self.obj_point_service,
+            self.obj_law_regulation_service,
+            self.obj_service_calibration,
+        )
+        print("✔ CaptureItemDeleteService init")
+
 
 
         # ---------------------------------------------------------
@@ -315,6 +323,9 @@ class ServiceContainer:
         self.obj_deployment_Unet = WeldMeamunetUnetService(
             self.obj_unet_config_line_master,
             self.obj_unet_weld_line_model
+        )
+        self.obj_weld_seam_air_bubbles_detector.set_weld_seam_service(
+            self.obj_deployment_Unet
         )
         
         self.obj_unet_calib_search_coordinator = CalibSearchCoordinator(

@@ -1,7 +1,7 @@
 
 import {
     scroll_container, SocketLog, canvasManager,
-    get_camera_connection, active_sceen_show_video, show_video_product
+    get_camera_connection, active_sceen_show_video, show_video_product, video_product
 } from "./common_value.js";  // Khoi ghein thi anh
 import { postData } from "./utills/api.js";
 import { openOptionPanel } from "./panel_manager.js";
@@ -133,7 +133,18 @@ header_btn_function_capture_product.addEventListener("click", function () {
 function renderMaster(data) {
     scroll_container.innerHTML = "";
     process_table_product(data);
-    create_img_items(data.data_point);
+    create_img_items(data?.data_point || {});
+}
+
+function resetControlsSinglePointAfterDelete() {
+    selected.frame_id = -1;
+    selected.point_id = -1;
+    current_frame_box = null;
+    anonymous.innerHTML = "";
+    anonymous.style.display = "none";
+    canvasManager.hideImagePreview();
+    canvasManager.setWrapCanvasVisible(false);
+    video_product.style.display = "none";
 }
 
 function create_img_items(points_and_box) {
@@ -332,8 +343,20 @@ btn_erase_frame.addEventListener("click", () => {
     }
     console.log(`Xóa Frame Product = ${id_product_selecting_now} Item Frame ID = ${selected.frame_id}`);
     postData("/captureproduct/erase_frame", { "id_product_selecting_now": id_product_selecting_now, "FrameID": selected.frame_id }).then(data => {
-        console.log("Data Receive Erase Frame", data?.data);
-        renderMaster(data?.data);
+        const is_ok = Boolean(data?.ok);
+        const technical_report = data?.data?.technical_report || [];
+        console.log("[DeleteFrame][Summary]", {
+            ok: is_ok,
+            message: data?.message,
+            product_id: id_product_selecting_now,
+            frame_id: selected.frame_id
+        });
+        console.log("[DeleteFrame][TechnicalReport]", technical_report);
+        resetControlsSinglePointAfterDelete();
+        if (data?.data) {
+            renderMaster(data?.data);
+        }
+        write_log_capture_clear(is_ok ? "Đã xóa frame thành công." : `Xóa frame thất bại: ${data?.message || "Lỗi không xác định"}`);
     });
 });
 
@@ -511,8 +534,21 @@ function HandleClickBtnEraseItemProduct(FrameID, PointID) {
     }
 
     postData("/captureproduct/erase_item_img", { "id_product_selecting_now": id_product_selecting_now, "FrameID": FrameID, "PointID": PointID }).then(data => {
-        console.log("Data Receive Erase Items IMG", data?.data);
-        renderMaster(data?.data);
+        const is_ok = Boolean(data?.ok);
+        const technical_report = data?.data?.technical_report || [];
+        console.log("[DeleteItem][Summary]", {
+            ok: is_ok,
+            message: data?.message,
+            product_id: id_product_selecting_now,
+            frame_id: FrameID,
+            point_id: PointID
+        });
+        console.log("[DeleteItem][TechnicalReport]", technical_report);
+        resetControlsSinglePointAfterDelete();
+        if (data?.data) {
+            renderMaster(data?.data);
+        }
+        write_log_capture_clear(is_ok ? "Đã xóa ảnh thành công." : `Xóa ảnh thất bại: ${data?.message || "Lỗi không xác định"}`);
     });
 }
 

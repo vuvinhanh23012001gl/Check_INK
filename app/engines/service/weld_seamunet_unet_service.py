@@ -46,6 +46,28 @@ class WeldMeamunetUnetService:
         mask = self.infeUnet.get_mask(img)
         return mask
 
+    def extract_weld_seam_reference(self, img):
+        """Trích xuất polygon và skeleton điểm tâm đường hàn từ ảnh master.
+
+        Args:
+            img (np.ndarray): Ảnh gốc đầu vào (BGR).
+
+        Returns:
+            tuple:
+                - polygons (list[np.ndarray]): Danh sách đa giác biên của đường hàn.
+                - center_points (list[tuple[int, int]]): Danh sách các điểm tâm skeleton.
+                - (width, height) (tuple[int, int]): Kích thước ảnh gốc.
+        """
+        height, width = img.shape[:2]
+        mask, polygons = self.get_mask_and_polygon(img)
+        skeleton = self.get_skeleton(mask)
+        center_points = self.get_main_skeleton_points(skeleton)
+        sampled_center = self.sample_skeleton_points(
+            center_points,
+            spacing=self.auto_detect_line_master.distance_between_points_center_point
+        )
+        return polygons, sampled_center, (width, height)
+
     def automate_sampling_for_checking(self, img, edge_point_spacing_polygons=-1, length_line_extend=-1):
         """Tự động thực hiện quy trình lấy mẫu biên, trích xuất skeleton và sinh các đường đo chiều rộng vật thể.
 

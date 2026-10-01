@@ -28,7 +28,7 @@ class StageExport:
             "points": results,
         }
         output_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
+            json.dumps(payload, ensure_ascii=False, indent=2, default=str),
             encoding="utf-8",
         )
         self.service.send_judgment_log(f"✅ Đã lưu kết quả: {output_path.name}")

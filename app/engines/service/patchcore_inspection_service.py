@@ -220,6 +220,11 @@ class PatchCoreInspectionService:
             / str(frame_id)
             / str(item_id)
         )
+        self.point_service.attach_patchcore_paths(
+            int(product_id),
+            int(frame_id),
+            int(item_id),
+        )
         config = PatchCoreTrainConfig(
             crop_roi=crop_roi,
             coreset_ratio=1.0,

@@ -69,7 +69,7 @@ class MeasurementWeldingDetector(BorderDetector):
 				bool(
 					runtime
 					and runtime.get("is_valid")
-					and intersection_count == 2
+					and intersection_count >= 2
 				),
 				levels,
 			)
@@ -110,7 +110,7 @@ class MeasurementWeldingDetector(BorderDetector):
 				measured = bool(
 					runtime
 					and runtime.get("is_valid")
-					and item["intersection_count"] == 2
+					and item["intersection_count"] >= 2
 					and item["distance_mm"] is not None
 				)
 				actual = (

@@ -4,6 +4,7 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.engines.AI_model_process.frame_patch_core_process import FrameModelPatchCore
+from app.utils.opencv_tool import Tool_OpenCv2
 from .base_ai import BaseJudgerAI, JudgmentResult
 
 
@@ -57,6 +58,8 @@ class EndChippingDetector(BaseJudgerAI):
 
         Gọi ``predict_with_anomaly_boxes`` để tính điểm số bất thường (score),
         bản đồ nhiệt (heatmap), và các bounding box vùng mẻ theo ngưỡng threshold.
+        Ảnh runtime đầu ra chỉ vẽ các vùng lỗi; không phủ heatmap lên ROI để tránh
+        che các lớp vẽ khác (polygon, line, ...).
 
         Args:
             img (np.ndarray): Mảng ảnh gốc đầu vào (định dạng BGR/RGB).
@@ -75,7 +78,7 @@ class EndChippingDetector(BaseJudgerAI):
                 - "anomaly_boxes" (List[Tuple[int, int, int, int]]): Danh sách bounding box vùng lỗi.
                 - "roi" (Dict[str, int]): Tọa độ ROI x1, y1, x2, y2 đã kiểm tra.
                 - "threshold_applied" (float): Ngưỡng đã dùng khi define.
-                - "image" (np.ndarray): Ảnh đã vẽ heatmap và viền box vùng mẻ viền vàng cam.
+                - "image" (np.ndarray): Ảnh đã vẽ vùng lỗi bằng tiếng Việt, không phủ heatmap ROI.
 
         Raises:
             ValueError: Nếu ảnh rỗng, tọa độ ROI không hợp lệ hoặc thiếu thông tin point.
@@ -121,33 +124,15 @@ class EndChippingDetector(BaseJudgerAI):
         # Tạo bản sao ảnh để vẽ kết quả trực quan phục vụ UI và xuất kết quả
         annotated_image = img.copy()
 
-        # 1. Phủ bản đồ nhiệt PatchCore (heatmap colormap JET) lên toàn bộ vùng ROI kiểm tra
-        if heatmap is not None and isinstance(heatmap, np.ndarray) and heatmap.size > 0:
-            h_roi, w_roi = y2 - y1, x2 - x1
-            if heatmap.shape[:2] == (h_roi, w_roi):
-                annotated_image[y1:y2, x1:x2] = heatmap
-            else:
-                resized_heatmap = cv2.resize(heatmap, (w_roi, h_roi))
-                annotated_image[y1:y2, x1:x2] = resized_heatmap
-
-        # 2. Vẽ khung và nhãn các vùng bất thường phát hiện được với màu vàng cam rực rỡ (0, 215, 255)
+        # Chỉ vẽ khung và nhãn vùng lỗi, không phủ heatmap để tránh che lớp vẽ khác.
         for idx, abox in enumerate(anomaly_boxes):
             px, py, pw, ph = (int(v) for v in abox)
-            # Khung viền màu vàng cam rực rỡ (0, 215, 255), độ dày 2px
-            cv2.rectangle(annotated_image, (px, py), (px + pw, py + ph), (0, 215, 255), 2)
-            label_anom = f"Vung loi #{idx + 1}"
-            (tw, th), _ = cv2.getTextSize(label_anom, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-            bg_y1 = max(0, py - th - 6)
-            cv2.rectangle(annotated_image, (px, bg_y1), (px + tw + 6, py), (0, 215, 255), -1)
-            cv2.putText(
+            Tool_OpenCv2.draw_labeled_roi(
                 annotated_image,
-                label_anom,
-                (px + 3, py - 3),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 0),
-                1,
-                cv2.LINE_AA,
+                (px, py, px + pw, py + ph),
+                f"Vùng lỗi {idx + 1}",
+                (0, 215, 255),
+                thickness=2,
             )
 
         return {

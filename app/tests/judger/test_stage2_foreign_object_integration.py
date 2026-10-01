@@ -11,6 +11,8 @@ from pathlib import Path
 import json
 import sys
 import unittest
+from unittest.mock import MagicMock
+
 
 import cv2
 import numpy as np
@@ -74,9 +76,14 @@ class TestStage2ForeignObjectIntegration(unittest.TestCase):
 
         foreign_detector = ForeignObjectDetector(foreign_service=foreign_service)
 
+        from app.judger.weld_seam_air_bubbles_detector import WeldSeamAirBubbles
+        bubble_detector = WeldSeamAirBubbles(model_bubble=MagicMock())
         judment = Judment({
             "ForeignObjectInspector": foreign_detector,
+            "AirBubblesItemInspector": bubble_detector,
         })
+
+
 
         # Gọi run_summary với training_context y hệt Stage 2
         training_context = {

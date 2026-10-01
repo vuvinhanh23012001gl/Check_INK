@@ -99,18 +99,49 @@ async def erase_item_img(services: ServiceContainer = Depends(get_services),payl
         frame_id = int(frame_id)
         point_id = int(point_id)
     except Exception:
-        Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
+        return Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
     status_data = ValidateCaptureProduct.validate_erase_item_img(id_product_selecting_now,frame_id,point_id)
-    if status_data:
-        services.obj_point_service.delete_point(id_product_selecting_now,frame_id,point_id)
-        default_iai_config = services.obj_iai_config.get_dict()
-        product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
-        return Result.Ok({
-            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,
-            "default_iai": default_iai_config,
-            "infor_iai": default_iai_config,
-            "product": product.data
-        }).to_dict()
+    if not status_data:
+        return Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
+
+    delete_result = services.obj_capture_item_delete_service.delete_capture_item(
+        id_product_selecting_now,
+        frame_id,
+        point_id,
+    )
+    default_iai_config = services.obj_iai_config.get_dict()
+    product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
+    points_result = services.obj_point_service.get_points_by_product_id(id_product_selecting_now)
+
+    data_payload = {
+        "data_point": points_result.data if points_result.ok else {},
+        "default_iai": default_iai_config,
+        "infor_iai": default_iai_config,
+        "product": product.data if product.ok else None,
+        "technical_report": (
+            delete_result.data.get("technical_report", [])
+            if delete_result.ok
+            else delete_result.error.get("technical_report", [])
+            if isinstance(delete_result.error, dict)
+            else []
+        ),
+    }
+
+    if delete_result.ok:
+        return Result.Ok(data_payload).to_dict() | {
+            "message": "Đã xóa ảnh thành công.",
+        }
+
+    failure_message = "Xóa ảnh thất bại. Dữ liệu đã được rollback."
+    if isinstance(delete_result.error, dict):
+        failure_message = delete_result.error.get("message") or failure_message
+    return {
+        "ok": False,
+        "data": data_payload,
+        "error_code": ErrorCode.DATA_INVALID.value,
+        "error_name": ErrorCode.DATA_INVALID.name,
+        "message": failure_message,
+    }
 
 
 @router.post("/erase_frame")
@@ -123,18 +154,111 @@ async def erase_frame(services: ServiceContainer = Depends(get_services),payload
         id_product_selecting_now = int(id_product_selecting_now)
         frame_id = int(frame_id)
     except Exception:
-        Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
+        return Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
     status_data = ValidateCaptureProduct.validate_erase_frame(id_product_selecting_now,frame_id)
-    if status_data:
-        services.obj_point_service.delete_frame(id_product_selecting_now,frame_id)
-        default_iai_config = services.obj_iai_config.get_dict()
-        product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
-        return Result.Ok({
-            "data_point": services.obj_point_service.get_points_by_product_id(id_product_selecting_now).data,
-            "default_iai": default_iai_config,
-            "infor_iai": default_iai_config,
-            "product": product.data
-        }).to_dict()
+    if not status_data:
+        return Result.Fail(ErrorCode.INVALID_INPUT).to_dict()
+
+    frame_points = services.obj_point_service.points.get(id_product_selecting_now, {}).get(frame_id)
+    aggregate_report = []
+    first_error_message = None
+    if frame_points is None:
+        cleanup_result = services.obj_capture_item_delete_service.cleanup_empty_frame_structure(
+            id_product_selecting_now,
+            frame_id,
+        )
+        cleanup_steps = (
+            cleanup_result.data.get("technical_report", [])
+            if cleanup_result.ok
+            else cleanup_result.error.get("technical_report", [])
+            if isinstance(cleanup_result.error, dict)
+            else []
+        )
+        aggregate_report.append(
+            {
+                "point_id": None,
+                "ok": bool(cleanup_result.ok),
+                "steps": cleanup_steps,
+            }
+        )
+        if not cleanup_result.ok:
+            first_error_message = "Xóa frame thất bại khi dọn cấu trúc thư mục rỗng."
+
+    if frame_points is not None:
+        point_ids = list(frame_points.keys())
+
+        for point_id in point_ids:
+            delete_result = services.obj_capture_item_delete_service.delete_capture_item(
+                id_product_selecting_now,
+                frame_id,
+                int(point_id),
+            )
+            step_report = (
+                delete_result.data.get("technical_report", [])
+                if delete_result.ok
+                else delete_result.error.get("technical_report", [])
+                if isinstance(delete_result.error, dict)
+                else []
+            )
+            aggregate_report.append({
+                "point_id": int(point_id),
+                "ok": bool(delete_result.ok),
+                "steps": step_report,
+            })
+
+            if not delete_result.ok and first_error_message is None:
+                if isinstance(delete_result.error, dict):
+                    first_error_message = delete_result.error.get("message")
+                if not first_error_message:
+                    first_error_message = "Xóa frame thất bại ở một item."
+                break
+
+        if first_error_message is None:
+            cleanup_result = services.obj_capture_item_delete_service.cleanup_empty_frame_structure(
+                id_product_selecting_now,
+                frame_id,
+            )
+            cleanup_steps = (
+                cleanup_result.data.get("technical_report", [])
+                if cleanup_result.ok
+                else cleanup_result.error.get("technical_report", [])
+                if isinstance(cleanup_result.error, dict)
+                else []
+            )
+            aggregate_report.append(
+                {
+                    "point_id": None,
+                    "ok": bool(cleanup_result.ok),
+                    "steps": cleanup_steps,
+                }
+            )
+            if not cleanup_result.ok:
+                first_error_message = "Xóa frame thất bại khi dọn cấu trúc thư mục rỗng."
+
+    default_iai_config = services.obj_iai_config.get_dict()
+    product = services.obj_products_service.get_product_by_id(id_product_selecting_now)
+    points_result = services.obj_point_service.get_points_by_product_id(id_product_selecting_now)
+
+    data_payload = {
+        "data_point": points_result.data if points_result.ok else {},
+        "default_iai": default_iai_config,
+        "infor_iai": default_iai_config,
+        "product": product.data if product.ok else None,
+        "technical_report": aggregate_report,
+    }
+
+    if first_error_message is None:
+        return Result.Ok(data_payload).to_dict() | {
+            "message": "Đã xóa frame thành công.",
+        }
+
+    return {
+        "ok": False,
+        "data": data_payload,
+        "error_code": ErrorCode.DATA_INVALID.value,
+        "error_name": ErrorCode.DATA_INVALID.name,
+        "message": first_error_message,
+    }
 
 
 

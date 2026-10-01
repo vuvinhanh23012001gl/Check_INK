@@ -52,6 +52,7 @@ export async function fetchGet(url, timeout = 10000) {
     }
 }
 
+export const getData = fetchGet;
 
 export async function fetchGetSendData(url, data = {}) {
     try {

@@ -712,6 +712,94 @@ async def run_model_arm_cover(
 
 # Weld seam air bubbles judgment
 
+@router.post("/air_bubbles/identify_weld_seam")
+async def identify_weld_seam(
+    data: dict = Body(),
+    services: ServiceContainer = Depends(get_services)
+):
+    """Xác định đường hàn và trích xuất Polygon + Skeleton tâm của frame/item hiện tại."""
+    selected = data.get("select", data) if isinstance(data, dict) else {}
+    try:
+        product_id = int(selected.get("product_id", selected.get("product", -1)))
+        frame_id = int(selected.get("frame_id", selected.get("frame", -1)))
+        items_id = int(selected.get("items_id", selected.get("items", -1)))
+    except (KeyError, TypeError, ValueError) as error:
+        return Result.Fail(f"Dữ liệu lựa chọn không hợp lệ: {error}").to_dict()
+
+    if product_id < 0 or frame_id < 0 or items_id < 0:
+        return Result.Fail("Chưa chọn đầy đủ sản phẩm, frame và item.").to_dict()
+
+    result_path = services.obj_point_service.get_path_img_point(product_id, frame_id, items_id)
+    if not result_path.ok:
+        return result_path.to_dict()
+
+    img = cv2.imread(str(result_path.data))
+    if img is None:
+        return Result.Fail(ErrorCode.IMAGE_NOT_FOUND).to_dict()
+
+    try:
+        polygons, center_points, (width, height) = services.obj_deployment_Unet.extract_weld_seam_reference(img)
+        polygon_json = []
+        for p in polygons:
+            if hasattr(p, "squeeze"):
+                polygon_json.append(p.squeeze(1).tolist() if p.ndim == 3 else p.tolist())
+            elif isinstance(p, list):
+                polygon_json.append(p)
+
+        skeleton_json = [[int(pt[0]), int(pt[1])] for pt in center_points]
+
+        return Result.Ok({
+            "polygon": polygon_json,
+            "skeleton": skeleton_json,
+            "width": width,
+            "height": height,
+            "product_id": product_id,
+            "frame_id": frame_id,
+            "items_id": items_id,
+        }).to_dict()
+    except Exception as error:
+        print(f"❌ [API][identify_weld_seam] Lỗi phân tích đường hàn: {error}")
+        return Result.Fail(f"Lỗi phân tích đường hàn: {error}").to_dict()
+
+
+@router.get("/air_bubbles/weld_reference/{record_id}")
+async def get_weld_reference(record_id: str):
+    """Lấy dữ liệu polygon và skeleton đường hàn đã lưu từ trước."""
+    from app.services.weld_reference_service import weld_reference_service
+    ref_data = weld_reference_service.get_reference(record_id)
+    if not ref_data:
+        return Result.Fail("Không tìm thấy bản ghi đường hàn.").to_dict()
+    return Result.Ok(ref_data).to_dict()
+
+
+@router.post("/air_bubbles/delete_weld_reference")
+async def delete_weld_reference(
+    data: dict = Body(),
+    services: ServiceContainer = Depends(get_services),
+):
+    """Xóa polygon và skeleton đường hàn của product/frame/item được chọn.
+
+    Input: JSON chứa lựa chọn trong khóa ``select`` hoặc ở cấp gốc.
+    Output: Result cho biết reference có bị xóa và cấu hình có thay đổi không.
+    Errors: Trả về Result lỗi nếu lựa chọn không hợp lệ hoặc lưu/xóa thất bại.
+    """
+    selected = data.get("select", data) if isinstance(data, dict) else {}
+    try:
+        product_id = int(selected.get("product_id", selected.get("product", -1)))
+        frame_id = int(selected.get("frame_id", selected.get("frame", -1)))
+        item_id = int(selected.get("items_id", selected.get("items", -1)))
+    except (AttributeError, TypeError, ValueError) as error:
+        return Result.Fail(f"Dữ liệu lựa chọn không hợp lệ: {error}").to_dict()
+
+    if product_id < 0 or frame_id < 0 or item_id < 0:
+        return Result.Fail("Chưa chọn đầy đủ sản phẩm, frame và item.").to_dict()
+
+    result = services.obj_law_regulation_service.delete_weld_reference(
+        product_id, frame_id, item_id
+    )
+    return result.to_dict()
+
+
 @router.post("/air_bubbles/run_model")
 async def run_model_air_bubbles(
     data: dict = Body(), services: ServiceContainer = Depends(get_services)
@@ -727,6 +815,8 @@ async def run_model_air_bubbles(
         frame_id = int(select_data["frame_id"])
         items_id = int(select_data["items_id"])
         width_canvas = int(data.get("WidthCanvas", 1))
+        weld_polygon = data.get("weld_polygon")
+        weld_reference_id = data.get("weld_reference_id")
     except (KeyError, TypeError, ValueError) as error:
         return Result.Fail(f"Dữ liệu không hợp lệ: {error}").to_dict()
     if not isinstance(regions, list) or not regions:
@@ -738,13 +828,22 @@ async def run_model_air_bubbles(
         if not result_path.ok:
             return result_path.to_dict()
         image = cv2.imread(str(result_path.data))
+
+        # Nếu không truyền trực tiếp weld_polygon, thử load qua weld_reference_id
+        if not weld_polygon and weld_reference_id:
+            from app.services.weld_reference_service import weld_reference_service
+            ref_data = weld_reference_service.get_reference(weld_reference_id)
+            if ref_data and ref_data.get("polygon"):
+                weld_polygon = ref_data["polygon"]
+
         result_judgment = services.obj_surface_model_service.judge_regions(
-            image, regions, width_canvas
+            image, regions, width_canvas, weld_polygon
         )
         return result_judgment.to_dict()
     except Exception as error:
         print(f"Lỗi phán định bọt khí đường hàn: {error}")
         return Result.Fail(f"[Lỗi hệ thống] {error}").to_dict()
+
 
 # Border Film judgment
 @router.post("/border_film/run_model")

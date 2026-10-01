@@ -165,7 +165,7 @@ class PointService:
 
     def add_point(self, product_id: int, frame_id: int, point: Point, img: np.ndarray) -> Result:
         """
-        Chức năng: Kiểm tra hợp lệ dữ liệu đầu vào, khởi tạo cấu trúc thư mục ổ đĩa, lưu trữ hình ảnh và tạo mới điểm.
+        Chức năng: Kiểm tra hợp lệ dữ liệu đầu vào, lưu ảnh mẫu Point và tạo mới điểm trong RAM/repository.
         Input: product_id (int/str), frame_id (int/str), point (Point), img (np.ndarray)
         Output: Result.Ok(Point) khi thêm mới thành công, hoặc Result.Fail kèm mã lỗi tương ứng
         """
@@ -207,20 +207,38 @@ class PointService:
         if point.point_id in self.points[product_id][frame_id]: return Result.Fail(ErrorCode.POINT_ALREADY_EXISTS)
         
         product_id_str, frame_id_str, point_id_str = str(product_id), str(frame_id), str(point.point_id)
-        path_model_folder = Path(self.path_base_patch_core) / product_id_str / frame_id_str / point_id_str
         path_img_coordinate = Path(self.path_base_img_coordinates) / product_id_str / frame_id_str / f"{point_id_str}.jpg"
-        path_img_retrain_folder = Path(self.path_base_img_coordinates_output) / product_id_str / frame_id_str / point_id_str
-        
-        Folder.create_folder(path_model_folder)
-        Folder.create_folder(path_img_retrain_folder)
+
         path_img_coordinate.parent.mkdir(parents=True, exist_ok=True)
         
         Tool_OpenCv2.save_image(img, path_img_coordinate)
-        point.path_model_patch_core = Folder.get_parts_from_bottom(path_model_folder, 6)
+        point.path_model_patch_core = None
         point.path_img_point = Folder.get_parts_from_bottom(path_img_coordinate, 5)
-        point.path_img_retrain = Folder.get_parts_from_bottom(path_img_retrain_folder, 6)
+        point.path_img_retrain = None
         
         self.points[product_id][frame_id][point.point_id] = point
+        self._save_points()
+        return Result.Ok(point)
+
+    def attach_patchcore_paths(self, product_id: int, frame_id: int, point_id: int) -> Result:
+        """
+        Chức năng: Gắn đường dẫn PatchCore vào Point khi item thực sự tham gia workflow EndChipping/ForeignObject.
+        Input: product_id (int), frame_id (int), point_id (int).
+        Output: Result.Ok(Point) khi cập nhật thành công, hoặc Result.Fail(POINT_NOT_FOUND).
+        Errors: POINT_NOT_FOUND khi bộ ba định danh không tồn tại trong RAM.
+        """
+        result_find = self.get_point_by_id(product_id, frame_id, point_id)
+        if not result_find.ok:
+            return Result.Fail(ErrorCode.POINT_NOT_FOUND)
+
+        point: Point = result_find.data
+        product_id_str = str(product_id)
+        frame_id_str = str(frame_id)
+        point_id_str = str(point_id)
+        path_model_folder = Path(self.path_base_patch_core) / product_id_str / frame_id_str / point_id_str
+        path_img_retrain_folder = Path(self.path_base_img_coordinates_output) / product_id_str / frame_id_str / point_id_str
+        point.path_model_patch_core = Folder.get_parts_from_bottom(path_model_folder, 6)
+        point.path_img_retrain = Folder.get_parts_from_bottom(path_img_retrain_folder, 6)
         self._save_points()
         return Result.Ok(point)
 
