@@ -365,7 +365,10 @@ class Judment:
         errors: list[dict[str, str]] = []
         inspector_images: dict[str, np.ndarray] = {}
         overlay_data: dict[str, dict[str, Any]] = {}
-        shared_polygons: dict[tuple[int, tuple[str, ...], tuple[tuple[str, str], ...]], Any] = {}
+        shared_polygons: dict[
+            tuple[int, tuple[str, ...], tuple[tuple[str, str], ...]],
+            dict[str, Any],
+        ] = {}
         shared_runtime_weld_polygon: list | None = None
         shared_runtime_skeleton_points: list[list[int]] = []
         judgment_image = image.copy()
@@ -413,11 +416,12 @@ class Judment:
                 ):
                     define_kwargs["weld_skeleton_points"] = shared_runtime_skeleton_points
                 if polygon_key is not None and polygon_key in shared_polygons:
+                    cached_polygon_payload = shared_polygons[polygon_key]
                     runtime_data = task.inspector.define_with_polygon(
                         image,
                         task.define_args[0],
-                        shared_polygons[polygon_key],
-                        *task.define_args[1:],
+                        cached_polygon_payload.get("polygon"),
+                        cached_polygon_payload.get("polygons"),
                         **define_kwargs,
                     )
                 else:
@@ -429,9 +433,19 @@ class Judment:
                     if (
                         polygon_key is not None
                         and isinstance(runtime_data, dict)
-                        and "polygon" in runtime_data
                     ):
-                        shared_polygons[polygon_key] = runtime_data["polygon"]
+                        runtime_polygons = self._extract_runtime_polygons(
+                            runtime_data,
+                            None,
+                        )
+                        primary_polygon = runtime_data.get("polygon")
+                        if primary_polygon is None and runtime_polygons:
+                            primary_polygon = runtime_polygons[0]
+                        if primary_polygon is not None:
+                            shared_polygons[polygon_key] = {
+                                "polygon": primary_polygon,
+                                "polygons": runtime_polygons,
+                            }
                 comparison_data = task.inspector.compare(
                     task.standard_data,
                     runtime_data,
@@ -566,6 +580,43 @@ class Judment:
                 return None
             return polygon_candidate
         return None
+
+    @staticmethod
+    def _extract_runtime_polygons(
+        runtime_data: Any,
+        comparison_data: Any,
+    ) -> list[list[list[int]]]:
+        """Trích xuất toàn bộ contour runtime theo định dạng chuẩn để tái sử dụng.
+
+        Input: ``runtime_data`` từ ``define`` và ``comparison_data`` từ ``compare``.
+            Hai nguồn có thể chứa ``polygons`` (danh sách contour) hoặc
+            ``polygon`` (contour chính).
+        Output: Danh sách contour đã chuẩn hóa về ``list[[x, y], ...]``;
+            trả về danh sách rỗng nếu không có contour hợp lệ.
+        Errors: Không phát sinh; dữ liệu sai kiểu được bỏ qua an toàn.
+        """
+        polygon_candidates = None
+        if isinstance(runtime_data, dict) and runtime_data.get("polygons") is not None:
+            polygon_candidates = runtime_data.get("polygons")
+        elif isinstance(comparison_data, dict) and comparison_data.get("polygons") is not None:
+            polygon_candidates = comparison_data.get("polygons")
+
+        normalized_contours = BorderDetector._normalize_polygons(polygon_candidates)
+        if not normalized_contours:
+            single_polygon = None
+            if isinstance(runtime_data, dict) and runtime_data.get("polygon") is not None:
+                single_polygon = runtime_data.get("polygon")
+            elif isinstance(comparison_data, dict) and comparison_data.get("polygon") is not None:
+                single_polygon = comparison_data.get("polygon")
+            normalized_contours = BorderDetector._normalize_polygons(single_polygon)
+
+        polygons: list[list[list[int]]] = []
+        for contour in normalized_contours:
+            points = np.asarray(contour, dtype=np.float32).reshape(-1, 2)
+            if len(points) < 3:
+                continue
+            polygons.append(points.astype(np.int32).tolist())
+        return polygons
 
     @staticmethod
     def _extract_runtime_skeleton_points(
@@ -810,17 +861,20 @@ class Judment:
             overlay["standard"]["labels"] = [label]
             overlay["standard"].setdefault("boxes", []).append([x1, y1, x2, y2])
 
-        polygon = runtime_source.get("polygon")
-        if polygon is None:
-            polygon = comparison_source.get("polygon")
+        polygons = cls._extract_runtime_polygons(runtime_source, comparison_source)
         should_draw_polygon = bool(
             comparison_source.get("draw_polygon_for_air_bubble", True)
         )
-        if polygon is not None and should_draw_polygon:
-            polygon_points = cls._points_array(polygon)
-            if polygon_points is not None and len(polygon_points) >= 3:
+        if polygons and should_draw_polygon:
+            drawn_polygons: list[list[list[int]]] = []
+            for polygon in polygons:
+                polygon_points = cls._points_array(polygon)
+                if polygon_points is None or len(polygon_points) < 3:
+                    continue
                 cv2.polylines(output, [polygon_points], True, (0, 255, 0), 3)
-                overlay["runtime"]["polygons"] = [polygon_points.reshape(-1, 2).tolist()]
+                drawn_polygons.append(polygon_points.reshape(-1, 2).tolist())
+            if drawn_polygons:
+                overlay["runtime"]["polygons"] = drawn_polygons
 
         skeleton_points = runtime_source.get("skeleton_points")
         if skeleton_points is None:

@@ -73,6 +73,7 @@ class SlitDetector(BorderDetector):
 		return {
 			"comparisons": comparisons,
 			"polygon": runtime_data.get("polygon"),
+			"polygons": runtime_data.get("polygons"),
 			"image": runtime_data.get("image"),
 		}
 

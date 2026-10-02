@@ -2,30 +2,57 @@
     "1": {
         "0": {
             "0": {
-                "x": 113,
+                "x": 132,
                 "y": 0,
                 "z": 0,
-                "path_model_patch_core": "input\\model\\patch_core\\1\\0\\0",
+                "path_model_patch_core": null,
                 "path_img_point": "storage\\img_points\\1\\0\\0.jpg",
-                "path_img_retrain": "app\\output\\patch_core\\1\\0\\0",
+                "path_img_retrain": null,
                 "arr_polygon": []
             },
             "1": {
-                "x": 126,
+                "x": 139,
                 "y": 0,
                 "z": 0,
-                "path_model_patch_core": "input\\model\\patch_core\\1\\0\\1",
+                "path_model_patch_core": null,
                 "path_img_point": "storage\\img_points\\1\\0\\1.jpg",
-                "path_img_retrain": "app\\output\\patch_core\\1\\0\\1",
+                "path_img_retrain": null,
                 "arr_polygon": []
             },
             "2": {
+                "x": 150,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": null,
+                "path_img_point": "storage\\img_points\\1\\0\\2.jpg",
+                "path_img_retrain": null,
+                "arr_polygon": []
+            },
+            "3": {
+                "x": 130,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": null,
+                "path_img_point": "storage\\img_points\\1\\0\\3.jpg",
+                "path_img_retrain": null,
+                "arr_polygon": []
+            },
+            "4": {
                 "x": 140,
                 "y": 0,
                 "z": 0,
-                "path_model_patch_core": "input\\model\\patch_core\\1\\0\\2",
-                "path_img_point": "storage\\img_points\\1\\0\\2.jpg",
-                "path_img_retrain": "app\\output\\patch_core\\1\\0\\2",
+                "path_model_patch_core": null,
+                "path_img_point": "storage\\img_points\\1\\0\\4.jpg",
+                "path_img_retrain": null,
+                "arr_polygon": []
+            },
+            "5": {
+                "x": 150,
+                "y": 0,
+                "z": 0,
+                "path_model_patch_core": null,
+                "path_img_point": "storage\\img_points\\1\\0\\5.jpg",
+                "path_img_retrain": null,
                 "arr_polygon": []
             }
         }

@@ -32,8 +32,11 @@ export class SlitItemInspector {
             console.error("Đối tượng thêm vào không phải là Instance của ModelSlit");
             return false;
         }
-        // Kiểm tra xem id_line đã tồn tại chưa
-        const index = this.slits.findIndex(item => item.id_line === modelSlit.id_line);
+        if (modelSlit.id_line === undefined || modelSlit.id_line === "undefined" || modelSlit.id_line === null) {
+            modelSlit.id_line = "0";
+        }
+        // Kiểm tra xem id_line đã tồn tại chưa (so sánh chuỗi)
+        const index = this.slits.findIndex(item => String(item.id_line) === String(modelSlit.id_line));
         if (index !== -1) {
             // Nếu đã tồn tại, tiến hành cập nhật/ghi đè
             this.slits[index] = modelSlit;
@@ -171,7 +174,11 @@ export class SlitItemInspector {
     toDict() {
         const fullDict = {};
         this.slits.forEach(slitInstance => {
-            Object.assign(fullDict, slitInstance.toDict());
+            const d = slitInstance.toDict();
+            for (const [k, v] of Object.entries(d)) {
+                const key = (k === "undefined" || k === "null" || !k) ? "0" : String(k);
+                fullDict[key] = v;
+            }
         });
         return fullDict;
     }
@@ -186,8 +193,17 @@ export class SlitItemInspector {
         // Reset lại danh sách cũ
         this.slits = [];
 
-        Object.keys(fullDict).forEach(id_line => {
-            const singleSlitDict = { [id_line]: fullDict[id_line] };
+        const normalizedDict = { ...fullDict };
+        // Nếu có "undefined", ghi đè giá trị của nó vào "0" và xóa "undefined"
+        if ("undefined" in normalizedDict) {
+            const undefinedData = normalizedDict["undefined"];
+            delete normalizedDict["undefined"];
+            normalizedDict["0"] = { ...(normalizedDict["0"] || {}), ...undefinedData };
+        }
+
+        Object.keys(normalizedDict).forEach(id_line => {
+            if (id_line === "undefined" || id_line === "null") return;
+            const singleSlitDict = { [id_line]: normalizedDict[id_line] };
             const slitInstance = ModelSlit.fromDict(singleSlitDict);
             
             if (slitInstance) {

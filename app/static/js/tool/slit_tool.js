@@ -78,6 +78,14 @@ function func_callback_click_on_line_drawn(line_current){
     line.yEnd =   Number(line_current?.yEnd);
     line.xStart = Number(line_current?.xStart);
     line.yStart = Number(line_current?.yStart);   
+    let target_id = line_current?.id_line;
+    if (target_id !== undefined && target_id !== null && target_id !== "undefined") {
+        console.log("Line đã tồn tại với ID:", target_id);
+        const measurementClone = { ...line_current, id_line: String(target_id) };
+        boxContentMeasureSlitWidth.appendChild(createMeasureSlitWidthTable(measurementClone.id_line, measurementClone));
+        return;
+    }
+
     let result_create_line_id_new = obj_slit_item_inspector.findLineByCoordinate(
         line.xStart, 
         line.yStart, 
@@ -86,14 +94,18 @@ function func_callback_click_on_line_drawn(line_current){
     );
     console.log("Kết quả tìm kiếm line:", result_create_line_id_new);
     if (!result_create_line_id_new || !result_create_line_id_new.status){
-        let id_new = result_create_line_id_new?.data || obj_slit_item_inspector.generateNextId();
+        let id_new = result_create_line_id_new?.data ?? obj_slit_item_inspector.generateNextId();
+        if (id_new === "undefined" || id_new === undefined) id_new = "0";
         console.log("Line chưa tồn tại trong inspector. Tạo mới với ID:", id_new);
-        boxContentMeasureSlitWidth.appendChild(createMeasureSlitWidthTable(id_new, line));
+        boxContentMeasureSlitWidth.appendChild(createMeasureSlitWidthTable(String(id_new), line));
     }
     else {
         console.log("Line đã tồn tại trong inspector. Đang nạp dữ liệu cũ...");
         const measurementClone = { ...result_create_line_id_new.data };
-        boxContentMeasureSlitWidth.appendChild(createMeasureSlitWidthTable(measurementClone.lineId, measurementClone));
+        let valid_id = measurementClone.id_line ?? "0";
+        if (valid_id === "undefined") valid_id = "0";
+        measurementClone.id_line = String(valid_id);
+        boxContentMeasureSlitWidth.appendChild(createMeasureSlitWidthTable(measurementClone.id_line, measurementClone));
     }
 }
 
@@ -126,6 +138,11 @@ function func_callback_click_mouse_left_into_line(data){
 
 
 function createMeasureSlitWidthTable(id_line,data_line) {
+    if (id_line === undefined || id_line === "undefined" || id_line === null) {
+        id_line = data_line?.id_line ?? "0";
+        if (id_line === "undefined") id_line = "0";
+    }
+    id_line = String(id_line);
     let obj_slit_item_inspector = create_obj_cross_item(ItemsInspector.TYPE_SLIT,SlitItemInspector,"setSlitItems");
     const existed = document.getElementById(
         `measure-slit-width-wrapper-${id_line}`
@@ -188,15 +205,21 @@ function createMeasureSlitWidthTable(id_line,data_line) {
         const nameLineVal = document.getElementById(`measure-slit-width-input-${id_line}-0`)?.value || "";
         const widthMinVal = Number(document.getElementById(`measure-slit-width-input-${id_line}-1`)?.value || 0);
         const widthMaxVal = Number(document.getElementById(`measure-slit-width-input-${id_line}-2`)?.value || 0);
+        let valid_id = id_line;
+        if (valid_id === undefined || valid_id === "undefined" || valid_id === null) {
+            valid_id = data_line?.id_line ?? "0";
+            if (valid_id === "undefined") valid_id = "0";
+        }
+        valid_id = String(valid_id);
         let obj_probationary = new ModelSlit(
-            id_line,
+            valid_id,
             nameLineVal,
             widthMinVal,
             widthMaxVal,
-            line?.xStart ?? 0, 
-            line?.yStart ?? 0,
-            line?.xEnd ?? 0,
-            line?.yEnd ?? 0
+            data_line?.xStart ?? line?.xStart ?? 0, 
+            data_line?.yStart ?? line?.yStart ?? 0,
+            data_line?.xEnd ?? line?.xEnd ?? 0,
+            data_line?.yEnd ?? line?.yEnd ?? 0
         );
         console.log("obj_probationary",obj_probationary);
         let result_validate_probationarier = obj_probationary.validateSlitLevelsIncreasing(); 

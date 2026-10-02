@@ -2,15 +2,18 @@
     "1": {
         "0": {
             "0": {
-                "SlitWeldInspector": {
+                "MeasurementWeldInspector": {
                     "0": {
-                        "nameLine": "1",
-                        "widthMin": 2,
-                        "widthMax": 3,
-                        "xStart": 1196,
-                        "yStart": 138,
-                        "xEnd": 1042,
-                        "yEnd": 556,
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 6,
+                        "level5": 7,
+                        "xStart": 1244,
+                        "yStart": 1084,
+                        "xEnd": 1232,
+                        "yEnd": 1314,
                         "coordinateSpace": "image"
                     }
                 }
@@ -19,27 +22,15 @@
                 "MeasurementWeldInspector": {
                     "0": {
                         "name_line": "1",
-                        "level1": 0.1,
-                        "level2": 0.2,
-                        "level3": 0.3,
-                        "level4": 4,
-                        "level5": 5,
-                        "xStart": 1442,
-                        "yStart": 278,
-                        "xEnd": 1340,
-                        "yEnd": 568,
-                        "coordinateSpace": "image"
-                    }
-                },
-                "BorderFilmInspector": {
-                    "0": {
-                        "nameLine": "1",
-                        "widthMin": 2,
-                        "widthMax": 3,
-                        "xStart": 1182,
-                        "yStart": 216,
-                        "xEnd": 1138,
-                        "yEnd": 398,
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 404,
+                        "yStart": 778,
+                        "xEnd": 392,
+                        "yEnd": 1028,
                         "coordinateSpace": "image"
                     }
                 }
@@ -47,16 +38,67 @@
             "2": {
                 "MeasurementWeldInspector": {
                     "0": {
-                        "name_line": "3",
-                        "level1": 0.1,
-                        "level2": 0.2,
-                        "level3": 0.3,
-                        "level4": 4,
-                        "level5": 5,
-                        "xStart": 1062,
-                        "yStart": 264,
-                        "xEnd": 938,
-                        "yEnd": 530,
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 732,
+                        "yStart": 1152,
+                        "xEnd": 714,
+                        "yEnd": 1462,
+                        "coordinateSpace": "image"
+                    }
+                }
+            },
+            "3": {
+                "MeasurementWeldInspector": {
+                    "0": {
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 998,
+                        "yStart": 1164,
+                        "xEnd": 990,
+                        "yEnd": 1434,
+                        "coordinateSpace": "image"
+                    }
+                }
+            },
+            "4": {
+                "MeasurementWeldInspector": {
+                    "0": {
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 510,
+                        "yStart": 752,
+                        "xEnd": 500,
+                        "yEnd": 1014,
+                        "coordinateSpace": "image"
+                    }
+                }
+            },
+            "5": {
+                "MeasurementWeldInspector": {
+                    "0": {
+                        "name_line": "1",
+                        "level1": 2,
+                        "level2": 3,
+                        "level3": 4,
+                        "level4": 5,
+                        "level5": 6,
+                        "xStart": 744,
+                        "yStart": 1150,
+                        "xEnd": 732,
+                        "yEnd": 1468,
                         "coordinateSpace": "image"
                     }
                 }

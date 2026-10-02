@@ -1,1 +1,27 @@
-{}
+{
+    "1": {
+        "0": {
+            "calculation_parameters": {
+                "number_capture": 20,
+                "name_item": "1",
+                "id_tems": "0",
+                "startX": 868,
+                "startY": 1098,
+                "endX": 856,
+                "endY": 1316,
+                "reality_mm": 2.0
+            },
+            "result_parameters": {
+                "pixel_mean": 89.52732286955181,
+                "pixel_std": 2.3188213244107176,
+                "cv": 0.02590071109117625,
+                "scale_mm_per_pixel": 0.022339548820354584,
+                "scale_error_mm_per_pixel": 0.0005786101999032312,
+                "confidence": 0.9253943244633825,
+                "samples_used": 19,
+                "samples_raw": 20,
+                "mad": 1.0023040771484375
+            }
+        }
+    }
+}

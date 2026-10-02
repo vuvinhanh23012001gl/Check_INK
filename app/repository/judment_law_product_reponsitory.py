@@ -20,16 +20,47 @@ class JudmentLawProductRepository:
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump({}, f)
 
+    @staticmethod
+    def clean_undefined_keys(data: dict) -> bool:
+        """Kiểm tra và thay thế key 'undefined' bằng key '0' trong cấu trúc judgment law.
+
+        Nếu trong cùng inspector có cả '0' và 'undefined', giá trị 'undefined'
+        sẽ thay thế cho '0' và xóa key 'undefined'.
+        Returns:
+            bool: True nếu có sự thay đổi dữ liệu.
+        """
+        changed = False
+        if not isinstance(data, dict):
+            return False
+
+        for k, v in list(data.items()):
+            if isinstance(v, dict):
+                if "undefined" in v:
+                    undefined_val = v.pop("undefined")
+                    if "0" in v and isinstance(v["0"], dict) and isinstance(undefined_val, dict):
+                        v["0"].update(undefined_val)
+                    else:
+                        v["0"] = undefined_val
+                    changed = True
+                if JudmentLawProductRepository.clean_undefined_keys(v):
+                    changed = True
+        return changed
+
     def _load(self) -> dict:
-        """Đọc dữ liệu từ file JSON.
+        """Đọc dữ liệu từ file JSON và tự động làm sạch key 'undefined'.
         Returns:
             dict: Dữ liệu.
         """
         with open(self.path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        if self.clean_undefined_keys(data):
+            with open(self.path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+        return data
 
     def save(self) -> None:
-        """Lưu dữ liệu xuống file JSON."""
+        """Lưu dữ liệu xuống file JSON sau khi làm sạch key 'undefined'."""
+        self.clean_undefined_keys(self.data)
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump(self.data, f, ensure_ascii=False, indent=4)
 

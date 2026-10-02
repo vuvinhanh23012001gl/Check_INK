@@ -282,9 +282,9 @@
     "semantic_hash": "169825127adbce791fbc7f22142e16dd"
   },
   "app/judger/border_detector.py": {
-    "mtime": 1790849964.0545595,
-    "seen": 1790850012.1644113,
-    "ast_hash": "ad7411eb31c6f0152c278cd54e932da1",
+    "mtime": 1790916199.6041944,
+    "seen": 1790916253.9347022,
+    "ast_hash": "c4222be1887e0547d61ed6edf05abcb6",
     "semantic_hash": ""
   },
   "app/judger/hole_detector.py": {
@@ -294,15 +294,15 @@
     "semantic_hash": ""
   },
   "app/judger/judment.py": {
-    "mtime": 1790849509.3148496,
-    "seen": 1790850012.1644113,
-    "ast_hash": "592f2541b2433685868d91b3bf87d81a",
+    "mtime": 1790915140.2850168,
+    "seen": 1790915333.8856876,
+    "ast_hash": "6d32284df8d880ebbe7513a326fc60b8",
     "semantic_hash": ""
   },
   "app/judger/measurement_welding_detector.py": {
-    "mtime": 1790849509.3131607,
-    "seen": 1790850012.1644113,
-    "ast_hash": "e7a515060af26f3f7a75d1636aff28f2",
+    "mtime": 1790915153.4723585,
+    "seen": 1790915333.8856876,
+    "ast_hash": "7308a1c9a1d9694b74ade9241dad325f",
     "semantic_hash": ""
   },
   "app/judger/scratch_the_pipe_detector.py": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "app/judger/slit_detector.py": {
-    "mtime": 1790849509.313535,
-    "seen": 1790850012.1644113,
-    "ast_hash": "6e61a0d07c4622002b05fd4834003d7e",
+    "mtime": 1790915149.2422953,
+    "seen": 1790915333.8856876,
+    "ast_hash": "27f7ba5a5b012ecc68e602b32327b64f",
     "semantic_hash": ""
   },
   "app/judger/weld_seam_air_bubbles_detector.py": {
@@ -438,9 +438,9 @@
     "semantic_hash": "568f8870316a1d7a110008d786d27030"
   },
   "app/repository/judment_law_product_reponsitory.py": {
-    "mtime": 1790657656.6234205,
-    "seen": 1790657838.153815,
-    "ast_hash": "b44e4fdc227a6b81253ba2e02f53f770",
+    "mtime": 1790912750.7048204,
+    "seen": 1790915333.8856876,
+    "ast_hash": "3bd588f9c84d4fffe22f9f35d7632017",
     "semantic_hash": ""
   },
   "app/repository/point_repository.py": {
@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "app/routers/api_tool_law_regulations.py": {
-    "mtime": 1790827267.3992,
-    "seen": 1790829224.6748846,
-    "ast_hash": "49052e60ed121dc65804d73379ac8b3e",
+    "mtime": 1790912792.2500262,
+    "seen": 1790915333.8856876,
+    "ast_hash": "365b6aadfe1d1328915bc02c8601df16",
     "semantic_hash": ""
   },
   "app/routers/home.py": {
@@ -690,15 +690,15 @@
     "semantic_hash": "fdef96641e3a3eb7e71159a361da5cac"
   },
   "app/stages/stage_1_preprocess.py": {
-    "mtime": 1790236101.1044464,
-    "seen": 1790390320.1389942,
-    "ast_hash": "1d40e4eab936aa142906e63359155219",
-    "semantic_hash": "1d40e4eab936aa142906e63359155219"
+    "mtime": 1790907485.475153,
+    "seen": 1790908537.4674864,
+    "ast_hash": "12a9e428b090a6f31e7a3d28224ce3d7",
+    "semantic_hash": ""
   },
   "app/stages/stage_2_transform.py": {
-    "mtime": 1790753765.9847171,
-    "seen": 1790825282.0855856,
-    "ast_hash": "ef891a84793059a3354369b47a0f1bdd",
+    "mtime": 1790907485.475153,
+    "seen": 1790908537.4674864,
+    "ast_hash": "28706012c8efe511991184228c5c53df",
     "semantic_hash": ""
   },
   "app/stages/stage_3_export.py": {
@@ -924,10 +924,10 @@
     "semantic_hash": "2d1837bedcb69f378cfe694555b5e551"
   },
   "app/static/js/services/slit_item_inspector.js": {
-    "mtime": 1785821789.3720512,
-    "seen": 1790390320.1389942,
-    "ast_hash": "f33688c9484ee53ccb396c1cab6a394b",
-    "semantic_hash": "f33688c9484ee53ccb396c1cab6a394b"
+    "mtime": 1790912824.3171449,
+    "seen": 1790915333.8856876,
+    "ast_hash": "a12b6cf91602669f622fa39ba5fde9f1",
+    "semantic_hash": ""
   },
   "app/static/js/tool/air_bubbles_tool.js": {
     "mtime": 1790827267.3992,
@@ -996,10 +996,10 @@
     "semantic_hash": "7d8a757f9743ca5aac4caaded28d74cf"
   },
   "app/static/js/tool/slit_tool.js": {
-    "mtime": 1788418577.755959,
-    "seen": 1790390320.1389942,
-    "ast_hash": "a253034404aa5f10107d687bfea32204",
-    "semantic_hash": "a253034404aa5f10107d687bfea32204"
+    "mtime": 1790912847.4200213,
+    "seen": 1790915333.8856876,
+    "ast_hash": "46c6e821a0c0ab16a1a644f839e28f66",
+    "semantic_hash": ""
   },
   "app/static/js/tool/summary_tool.js": {
     "mtime": 1790657781.8957174,
@@ -1032,9 +1032,9 @@
     "semantic_hash": "0792d2e905e92c2de0ced05e6f85401e"
   },
   "app/storage/choose_product_select.json": {
-    "mtime": 1790843630.5735736,
-    "seen": 1790846065.8118823,
-    "ast_hash": "14f2414797fa365e5006bf33a11cd7b9",
+    "mtime": 1790914936.416768,
+    "seen": 1790915333.8856876,
+    "ast_hash": "7fd06c9fad633c51252b6e70c35118af",
     "semantic_hash": ""
   },
   "app/storage/config/COM.json": {
@@ -1050,15 +1050,15 @@
     "semantic_hash": ""
   },
   "app/storage/config_calibration.json": {
-    "mtime": 1790848833.982833,
-    "seen": 1790849164.2985837,
-    "ast_hash": "99914b932bd37a50b983c5e7c90ae93b",
+    "mtime": 1790915932.9108505,
+    "seen": 1790916253.9347022,
+    "ast_hash": "93dcbebe9b5d4abdbdde7bccda913e5b",
     "semantic_hash": ""
   },
   "app/storage/config_judgment_law.json": {
-    "mtime": 1790849831.8148942,
-    "seen": 1790850012.1644113,
-    "ast_hash": "fad2a460dc8103d51980b923974f6ebd",
+    "mtime": 1790916100.9458234,
+    "seen": 1790916253.9347022,
+    "ast_hash": "70f5c90345ebc0c64ec44c41a0cef665",
     "semantic_hash": ""
   },
   "app/storage/config_software.json": {
@@ -1068,14 +1068,14 @@
     "semantic_hash": "a3bc30926d32d49c01bd85609b38a3f6"
   },
   "app/storage/end_chipping_crop_patch_core_record.json": {
-    "mtime": 1790848017.8184688,
-    "seen": 1790848056.694698,
+    "mtime": 1790915566.97787,
+    "seen": 1790916253.9347022,
     "ast_hash": "d751713988987e9331980363e24189ce",
     "semantic_hash": ""
   },
   "app/storage/foreign_crop_patch_core_record.json": {
-    "mtime": 1790848017.8450284,
-    "seen": 1790848056.694698,
+    "mtime": 1790915566.9825535,
+    "seen": 1790916253.9347022,
     "ast_hash": "d751713988987e9331980363e24189ce",
     "semantic_hash": ""
   },
@@ -1092,15 +1092,15 @@
     "semantic_hash": "95553b0b22917b3eacffbd79ecefdf4b"
   },
   "app/storage/points.json": {
-    "mtime": 1790849714.6881938,
-    "seen": 1790850012.1644113,
-    "ast_hash": "191b09a0c02e97f3afb4a98d11c5beda",
+    "mtime": 1790915860.6942391,
+    "seen": 1790916253.9347022,
+    "ast_hash": "5382a2958edfbba851fe636a3f22ad49",
     "semantic_hash": ""
   },
   "app/storage/products_data.json": {
-    "mtime": 1790842482.1947598,
-    "seen": 1790846065.8118823,
-    "ast_hash": "cd646abadcc8c2bc7edc55cad8a3d013",
+    "mtime": 1790914932.924726,
+    "seen": 1790915333.8856876,
+    "ast_hash": "c562f2c7f0b9a8ff430553865641aae1",
     "semantic_hash": ""
   },
   "app/tests/__init__.py": {
@@ -2118,9 +2118,9 @@
     "semantic_hash": ""
   },
   "ket_qua.jpg": {
-    "mtime": 1790848874.2809286,
-    "seen": 1790849164.2985837,
-    "ast_hash": "763422d408c2b698888ca2d5e2629184",
+    "mtime": 1790915932.8416338,
+    "seen": 1790916253.936262,
+    "ast_hash": "274a0b19ccaf9c86b01d43e1ac05afc6",
     "semantic_hash": ""
   },
   "train18/F1_curve.png": {
@@ -2220,9 +2220,9 @@
     "semantic_hash": ""
   },
   "app/storage/count_product.json": {
-    "mtime": 1790849801.6587913,
-    "seen": 1790850012.1644113,
-    "ast_hash": "333176748396d123474543ff66038f53",
+    "mtime": 1790916337.89816,
+    "seen": 1790916727.6546276,
+    "ast_hash": "61cd5de53659212aaba7c488f25efa3b",
     "semantic_hash": ""
   },
   "app/routers/api_instruct_fix_erro.py": {
@@ -2340,9 +2340,9 @@
     "semantic_hash": ""
   },
   "app/storage/img_points/1/0/0.jpg": {
-    "mtime": 1790849714.657985,
-    "seen": 1790850012.1644113,
-    "ast_hash": "5d7a590abdc721ce65fad8af6b8c791e",
+    "mtime": 1790909552.8688047,
+    "seen": 1790915333.887582,
+    "ast_hash": "61aab3cd286680a227123d467ff53be3",
     "semantic_hash": ""
   },
   "app/storage/manager_product_images/1.jpg": {
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "app/storage/weld_reference_record.json": {
-    "mtime": 1790848017.8744025,
-    "seen": 1790848056.694698,
+    "mtime": 1790915566.9885876,
+    "seen": 1790916253.9347022,
     "ast_hash": "db953e7bbe281d823adc8092a7ee4899",
     "semantic_hash": ""
   },
@@ -2406,15 +2406,147 @@
     "semantic_hash": ""
   },
   "app/storage/img_points/1/0/1.jpg": {
-    "mtime": 1790847464.5110013,
-    "seen": 1790848056.6966603,
-    "ast_hash": "c7b29fc82e46bc0ec7110914cff4b23f",
+    "mtime": 1790905277.648794,
+    "seen": 1790906806.9794672,
+    "ast_hash": "6d21ee071dd77d3a3201fcf874908a70",
     "semantic_hash": ""
   },
-  "app/storage/img_points/1/0/2.jpg": {
-    "mtime": 1790847467.7396863,
-    "seen": 1790848056.6966603,
-    "ast_hash": "67aa88b72e96720173b98eeeb75218b7",
+  "app/storage/img_points/1/1/0.jpg": {
+    "mtime": 1790905526.6707764,
+    "seen": 1790906806.9794672,
+    "ast_hash": "2a3c432e5c56b5172dfa5bd7cf1340f1",
+    "semantic_hash": ""
+  },
+  "app/storage/img_points/1/1/1.jpg": {
+    "mtime": 1790905346.2066054,
+    "seen": 1790906806.9794672,
+    "ast_hash": "7e78fa7e3e95d5001827426b92ff112f",
+    "semantic_hash": ""
+  },
+  "app/tests/test_judment/logic/test_judment_polygon_cache_multi_contour.py": {
+    "mtime": 1790915196.2414484,
+    "seen": 1790915333.8856876,
+    "ast_hash": "0598ad06863ac6af6cde791107d21766",
+    "semantic_hash": ""
+  },
+  ".agents/docs/README.md": {
+    "mtime": 1790913914.0782883,
+    "seen": 1790915333.887272,
+    "ast_hash": "7755be73f52494a0af8697c8f90aed22",
+    "semantic_hash": ""
+  },
+  ".agents/docs/features/calibration.md": {
+    "mtime": 1790913958.5822804,
+    "seen": 1790915333.887272,
+    "ast_hash": "16f5a4085b717e519b9fe4764e4b9d1e",
+    "semantic_hash": ""
+  },
+  ".agents/docs/features/capture_and_inspection.md": {
+    "mtime": 1790913948.803898,
+    "seen": 1790915333.887272,
+    "ast_hash": "2bfdf63ebbe17c99f518d7cec687f185",
+    "semantic_hash": ""
+  },
+  ".agents/docs/features/master_adjustment.md": {
+    "mtime": 1790913937.5255604,
+    "seen": 1790915333.887272,
+    "ast_hash": "b3d63ce0f8ee8bdb259dc9eec54d963b",
+    "semantic_hash": ""
+  },
+  ".agents/docs/features/overview.md": {
+    "mtime": 1790913924.2218623,
+    "seen": 1790915333.887272,
+    "ast_hash": "f1ee500762c92339a3e4c6ed272f0269",
+    "semantic_hash": ""
+  },
+  ".agents/docs/features/product_management.md": {
+    "mtime": 1790913971.581639,
+    "seen": 1790915333.887272,
+    "ast_hash": "76d1395786eddeb262f5703b67219189",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/ai_engines.md": {
+    "mtime": 1790914012.599408,
+    "seen": 1790915333.887272,
+    "ast_hash": "a211ad04a69bda85ea1fec28aaf2b194",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/architecture_overview.md": {
+    "mtime": 1790913984.3654933,
+    "seen": 1790915333.887272,
+    "ast_hash": "82ae15b681aaf3364d8135f45c160aa0",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/frontend_architecture.md": {
+    "mtime": 1790914134.6842048,
+    "seen": 1790915333.887272,
+    "ast_hash": "12fd48a5faefbf332508c4d82832034b",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/hardware_integration.md": {
+    "mtime": 1790914105.6965768,
+    "seen": 1790915333.887272,
+    "ast_hash": "3ad0f83242ba64ac4cbdb99b8e0bb528",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/judger.md": {
+    "mtime": 1790914022.8688357,
+    "seen": 1790915333.887272,
+    "ast_hash": "314f4fb652cf9537251a7d680aca3d95",
+    "semantic_hash": ""
+  },
+  ".agents/docs/modules/storage_and_repositories.md": {
+    "mtime": 1790914121.696399,
+    "seen": 1790915333.887272,
+    "ast_hash": "cced90b3adcd47bcbea5773855d65a2e",
+    "semantic_hash": ""
+  },
+  ".agents/docs/tasks/task_fix_slit_inspector_undefined.md": {
+    "mtime": 1790914157.7534068,
+    "seen": 1790915333.887272,
+    "ast_hash": "7aff911e616b53d833c4a75fc78976af",
+    "semantic_hash": ""
+  },
+  ".agents/docs/tasks/task_roadmap.md": {
+    "mtime": 1790914167.1226916,
+    "seen": 1790915333.887272,
+    "ast_hash": "d80a30a3ea6f1cbe29cf3871ed6626b7",
+    "semantic_hash": ""
+  },
+  ".agents/docs/tasks/task_weld_bubble_detection.md": {
+    "mtime": 1790914146.5459776,
+    "seen": 1790915333.887272,
+    "ast_hash": "6aefea70d665f1a85877fe10d40691a3",
+    "semantic_hash": ""
+  },
+  "cach_luu_doc.md": {
+    "mtime": 1790913824.2489078,
+    "seen": 1790915333.887272,
+    "ast_hash": "2bcfbdc5efd15777d563d49bb083ef5f",
+    "semantic_hash": ""
+  },
+  "app/storage/img_points/2/0/0.jpg": {
+    "mtime": 1790915789.109338,
+    "seen": 1790916253.936262,
+    "ast_hash": "f13198392aaef824bfcb4412f4983939",
+    "semantic_hash": ""
+  },
+  "app/storage/img_points/2/0/2.jpg": {
+    "mtime": 1790915860.6898203,
+    "seen": 1790916253.936262,
+    "ast_hash": "2b303219f116e190a207207041c10aea",
+    "semantic_hash": ""
+  },
+  "app/storage/manager_product_images/2.jpg": {
+    "mtime": 1790914932.913572,
+    "seen": 1790915333.887582,
+    "ast_hash": "7996ba5a3f4a36d65b51de4901fa15f4",
+    "semantic_hash": ""
+  },
+  "app/tests/test_judment/logic/test_logic_same_polygon_two_intersections.py": {
+    "mtime": 1790916665.2305844,
+    "seen": 1790916727.6546276,
+    "ast_hash": "98baf25bc28e64a42c3e0eeab8e5d83a",
     "semantic_hash": ""
   }
 }

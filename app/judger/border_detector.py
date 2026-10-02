@@ -67,12 +67,18 @@ class BorderDetector(BaseJudgerAI):
             raise ValueError("lines phải là list")
 
         polygon_candidates = (
-            [contour.copy() for contour in polygons]
+            self._normalize_polygons(polygons)
             if isinstance(polygons, list)
             else self._normalize_polygons(polygon)
         )
         primary_polygon = self._select_primary_polygon(polygon_candidates)
-        runtime_lines = self.process_lines_from_polygon(image, lines, primary_polygon)
+        # Đo trên toàn bộ contour candidates để tránh bỏ sót trường hợp
+        # line cắt contour phụ nhưng không cắt contour lớn nhất.
+        runtime_lines = self.process_lines_from_polygon(
+            image,
+            lines,
+            polygon_candidates,
+        )
         return {
             # ``polygon`` giữ contour chính để tương thích luồng cũ.
             "polygon": (
@@ -151,6 +157,7 @@ class BorderDetector(BaseJudgerAI):
         return {
             "comparisons": comparisons,
             "polygon": runtime_data.get("polygon"),
+            "polygons": runtime_data.get("polygons"),
             "image": runtime_data.get("image"),
         }
 

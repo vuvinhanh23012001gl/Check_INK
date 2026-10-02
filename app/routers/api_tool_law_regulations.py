@@ -58,6 +58,9 @@ def header_function(services: ServiceContainer = Depends(get_services)):
                     if p_id not in current_frames[f_id]:
                         current_frames[f_id][p_id] = {}
     if tree.ok and tree.data is not None:
+        if services.obj_law_regulation_service.repo.clean_undefined_keys(tree.data):
+            services.obj_law_regulation_service.repo.clean_undefined_keys(services.obj_law_regulation_service.repo.data)
+            services.obj_law_regulation_service.repo.save()
         print("✅ [Master] Đã lấy cây luật phán định của master.")
     else:
         print("⚠️ [Master] Không có cây luật phán định để nạp.")
@@ -135,6 +138,8 @@ def save(data:dict= Body(),services: ServiceContainer = Depends(get_services)):
             else:
                 print(f"⚠️ [Master][Save] Bỏ qua frame_id không hợp lệ: {f_id}")
         payload[product_key] = cleaned_product_frames
+
+    services.obj_law_regulation_service.repo.clean_undefined_keys(payload)
 
     converted = services.obj_law_regulation_service.convert_canvas_coordinates(
         payload,

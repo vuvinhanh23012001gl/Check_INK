@@ -19,6 +19,7 @@ class PreparedProduct:
 
     product_id: str
     frames: list[dict]
+    frame_calibrations: dict[str, dict]
     scale_mm_per_pixel: float
     session_id: str
     number_step: int
@@ -132,10 +133,24 @@ class StagePreprocess:
         if not frames:
             raise ValueError(f"Product {product_id} không có frame/point hợp lệ")
 
-        scale = self._read_scale(calibration_data)
+        frame_calibrations: dict[str, dict] = {}
+        for frame in frames:
+            frame_id = frame["frame_id"]
+            calibration_info = self._read_frame_scale(calibration_data, frame_id)
+            frame_calibrations[frame_id] = calibration_info
+            frame["calibration"] = calibration_info
+
+        scale = self._pick_default_scale(frame_calibrations)
         number_step = sum(len(frame["points"]) for frame in frames)
         session_id = datetime.now(timezone.utc).strftime("session_%Y%m%dT%H%M%S%fZ")
-        return PreparedProduct(product_id, frames, scale, session_id, number_step)
+        return PreparedProduct(
+            product_id,
+            frames,
+            frame_calibrations,
+            scale,
+            session_id,
+            number_step,
+        )
 
     @staticmethod
     def _sort_key(value: str) -> tuple[int, str]:
@@ -144,18 +159,73 @@ class StagePreprocess:
         return (0, f"{int(text):020d}") if text.isdigit() else (1, text)
 
     @staticmethod
-    def _read_scale(calibration_data: dict) -> float:
-        """Lấy scale calibration đầu tiên hợp lệ, mặc định 1.0."""
-        for frame in calibration_data.values():
-            if not isinstance(frame, dict):
+    def _read_frame_scale(calibration_data: dict, frame_id: str) -> dict:
+        """Đọc trạng thái calibration của một frame theo product hiện tại.
+
+        Input: ``calibration_data`` dạng `{frame_id: calibration_dict}` và
+            ``frame_id`` cần kiểm tra.
+        Output: Dict thống nhất gồm:
+            - ``is_calibrated`` (bool): frame đã có hệ số hợp lệ hay chưa.
+            - ``scale_mm_per_pixel`` (float | None): hệ số mm/pixel nếu hợp lệ.
+            - ``reason`` (str): mô tả ngắn trạng thái dữ liệu calibration.
+        Errors: Không phát sinh; dữ liệu thiếu/sai kiểu được trả về dưới dạng
+            ``is_calibrated=False`` cùng thông điệp tương ứng.
+        """
+        frame_data = calibration_data.get(str(frame_id)) if isinstance(calibration_data, dict) else None
+        if not isinstance(frame_data, dict):
+            return {
+                "is_calibrated": False,
+                "scale_mm_per_pixel": None,
+                "reason": "Frame chưa có dữ liệu calibration.",
+            }
+
+        result = frame_data.get("result_parameters")
+        if not isinstance(result, dict):
+            return {
+                "is_calibrated": False,
+                "scale_mm_per_pixel": None,
+                "reason": "Thiếu result_parameters trong dữ liệu calibration.",
+            }
+
+        scale_raw = result.get("scale_mm_per_pixel")
+        try:
+            scale_value = float(scale_raw)
+        except (TypeError, ValueError):
+            return {
+                "is_calibrated": False,
+                "scale_mm_per_pixel": None,
+                "reason": "scale_mm_per_pixel không hợp lệ.",
+            }
+
+        if scale_value <= 0:
+            return {
+                "is_calibrated": False,
+                "scale_mm_per_pixel": None,
+                "reason": "scale_mm_per_pixel phải lớn hơn 0.",
+            }
+
+        return {
+            "is_calibrated": True,
+            "scale_mm_per_pixel": scale_value,
+            "reason": "Calibration hợp lệ.",
+        }
+
+    @staticmethod
+    def _pick_default_scale(frame_calibrations: dict[str, dict]) -> float:
+        """Lấy scale hợp lệ đầu tiên để giữ tương thích luồng cũ.
+
+        Input: Mapping trạng thái calibration theo frame.
+        Output: Hệ số mm/pixel đầu tiên hợp lệ; nếu không có trả về 1.0.
+        Errors: Không phát sinh.
+        """
+        for calibration_info in frame_calibrations.values():
+            if not isinstance(calibration_info, dict):
                 continue
-            result = frame.get("result_parameters", {})
-            scale = result.get("scale_mm_per_pixel") if isinstance(result, dict) else None
-            try:
-                if scale is not None and float(scale) > 0:
-                    return float(scale)
-            except (TypeError, ValueError):
+            if not calibration_info.get("is_calibrated"):
                 continue
+            scale_value = calibration_info.get("scale_mm_per_pixel")
+            if isinstance(scale_value, (int, float)) and float(scale_value) > 0:
+                return float(scale_value)
         return 1.0
         
 
